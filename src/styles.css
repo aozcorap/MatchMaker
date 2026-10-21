@@ -764,3 +764,81 @@ h2[id^='abschnitt-'] {
   font-weight: 600;
   color: var(--text);
 }
+
+textarea {
+  font: inherit;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--rand);
+  border-radius: 6px;
+  background: var(--flaeche);
+  width: 100%;
+  resize: vertical;
+}
+
+.import-eingabe {
+  padding-bottom: 12px;
+}
+
+.import-aktionen {
+  align-items: flex-end;
+  margin-top: 10px;
+}
+
+.importtabelle input,
+.importtabelle select {
+  padding: 4px 6px;
+  font-size: 0.85rem;
+}
+
+.importtabelle input.breit {
+  width: 11rem;
+}
+
+.importtabelle input.datum {
+  width: 9.5rem;
+}
+
+.importtabelle input.schmal {
+  width: 4rem;
+}
+
+.importtabelle td {
+  vertical-align: top;
+  white-space: normal;
+}
+
+tr.import-fehler td {
+  background: var(--fehler-bg);
+}
+
+tr.import-info td {
+  padding-top: 0;
+  border-bottom: 1px solid var(--rand);
+}
+
+td.pruefung {
+  display: table-cell;
+}
+
+td.pruefung span {
+  display: inline-block;
+  margin-right: 14px;
+  font-size: 0.82rem;
+}
+
+td.pruefung .quelle {
+  color: var(--leise);
+  font-size: 0.75rem;
+}
+
+.ok-text {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.ignoriert {
+  margin-top: 14px;
+  color: var(--leise);
+  font-size: 0.85rem;
+}

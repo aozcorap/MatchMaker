@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { BoxerTab } from './BoxerTab';
 import { KEIN_FILTER, type Filter } from './filter';
+import { ImportTab } from './ImportTab';
 import { KampfkarteTab } from './KampfkarteTab';
 import { exportiere, laden, liesZustand, speichern, type Zustand } from './speicher';
 import { simulation } from './testdaten';
 import { bestaetige, DEMO } from './umgebung';
 
-type Tab = 'boxer' | 'kampfkarte';
+type Tab = 'boxer' | 'kampfkarte' | 'import';
 
 export function App() {
   const [zustand, setZustand] = useState<Zustand>(laden);
@@ -95,8 +96,20 @@ export function App() {
         <button className={tab === 'kampfkarte' ? 'aktiv' : ''} onClick={() => setTab('kampfkarte')}>
           Kampfkarte ({zustand.kampfkarte.length})
         </button>
+        <button className={tab === 'import' ? 'aktiv' : ''} onClick={() => setTab('import')}>
+          Import
+        </button>
       </nav>
-      {tab === 'boxer' ? (
+      {tab === 'import' ? (
+        <ImportTab
+          zustand={zustand}
+          setZustand={setZustand}
+          onUebernommen={(n) => {
+            setMeldung(`${n} ${n === 1 ? 'Boxer' : 'Boxer'} übernommen`);
+            setTab('boxer');
+          }}
+        />
+      ) : tab === 'boxer' ? (
         <BoxerTab zustand={zustand} setZustand={setZustand} filter={filter} setFilter={setFilter} />
       ) : (
         <KampfkarteTab zustand={zustand} setZustand={setZustand} filter={filter} setFilter={setFilter} />

@@ -38,6 +38,12 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 2. kleinste Gewichtsdifferenz
 3. ähnliche **Siegzahl** (z. B. 4 Kämpfe/0 Siege passt zu 0 Kämpfen/0 Siegen)
 
+## 6c. Import der Meldungen
+- **Quellen:** Excel (.xlsx), CSV, eingefügter Text aus E-Mail oder WhatsApp. Jeder Trainer meldet in einem anderen Format, es gibt nur einen ungefähren Standard.
+- **Erkennung:** Spalten werden an ihrer Überschrift erkannt (Name oder Vor- und Nachname, Verein, Geburtsdatum, Geschlecht, Gewicht, Kämpfe, Siege, Niederlagen, Bilanz), auch in anderer Schreibweise. Ohne Überschriften wird jede Zeile als Text gelesen.
+- **Prüfansicht vor der Übernahme:** Jede Zeile ist bearbeitbar und zeigt Fehler und Warnungen. Pflicht sind Name, Verein, vollständiges Geburtsdatum, Geschlecht und Gewicht. Fehlt die Kampfbilanz, wird mit 0 gerechnet und gewarnt. Das Geschlecht wird nie aus dem Namen geraten. Schon vorhandene Boxer werden erkannt.
+- **Screenshots:** noch offen (Entscheidung zwischen Texterkennung im Browser und KI-Bilderkennung über einen Server).
+
 ## 6b. Einstellbare Grenzen (Erfahrungswerte, nicht aus den WB)
 - **Gewicht:** Höchstens 10 % Unterschied, bezogen auf den leichteren Boxer, zusätzlich zur Klassenbreite. In nach oben offenen Gewichtsklassen gilt keine Prozentgrenze.
 - **Siege bei Nachbar-Leistungsklassen:** Höchstens 5 Siege Unterschied, sonst kein Vorschlag (12 gegen 7 ist noch möglich, 12 gegen 1 nicht).
