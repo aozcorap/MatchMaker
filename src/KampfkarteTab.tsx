@@ -3,7 +3,7 @@ import { erzeugePaarungen } from './regeln/generator';
 import { BoxerZelle } from './BoxerZelle';
 import { PaarungsDialog } from './PaarungsDialog';
 import { altersklasseText, boxerInfo } from './regeln/info';
-import { baueKampf, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
+import { baueKampf, leichterZuerst, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
 import { altersdifferenzMonate, paarungsGuete } from './regeln/paarung';
 import { rundenzeitFuer } from './regeln/klassen';
 import type { Boxer } from './regeln/typen';
@@ -12,6 +12,13 @@ import { bestaetige } from './umgebung';
 
 function minutenText(m: number): string {
   return String(m).replace('.', ',');
+}
+
+interface Vorschlag {
+  a: Boxer;
+  b: Boxer;
+  hinweise: string[];
+  guete: [number, number, number];
 }
 
 function gruppenName(b: Boxer, datum: string): string {
@@ -46,28 +53,27 @@ export function KampfkarteTab(props: {
     () => boxer.filter((b) => !belegt.has(b.id)).sort((x, y) => vergleicheWartende(x, y, datum)),
     [boxer, belegt, datum],
   );
-  const vorschlaege = useMemo(() => erzeugePaarungen(wartende, datum), [wartende, datum]);
-
-  // Je Wartendem alle anderen Wartenden, die nur mit Freigabe passen würden, beste Paarung zuerst
-  const freigabeGegner = useMemo(() => {
-    const karte = new Map<string, Boxer[]>();
+  // Alle möglichen Paarungen unter den Wartenden: erst die regelkonformen, dann die nur mit Freigabe
+  const moeglich = useMemo(() => {
+    const ok: Vorschlag[] = [];
+    const freigabe: Vorschlag[] = [];
     for (let i = 0; i < wartende.length; i++) {
       for (let j = i + 1; j < wartende.length; j++) {
-        if (baueKampf(wartende[i], wartende[j], datum).pruefung.status !== 'freigabe') continue;
-        karte.set(wartende[i].id, [...(karte.get(wartende[i].id) ?? []), wartende[j]]);
-        karte.set(wartende[j].id, [...(karte.get(wartende[j].id) ?? []), wartende[i]]);
+        const [a, b] = leichterZuerst(wartende[i], wartende[j]);
+        const k = baueKampf(a, b, datum);
+        if (k.pruefung.status === 'verboten') continue;
+        const eintrag = { a, b, hinweise: k.pruefung.hinweise, guete: paarungsGuete(a, b, datum) };
+        (k.pruefung.status === 'ok' ? ok : freigabe).push(eintrag);
       }
     }
-    for (const [id, liste] of karte) {
-      const ich = wartende.find((w) => w.id === id)!;
-      liste.sort((x, y) => {
-        const gx = paarungsGuete(ich, x, datum);
-        const gy = paarungsGuete(ich, y, datum);
-        return gx[1] - gy[1] || gx[2] - gy[2];
-      });
-    }
-    return karte;
+    const vergleiche = (x: Vorschlag, y: Vorschlag) =>
+      x.guete[1] - y.guete[1] || x.guete[2] - y.guete[2] || x.a.name.localeCompare(y.a.name, 'de');
+    return { ok: ok.sort(vergleiche), freigabe: freigabe.sort(vergleiche) };
   }, [wartende, datum]);
+  const mitFreigabe = useMemo(
+    () => new Set(moeglich.freigabe.flatMap((v) => [v.a.id, v.b.id])),
+    [moeglich],
+  );
 
   const gewaehlt = auswahl.filter((id) => !belegt.has(id)).map((id) => nachId.get(id)!).filter(Boolean);
   const vorschauAuswahl = gewaehlt.length === 2 ? baueKampf(gewaehlt[0], gewaehlt[1], datum) : null;
@@ -122,7 +128,7 @@ export function KampfkarteTab(props: {
     const info = boxerInfo(b, datum);
     if (!info.altersklasse) return 'Keine Altersklasse (unter 10 Jahre)';
     if (!info.gewichtsklasse) return 'Keine Gewichtsklasse (zu leicht)';
-    const hatVorschlag = vorschlaege.paarungen.some((p) => p.a.id === b.id || p.b.id === b.id);
+    const hatVorschlag = moeglich.ok.some((p) => p.a.id === b.id || p.b.id === b.id);
     return hatVorschlag ? 'Noch nicht eingeplant' : 'Kein freier passender Gegner';
   }
 
@@ -226,7 +232,6 @@ export function KampfkarteTab(props: {
           </p>
           <ul className="warteliste">
             {wartende.map((b, i) => {
-              const gegner = freigabeGegner.get(b.id) ?? [];
               const gruppe = gruppenName(b, datum);
               const neueGruppe = i === 0 || gruppe !== gruppenName(wartende[i - 1], datum);
               return (
@@ -243,23 +248,8 @@ export function KampfkarteTab(props: {
                   </label>
                   <span className="grund">
                     {grund(b)}
-                    {gegner.length > 0 ? ' · mit Freigabe wäre ein Gegner möglich' : ''}
+                    {mitFreigabe.has(b.id) ? ' · mit Freigabe möglich, siehe Vorschläge' : ''}
                   </span>
-                  {gegner.length > 0 && (
-                    <div className="freigabe-gegner">
-                      <span>Passt mit Freigabe zu:</span>
-                      {gegner.slice(0, 3).map((g) => {
-                        const gi = boxerInfo(g, datum);
-                        return (
-                          <button key={g.id} onClick={() => setAuswahl([b.id, g.id])}>
-                            {g.name} · {g.verein} · {g.gewicht} kg · {g.kaempfe} K / {g.siege} S ·{' '}
-                            {gi.leistungsklasse}
-                          </button>
-                        );
-                      })}
-                      {gegner.length > 3 && <span>+ {gegner.length - 3} weitere</span>}
-                    </div>
-                  )}
                 </li>
                 </Fragment>
               );
@@ -268,44 +258,51 @@ export function KampfkarteTab(props: {
         </>
       )}
 
-      {(vorschlaege.paarungen.length > 0 || vorschlaege.freigabeVorschlaege.length > 0) && (
+      {(moeglich.ok.length > 0 || moeglich.freigabe.length > 0) && (
         <>
           <h2>Vorschläge für Wartende</h2>
-          <ul className="vorschlaege">
-            {[
-              ...vorschlaege.paarungen.map((p) => ({ p, text: 'entspricht den Regeln', status: 'ok', hinweise: p.hinweise })),
-              ...vorschlaege.freigabeVorschlaege.map((p) => ({
-                p,
-                text: 'nur mit Freigabe',
-                status: 'freigabe',
-                hinweise: p.pruefung.hinweise,
-              })),
-            ].map(({ p, text, status, hinweise }) => (
-              <li key={`${p.a.id}-${p.b.id}`} className={`vorschlag ${status}`}>
-                <div className="kampfkopf">
-                  <span className="nr">{text}</span>
-                  <span>Altersdifferenz {altersdifferenzMonate(p.a.geburtsdatum, p.b.geburtsdatum)} Monate</span>
-                  <span className="kampfknoepfe">
-                    <button onClick={() => ergaenze([{ aId: p.a.id, bId: p.b.id, freigabe: false }])}>
-                      Übernehmen
-                    </button>
-                  </span>
-                </div>
-                <div className="gegner">
-                  <BoxerZelle b={p.a} datum={datum} ecke="rot" />
-                  <span className="gegen">gegen</span>
-                  <BoxerZelle b={p.b} datum={datum} ecke="blau" />
-                </div>
-                {hinweise.map((h) => (
-                  <p key={h} className={`hinweis vorschlag-grund ${status}`}>
-                    {h}
-                  </p>
-                ))}
-              </li>
+          {[
+            { titel: 'Entsprechen den Regeln', status: 'ok', liste: moeglich.ok },
+            { titel: 'Nur mit Freigabe', status: 'freigabe', liste: moeglich.freigabe },
+          ]
+            .filter((g) => g.liste.length > 0)
+            .map((g) => (
+              <div key={g.status}>
+                <h3 className="vorschlag-titel">
+                  {g.titel} ({g.liste.length})
+                </h3>
+                <ul className="vorschlaege">
+                  {g.liste.map((p) => (
+                    <li key={`${p.a.id}-${p.b.id}`} className={`vorschlag ${g.status}`}>
+                      <div className="kampfkopf">
+                        <span>Altersdifferenz {altersdifferenzMonate(p.a.geburtsdatum, p.b.geburtsdatum)} Monate</span>
+                        <span>
+                          Gewichtsdifferenz {Math.abs(p.a.gewicht - p.b.gewicht).toFixed(1).replace('.', ',')} kg
+                        </span>
+                        <span className="kampfknoepfe">
+                          <button onClick={() => ergaenze([{ aId: p.a.id, bId: p.b.id, freigabe: false }])}>
+                            Übernehmen
+                          </button>
+                        </span>
+                      </div>
+                      <div className="gegner">
+                        <BoxerZelle b={p.a} datum={datum} ecke="rot" />
+                        <span className="gegen">gegen</span>
+                        <BoxerZelle b={p.b} datum={datum} ecke="blau" />
+                      </div>
+                      {p.hinweise.map((h) => (
+                        <p key={h} className={`hinweis vorschlag-grund ${g.status}`}>
+                          {h}
+                        </p>
+                      ))}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
         </>
       )}
+
       {vorschauAuswahl && (
         <PaarungsDialog
           kampf={vorschauAuswahl}
