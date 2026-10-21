@@ -37,8 +37,12 @@ Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 M
 ## Offene Punkte
 1. E-Mails kommen vom Standard-Absender von Supabase, englisch und stark begrenzt. Vor dem echten Betrieb: eigener SMTP-Dienst mit eigener Absenderadresse und deutsche Vorlagen.
 2. Datenschutz (Namen, Geburtsdaten, teils Minderjährige): Datenschutzerklärung und Auftragsverarbeitung klären, bevor echte Veranstalter die Seite nutzen. Der kostenlose Plan pausiert ungenutzte Projekte nach etwa einer Woche (Wissensstand, prüfen).
-3. Screenshots: Texterkennung ist bei stark komprimierten JPGs und schmalen Handy-Tabellen unzuverlässig; alle Zahlen müssen in der Prüfansicht kontrolliert werden. Mehr echte (anonymisierte) Beispiele wären hilfreich. Eine KI-Bilderkennung über einen Server wäre eine Datenschutzentscheidung.
+3. Screenshots: Texterkennung im Browser, ohne KI und ohne API. Sie ist bei stark komprimierten JPGs, schmalen Handy-Tabellen und Fotos von Bildschirmen unzuverlässig; alle Zahlen müssen in der Prüfansicht kontrolliert werden. Entschieden: Eine KI-Bilderkennung über einen Server brauchen wir nicht. Sicherer Weg sind Excel-Dateien, eingefügter Text und saubere Screenshots (Cmd+Shift+4).
 4. Gewichtstoleranz (Klassenbreite des Leichteren, höchstens 10 %, einstellbar) und Rundenzeit sind bestätigt. Volltext der WB in `docs/Wettkampfbestimmungen-DBV-2025.pdf`. Heimverein und blaue Ecke (WB §4.6) entfallen: Bei diesen Veranstaltungen gibt es keinen Heimverein.
 5. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
 6. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
-7. Bezahlmethode: Konzept mit Stripe (10 Euro pro Veranstaltung inkl. USt, Kosten, Ablauf, offene Entscheidungen) in `docs/BEZAHLKONZEPT.md`. Noch nicht gebaut; erst Impressum und Datenschutz (Punkt 3) und die steuerliche Klärung.
+7. Bezahlmethode: Konzept mit Stripe (10 Euro pro Veranstaltung inkl. USt, Kosten, Ablauf, offene Entscheidungen) in `docs/BEZAHLKONZEPT.md`. Noch nicht gebaut; erst Impressum und Datenschutz (Punkt 2) und die steuerliche Klärung.
+
+
+## Bewusst nicht gebaut (entschieden)
+KI-Bilderkennung für Fotos, Hinweis bei Ende nach Mitternacht, Prüfung des US-Datumsformats (03/04/2009), Ausschluss versteckter Excel-Blätter, Barrierefreiheit der Knöpfe, Heimverein und blaue Ecke.
