@@ -2,6 +2,7 @@ import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { erzeugePaarungen } from './regeln/generator';
 import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
 import { baueKampf, vergleicheKampf } from './regeln/kampfkarte';
+import { altersdifferenzMonate } from './regeln/paarung';
 import { rundenzeitFuer } from './regeln/klassen';
 import type { Boxer } from './regeln/typen';
 import type { GeplanterKampf, Zustand } from './speicher';
@@ -17,7 +18,8 @@ function BoxerZelle({ b, datum }: { b: Boxer; datum: string }) {
       <strong>{b.name}</strong>
       <span>{b.verein}</span>
       <span>
-        {b.gewicht} kg · {b.kaempfe} K / {b.siege} S · {altersklasseText(info.altersklasse)} ·{' '}
+        geb. {b.geburtsdatum.split('-').reverse().join('.')} · {b.gewicht} kg · {b.kaempfe} K / {b.siege} S ·{' '}
+        {altersklasseText(info.altersklasse)} ·{' '}
         {gewichtsklasseText(info.gewichtsklasse)} · {info.leistungsklasse ?? '–'}
       </span>
     </div>
@@ -145,6 +147,7 @@ export function KampfkarteTab(props: {
                   <span>{altersklasseText(kampf.altersklasse)}</span>
                   <span>Leistungsklasse {kampf.leistungsklasse}</span>
                   <span>{rz ? `${rz.runden} × ${minutenText(rz.minuten)} min` : '–'}</span>
+                  <span>Altersdifferenz {altersdifferenzMonate(kampf.a.geburtsdatum, kampf.b.geburtsdatum)} Monate</span>
                   <button onClick={() => entferne(geplant)}>Entfernen</button>
                 </div>
                 <div className="gegner">

@@ -30,6 +30,13 @@ export function innerhalb24Monate(a: string, b: string): boolean {
   return nichtNach(juenger, [aelter[0] + 2, aelter[1], aelter[2]]);
 }
 
+/** Volle Monate Altersunterschied zwischen zwei Geburtsdaten (Anzeige). */
+export function altersdifferenzMonate(a: string, b: string): number {
+  const [aelter, juenger] = a <= b ? [datum(a), datum(b)] : [datum(b), datum(a)];
+  const monate = (juenger[0] - aelter[0]) * 12 + (juenger[1] - aelter[1]) - (juenger[2] < aelter[2] ? 1 : 0);
+  return monate;
+}
+
 const LEISTUNG_REIHE = ['C', 'B', 'A'];
 
 export function pruefePaarung(a: Boxer, b: Boxer, veranstaltung: string): Pruefung {

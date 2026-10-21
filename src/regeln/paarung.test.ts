@@ -5,7 +5,7 @@ import {
   leistungsklasseVon,
   rundenzeitFuer,
 } from './klassen';
-import { innerhalb24Monate, paarungsGuete, pruefePaarung } from './paarung';
+import { altersdifferenzMonate, innerhalb24Monate, paarungsGuete, pruefePaarung } from './paarung';
 import type { Boxer } from './typen';
 
 const TAG = '2026-11-14';
@@ -97,6 +97,14 @@ describe('Altersunterschied 24 Monate', () => {
     expect(innerhalb24Monate('2010-05-10', '2012-05-10')).toBe(true);
     expect(innerhalb24Monate('2010-05-10', '2012-05-11')).toBe(false);
     expect(innerhalb24Monate('2012-05-11', '2010-05-10')).toBe(false);
+  });
+});
+
+describe('Altersdifferenz Anzeige', () => {
+  it('volle Monate', () => {
+    expect(altersdifferenzMonate('2010-05-10', '2012-05-10')).toBe(24);
+    expect(altersdifferenzMonate('2010-05-10', '2012-05-09')).toBe(23);
+    expect(altersdifferenzMonate('2012-05-09', '2010-05-10')).toBe(23);
   });
 });
 
