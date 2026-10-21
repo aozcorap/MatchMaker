@@ -41,7 +41,7 @@ const KLASSE = 84;
 const VEREIN = 100;
 const KG = 30;
 const NAME = (SEITE_BREIT - NR - UHR - KLASSE - 2 * (VEREIN + KG)) / 2;
-const BREITEN = [NR, UHR, KLASSE, '*', VEREIN, KG, '*', VEREIN, KG];
+const BREITEN = [NR, UHR, KLASSE, NAME, VEREIN, KG, NAME, VEREIN, KG];
 
 const RASTER = {
   hLineWidth: (i: number) => (i === 1 ? 0.5 : 0),
@@ -164,7 +164,8 @@ export function baueKampfkartePdf(karte: PdfKarte): TDocumentDefinitions {
     pageMargins: [28, 68, 28, 30],
     defaultStyle: { font: 'Roboto', fontSize: 9 },
     info: { title: `${karte.titel} ${karte.datum}` },
-    header: {
+    // Als Funktion, damit die Tabelleneinstellungen (Abstände) beim Kopieren der Kopfzeile nicht verloren gehen
+    header: () => ({
       margin: [28, 14, 28, 0],
       stack: [
         {
@@ -179,7 +180,7 @@ export function baueKampfkartePdf(karte: PdfKarte): TDocumentDefinitions {
         },
         kopfZeile(),
       ],
-    },
+    }),
     content: inhalt,
     footer: (seite: number, gesamt: number) => ({
       text: `Seite ${seite} von ${gesamt}  ·  Zeiten voraussichtlich, Änderungen vorbehalten`,
