@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { kampfSchluessel } from './ablauf';
 import type { Boxer } from './regeln/typen';
-import { liesZustand, type Zustand } from './speicher';
+import { gleicherZustand, istLeer, liesZustand, type Zustand } from './speicher';
 
 function boxer(id: string): Boxer {
   return { id, name: id, verein: `V${id}`, geburtsdatum: '2000-01-01', geschlecht: 'M', gewicht: 70, kaempfe: 5, siege: 3, niederlagen: 2 };
@@ -60,5 +60,24 @@ describe('Speichern und Laden', () => {
   it('lehnt beschädigte Daten ab statt sie halb zu laden', () => {
     expect(liesZustand({ datum: 5 })).toBeNull();
     expect(liesZustand(null)).toBeNull();
+  });
+});
+
+describe('Vergleich nach dem Speichern', () => {
+  it('erkennt einen gleichen Stand, auch wenn die Datenbank die Felder umsortiert', () => {
+    const umsortiert = JSON.parse(JSON.stringify(voll));
+    const sortiert = Object.fromEntries(Object.entries(umsortiert).sort(([a], [b]) => (a < b ? 1 : -1)));
+    const z = liesZustand(sortiert);
+    expect(z && gleicherZustand(z, voll)).toBe(true);
+  });
+
+  it('erkennt einen anderen Stand', () => {
+    expect(gleicherZustand({ ...voll, beginn: '15:00' }, voll)).toBe(false);
+    expect(gleicherZustand({ ...voll, kampfkarte: [kampfkarte[1], kampfkarte[0], kampfkarte[2]] }, voll)).toBe(false);
+  });
+
+  it('istLeer erkennt eine geleerte Veranstaltung', () => {
+    expect(istLeer({ ...voll, boxer: [], kampfkarte: [] })).toBe(true);
+    expect(istLeer(voll)).toBe(false);
   });
 });
