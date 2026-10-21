@@ -29,7 +29,7 @@ Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 M
 ## Supabase
 - Projekt `matchmaker`, Ref `ymqzqfrskvmpyamvmnbe`, Region eu-central-1 (Frankfurt), kostenloser Plan, Organisation "ahmet@ozcorapci.de's Org".
 - URL und veröffentlichbarer Schlüssel stehen in `src/konto/client.ts` (für den Browser gedacht). Der Schutz der Daten liegt in den Zugriffsregeln (RLS).
-- Datenbank: `supabase/migrations/001..004` (angewendet), `005` (Sicherungen begrenzen: noch im SQL-Editor auszuführen). Tabellen `admins`, `veranstaltungen` (eine je Konto, Zustand als JSON, Versionszähler), `sicherungen`.
+- Datenbank: `supabase/migrations/001..005` (alle angewendet; 004 und 005 am 21.10.2026 im SQL-Editor ausgeführt). Tabellen `admins`, `veranstaltungen` (eine je Konto, Zustand als JSON, Versionszähler), `sicherungen`.
 - Admin: Tabelle `admins`, Eintrag `ahmet@ozcorapci.de`. Admin sieht alle Veranstaltungen nur lesend und kann sie leeren (Boxer, Kämpfe, Sicherungen weg; Konto und E-Mail bleiben).
 - Im Dashboard gesetzt: Authentication → URL Configuration, Site URL und Redirect URL = `https://aozcorap.github.io/MatchMaker/`.
 - Hinweis zu den Werkzeugen: Über den Supabase-Zugang der Sitzung hängen Anweisungen mit `DELETE FROM` (vermutlich eine nicht beantwortete Bestätigung). Das nicht umgehen, sondern Löschen über die Oberfläche der App oder das Dashboard machen.
