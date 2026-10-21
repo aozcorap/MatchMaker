@@ -42,3 +42,4 @@ Einstellungen in der Kampfkarte: max. Gewichtsdifferenz in % (10), max. Siegdiff
 5. Offen aus den Anforderungen: Heimverein/blaue Ecke (WB §4.6), Bestätigung der Auslegungen (Gewichtstoleranz, Rundenzeit bei gemischten Klassen).
 6. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; Sicherungen werden nie automatisch bereinigt; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
 7. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
+8. Bezahlmethode: noch keine Überlegungen (Preismodell, Zahlungsanbieter, Rechnungen, Steuern). Muss später eingebaut werden, ist aktuell nicht dringend.
