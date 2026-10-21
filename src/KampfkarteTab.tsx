@@ -93,7 +93,7 @@ export function KampfkarteTab(props: {
     () =>
       plane(
         beginn,
-        kaempfe.map((k) => kampfdauer(rundenzeitFuer(k.kampf.altersklasse ?? 'Erwachsene'))),
+        kaempfe.map((k) => kampfdauer(rundenzeitFuer(k.kampf.altersklasse ?? 'Erwachsene', zeit.erwachsenenRundeMin))),
         {
           zeit,
           extraPausen,
@@ -231,7 +231,7 @@ export function KampfkarteTab(props: {
           beginn: uhrzeit(zeiten[0].start),
           ende: uhrzeit(zeiten[zeiten.length - 1].ende),
           kaempfe: kaempfe.map(({ kampf }, i) => {
-            const rz = rundenzeitFuer(kampf.altersklasse ?? 'Erwachsene');
+            const rz = rundenzeitFuer(kampf.altersklasse ?? 'Erwachsene', zeit.erwachsenenRundeMin);
             const slot = zeiten[i];
             return {
               nr: i + 1,
@@ -433,6 +433,17 @@ export function KampfkarteTab(props: {
             />
           </label>
         ))}
+        <label>
+          Rundenzeit Erwachsene und U19
+          <select
+            id="erwachsenenrunde"
+            value={zeit.erwachsenenRundeMin}
+            onChange={(e) => setZustand((z) => ({ ...z, zeit: { ...z.zeit, erwachsenenRundeMin: Number(e.target.value) } }))}
+          >
+            <option value={3}>3 × 3 Minuten</option>
+            <option value={2}>3 × 2 Minuten</option>
+          </select>
+        </label>
       </div>
 
       <div className="aktionen">
@@ -477,7 +488,7 @@ export function KampfkarteTab(props: {
         <ol className="kampfliste">
           {kaempfe.map(({ geplant, kampf }, i) => {
             const status = kampf.pruefung.status;
-            const rz = kampf.altersklasse ? rundenzeitFuer(kampf.altersklasse) : null;
+            const rz = kampf.altersklasse ? rundenzeitFuer(kampf.altersklasse, zeit.erwachsenenRundeMin) : null;
             const slot = zeiten[i];
             if (!treffer([kampf.rot, kampf.blau])) return null;
             return (
@@ -771,6 +782,7 @@ export function KampfkarteTab(props: {
         <PaarungsDialog
           kampf={vorschauAuswahl}
           datum={datum}
+          erwachsenenRundeMin={zeit.erwachsenenRundeMin}
           onAnlegen={() => ergaenze([{ aId: gewaehlt[0].id, bId: gewaehlt[1].id, freigabe: false }])}
           onTauschen={() => setAuswahl(([x, y]) => [y, x])}
           onAbbrechen={() => setAuswahl([])}

@@ -19,14 +19,15 @@ function zahl(n: number): string {
 export function PaarungsDialog(props: {
   kampf: Kampf;
   datum: string;
+  erwachsenenRundeMin: number;
   onAnlegen: () => void;
   onTauschen: () => void;
   onAbbrechen: () => void;
 }) {
-  const { kampf, datum, onAnlegen, onTauschen, onAbbrechen } = props;
+  const { kampf, datum, erwachsenenRundeMin, onAnlegen, onTauschen, onAbbrechen } = props;
   const status = kampf.pruefung.status;
   const anlegenRef = useRef<HTMLButtonElement>(null);
-  const rz = kampf.altersklasse ? rundenzeitFuer(kampf.altersklasse) : null;
+  const rz = kampf.altersklasse ? rundenzeitFuer(kampf.altersklasse, erwachsenenRundeMin) : null;
 
   useEffect(() => anlegenRef.current?.focus(), []);
 

@@ -24,7 +24,7 @@ Webseite für Veranstalter von Amateur-Boxveranstaltungen: Meldungen einlesen, E
 ## Funktionsstand
 Fertig und getestet: Regeln und Generator, Kampfkarte mit Zeitplan/Pausen/Ausfällen/Verschieben, Filter, Import (Excel, CSV, Text, Screenshots; Prüfansicht; Verein aus Signatur), PDF-Export (mit Alters- und Gewichtsklasse je Boxer), Konten mit Registrierung/Passwort vergessen, automatische Speicherung je Veranstalter, Datensicherung mit Wiederherstellung, Admin-Übersicht mit Ansehen (nur lesen) und Löschen.
 
-Einstellungen in der Kampfkarte: max. Gewichtsdifferenz in % (10), max. Siegdifferenz bei Freigabe (5), "Andere Alters- oder Gewichtsklasse nur mit Freigabe" (an; die WB erlauben das laut §11.9 und §19.6 ohne Zustimmung, der Auftraggeber will es strenger).
+Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 Minuten, Standard 3 × 3; wirkt auf Zeitplan, Anzeige und PDF), max. Gewichtsdifferenz in % (10), max. Siegdifferenz bei Freigabe (5), "Andere Alters- oder Gewichtsklasse nur mit Freigabe" (an; die WB erlauben das laut §11.9 und §19.6 ohne Zustimmung, der Auftraggeber will es strenger).
 
 ## Supabase
 - Projekt `matchmaker`, Ref `ymqzqfrskvmpyamvmnbe`, Region eu-central-1 (Frankfurt), kostenloser Plan, Organisation "ahmet@ozcorapci.de's Org".

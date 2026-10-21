@@ -24,7 +24,7 @@ const start: Zustand = {
   kampfkarte: [{ aId: 'A', bId: 'B', freigabe: false }],
   ausfaelle: {},
   regeln: { maxGewichtProzent: 10, maxSiegdifferenzFreigabe: 5, klassenwechselFreigabe: true },
-  zeit: { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120 },
+  zeit: { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120, erwachsenenRundeMin: 3 },
   extraPausen: [],
   autoPausen: {},
 };

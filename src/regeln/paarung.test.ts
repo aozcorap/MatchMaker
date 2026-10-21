@@ -74,6 +74,10 @@ describe('Rundenzeit (§22)', () => {
     expect(rundenzeitFuer('U17').minuten).toBe(2);
     expect(rundenzeitFuer('U19').minuten).toBe(3);
     expect(rundenzeitFuer('Erwachsene').minuten).toBe(3);
+    expect(rundenzeitFuer('Erwachsene', 2).minuten).toBe(2);
+    expect(rundenzeitFuer('U19', 2).minuten).toBe(2);
+    expect(rundenzeitFuer('U17', 2).minuten).toBe(2);
+    expect(rundenzeitFuer('U13', 2).minuten).toBe(1);
   });
 });
 
