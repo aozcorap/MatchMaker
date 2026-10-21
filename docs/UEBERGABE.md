@@ -29,8 +29,8 @@ Einstellungen in der Kampfkarte: max. Gewichtsdifferenz in % (10), max. Siegdiff
 ## Supabase
 - Projekt `matchmaker`, Ref `ymqzqfrskvmpyamvmnbe`, Region eu-central-1 (Frankfurt), kostenloser Plan, Organisation "ahmet@ozcorapci.de's Org".
 - URL und veröffentlichbarer Schlüssel stehen in `src/konto/client.ts` (für den Browser gedacht). Der Schutz der Daten liegt in den Zugriffsregeln (RLS).
-- Datenbank: `supabase/migrations/001..003` (bereits angewendet). Tabellen `admins`, `veranstaltungen` (eine je Konto, Zustand als JSON, Versionszähler), `sicherungen`.
-- Admin: Tabelle `admins`, Eintrag `ahmet@ozcorapci.de`. Admin sieht alle Veranstaltungen nur lesend und darf sie löschen.
+- Datenbank: `supabase/migrations/001..003` (angewendet), `004` (Admin leert Veranstaltung: noch im Dashboard/SQL-Editor auszuführen). Tabellen `admins`, `veranstaltungen` (eine je Konto, Zustand als JSON, Versionszähler), `sicherungen`.
+- Admin: Tabelle `admins`, Eintrag `ahmet@ozcorapci.de`. Admin sieht alle Veranstaltungen nur lesend und kann sie leeren (Boxer, Kämpfe, Sicherungen weg; Konto und E-Mail bleiben).
 - Im Dashboard gesetzt: Authentication → URL Configuration, Site URL und Redirect URL = `https://aozcorap.github.io/MatchMaker/`.
 - Hinweis zu den Werkzeugen: Über den Supabase-Zugang der Sitzung hängen Anweisungen mit `DELETE FROM` (vermutlich eine nicht beantwortete Bestätigung). Das nicht umgehen, sondern Löschen über die Oberfläche der App oder das Dashboard machen.
 
@@ -42,3 +42,4 @@ Einstellungen in der Kampfkarte: max. Gewichtsdifferenz in % (10), max. Siegdiff
 5. Offen aus den Anforderungen: Heimverein/blaue Ecke (WB §4.6), Bestätigung der Auslegungen (Gewichtstoleranz, Rundenzeit bei gemischten Klassen).
 6. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; Sicherungen werden nie automatisch bereinigt; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
 7. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
+8. Bezahlmethode: noch keine Überlegungen (Preismodell, Zahlungsanbieter, Rechnungen, Steuern). Muss später eingebaut werden, ist aktuell nicht dringend.
