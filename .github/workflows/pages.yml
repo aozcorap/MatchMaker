@@ -2,7 +2,7 @@ name: Veröffentlichen auf GitHub Pages
 
 on:
   push:
-    branches: [main, claude/zen-cannon-ty3o2q]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
