@@ -1,7 +1,7 @@
-# Anforderungen Matchmaking-Webseite (Entwurf zur Bestätigung)
+# Anforderungen Matchmaking-Webseite
 
 Grundlage: DBV-Wettkampfbestimmungen (WB), gültig ab 01.01.2025 (Volltext: [docs/Wettkampfbestimmungen-DBV-2025.pdf](docs/Wettkampfbestimmungen-DBV-2025.pdf)). Paragraphen in Klammern.
-Status: Anforderungen, noch keine technische Umsetzung.
+Status: umgesetzt und live; offene Punkte stehen in Abschnitt 7 und in docs/UEBERGABE.md.
 
 ## 1. Zweck und Umfang
 Veranstalter von Amateurboxkämpfen erstellen **Einzelpaarungen** (keine Turniere, kein Breitensport).
@@ -15,7 +15,7 @@ Die App erzeugt einen **Entwurf**. Der Veranstalter hat das letzte Wort. Daten d
 3. **Sortierung der Kampfkarte.** Jüngste Altersklasse zuerst, darin leichteste Gewichtsklasse zuerst.
 4. **Warteliste.** Boxer ohne Gegner kommen mit Grund auf die Warteliste und können später manuell eingefügt werden.
 5. **Manuelle Änderung.** Der Veranstalter darf den Entwurf frei ändern. Die App warnt bei Regelverstoß, sperrt aber nicht.
-6. **Ausgabe.** Fertige Kampfkarte. Format wird später festgelegt.
+6. **Ausgabe.** Fertige Kampfkarte. Als PDF im Querformat (eine Zeile je Kampf, ohne Rundenzeiten).
 
 ## 3. Eingabedaten pro Boxer
 Name, Verein, Geburtsdatum, Geschlecht, Gewicht (Meldegewicht), Kämpfe, Siege, Niederlagen.
@@ -62,7 +62,7 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 
 ## 7. Offene Punkte
 - Bestätigung der Auslegung in 4.3 (Gewichtstoleranz). Die Rundenzeit (4.4) ist gegen die WB geprüft und bestätigt.
-- Spätere Themen: Projektname, Ausgabeformat, Nutzerrollen.
+- Spätere Themen: Projektname, Nutzerrollen, Bezahlmethode.
 
 ## Anhang: Gewichtsklassen (§19), "über" bis "bis einschließlich" in kg
 **Männer und männl. Jugend (U19):** 47–50, 50–55, 55–60, 60–65, 65–70, 70–75, 75–80, 80–85, 85–90, über 90 (offen).
@@ -75,7 +75,7 @@ Unter der untersten Klasse: keine Klasse, Warteliste.
 - Anmeldung und Registrierung mit E-Mail und Passwort (mindestens 8 Zeichen), „Passwort vergessen“ per E-Mail.
 - Jeder Veranstalter hat genau eine Veranstaltung. Alles (Boxer, Kampfkarte, Ausfälle, Einstellungen) wird nach jeder Änderung automatisch in der Datenbank gespeichert und beim nächsten Login geladen.
 - Die Trennung der Konten erzwingt die Datenbank (Row Level Security), nicht nur die Oberfläche.
-- Admin (ahmet@ozcorapci.de, Tabelle `admins`): sieht alle Veranstaltungen, nur lesend.
+- Admin (ahmet@ozcorapci.de, Tabelle `admins`): sieht alle Veranstaltungen nur lesend und kann sie leeren (Boxer, Kämpfe und Sicherungen weg; Konto und E-Mail bleiben).
 - Zwei Fenster/Geräte: Wurde woanders neuer gespeichert, erscheint eine Warnung mit der Wahl „Neu laden“ oder „Meine Version speichern“.
 - Beim ersten Login werden Daten, die zuvor nur im Browser lagen, auf Nachfrage ins Konto übernommen.
 - Die Demo-Version bleibt ohne Konto.
