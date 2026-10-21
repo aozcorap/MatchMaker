@@ -1,21 +1,24 @@
 # Bezahlkonzept (Entwurf, noch nicht gebaut)
 
+Entscheidungen vom 21.10.2026: Bezahlung direkt mit Stripe (kein Zwischenschritt), Paarungen erst nach Zahlung, der Betreiber ist Unternehmer, keine Erstattung bei Absage.
+
 Stand: 21.10.2026. Das ist ein Konzept, keine Rechts- oder Steuerberatung. Preise und Gebühren von Anbietern ändern sich und müssen vor dem Start noch einmal geprüft werden.
 
 ## Ziel
 - Der Dienst kostet **10 Euro pro Veranstaltung, inklusive Umsatzsteuer**.
-- Bezahlt wird mit Karte oder SEPA-Lastschrift über **Stripe** (Checkout, die Zahlung läuft auf einer Seite von Stripe, auf unserer Seite liegen nie Kartendaten).
+- Bezahlt wird mit Karte oder SEPA-Lastschrift über **Stripe** (Checkout: Die Zahlung läuft auf einer Seite von Stripe, auf unserer Seite liegen nie Kartendaten). Es gibt keinen manuellen Zwischenschritt.
 - Stripe erstellt die Rechnung automatisch.
+- **Keine Erstattung**, wenn die Veranstaltung abgesagt wird. Das muss in den Geschäftsbedingungen und vor der Zahlung auf der Seite stehen (rechtlich prüfen lassen).
 
-## Vorgehen in zwei Schritten
-1. **Manuell (Prototyp):** Der Veranstalter überweist, du setzt in der Admin-Liste den Haken "bezahlt". Dafür braucht es nur ein Feld in der Datenbank und einen Knopf. Damit prüfst du, ob jemand zahlt, ohne Stripe einzurichten.
-2. **Automatisch mit Stripe:** Knopf "Freischalten" führt zur Zahlungsseite. Nach der Zahlung meldet Stripe sie an eine kleine Server-Funktion, die die Veranstaltung freischaltet.
-
-## Was ist kostenlos, was kostet? (offene Entscheidung)
-Vorschlag, noch nicht bestätigt: Meldungen erfassen, Paarungen erzeugen und die Kampfkarte bearbeiten sind kostenlos zum Ausprobieren. Der **PDF-Export** gibt es erst nach der Zahlung, weil er das fertige Ergebnis ist. Leert der Admin eine Veranstaltung, gilt die nächste wieder als unbezahlt.
+## Was ist kostenlos, was kostet?
+- **Kostenlos:** Konto anlegen, Boxer erfassen und importieren, Boxerliste ansehen.
+- **Erst nach Zahlung:** Paarungen erzeugen, Kämpfe in die Kampfkarte aufnehmen, Kampfkarte bearbeiten und als PDF ausgeben. Vorher zeigt die Kampfkarte nur den Hinweis "Für diese Veranstaltung freischalten (10 €)" mit dem Knopf zur Zahlung.
+- Leert der Admin eine Veranstaltung (nach dem Termin), gilt die nächste wieder als unbezahlt.
+- Annahme: Die Boxer-Erfassung bleibt frei, weil man sonst nichts sieht. Wenn auch die schon gesperrt sein soll, bitte sagen.
 
 ## Technik (geplant)
 - Datenbank: Je Veranstaltung ein Status "bezahlt" mit Zeitpunkt und der Zahlungsnummer von Stripe.
+- Die Sperre muss auch in der Datenbank gelten (nicht nur im Browser), sonst kann ein technisch versierter Nutzer sie umgehen. Das ist der aufwendigste Teil.
 - Zwei kleine Funktionen in Supabase: eine startet die Zahlung (Stripe Checkout), eine nimmt die Meldung von Stripe an (Webhook) und setzt den Status.
 - Der geheime Schlüssel von Stripe liegt als Secret in Supabase, nie im Programm. Die Funktionen müssen im Supabase-Dashboard eingefügt werden (mein Zugang bricht bei Server-Code meist ab).
 - Die Meldung von Stripe wird mit der Signatur geprüft, sonst könnte jeder eine Zahlung vortäuschen.
@@ -33,7 +36,7 @@ Vorschlag, noch nicht bestätigt: Meldungen erfassen, Paarungen erzeugen und die
 
 Die Rechnungsgebühr für automatisch erstellte Rechnungen nach Checkout nennt die Preisseite mit 0,4 % und einer Obergrenze von 2,00 $; bei Stripe Invoicing "Starter" 0,4 %, "Plus" 0,5 %. Nicht belegt: ob die Stripe-Gebühren selbst Umsatzsteuer enthalten. Das zeigt die erste Abrechnung.
 
-**Umsatzsteuer (Rechenbeispiel mit 19 %, nur wenn du umsatzsteuerpflichtig bist):** In 10 € brutto stecken 1,60 € Umsatzsteuer, die du ans Finanzamt abführst.
+**Umsatzsteuer (Rechenbeispiel mit 19 %, solange nicht bestätigt ist, dass du nicht Kleinunternehmer nach §19 UStG bist):** In 10 € brutto stecken 1,60 € Umsatzsteuer, die du ans Finanzamt abführst.
 
 **Was bei einer 10-€-Zahlung übrig bleibt, vor Einkommensteuer:**
 - Mit Umsatzsteuer: ca. **7,96 €** (Karte) oder **8,01 €** (SEPA).
@@ -50,12 +53,11 @@ Die Rechnungsgebühr für automatisch erstellte Rechnungen nach Checkout nennt d
 - Geschäftsbedingungen und Hinweis zum Widerruf bei einer digitalen Leistung, soweit Verbraucher zahlen. Auch das gehört rechtlich geprüft.
 
 ## Offene Entscheidungen
-1. Bist du Unternehmen oder Kleinunternehmer, und enthalten die 10 Euro Umsatzsteuer? (Du hast gesagt: inklusive. Der Steuersatz fehlt noch.)
-2. Was genau ist kostenlos, was kostet? (Vorschlag oben: PDF-Export gegen Zahlung.)
-3. Gibt es Rückerstattung, wenn eine Veranstaltung ausfällt?
-4. Reicht für den Anfang der manuelle Schritt?
+1. Umsatzsteuerpflichtig (19 %) oder Kleinunternehmer nach §19 UStG? Du bist Unternehmer; das ist noch nicht dasselbe. Die Rechnung oben rechnet beides.
+2. Bleibt die Boxer-Erfassung wirklich kostenlos (Annahme oben)?
+3. Zahlen vor allem Vereine (Rechnung an eine Organisation) oder Privatpersonen? Das bestimmt, ob ein Widerrufsrecht gilt und was auf die Rechnung muss.
 
 ## Nächste Schritte
-1. Entscheidungen oben treffen.
-2. Schritt 1 bauen: Feld "bezahlt" je Veranstaltung, Haken in der Admin-Liste, PDF-Export gesperrt ohne Haken.
-3. Stripe-Konto anlegen (du), Schlüssel als Secret eintragen (du), Funktionen und Knopf bauen (ich).
+1. Entscheidungen oben treffen, Impressum und Datenschutzerklärung schreiben (deine Betreiberangaben), Geschäftsbedingungen mit dem Ausschluss der Erstattung prüfen lassen.
+2. Stripe-Konto anlegen (du) und den geheimen Schlüssel als Secret in Supabase eintragen (du, nicht im Chat posten).
+3. Bauen (ich): Statusfeld, Zahlungsknopf, Funktion für die Meldung von Stripe, Sperre von Paarungen und PDF in Programm und Datenbank. Die Funktionen fügst du im Supabase-Dashboard ein.
