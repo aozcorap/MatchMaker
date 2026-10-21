@@ -546,3 +546,7 @@ th {
   justify-content: flex-end;
   margin-top: 16px;
 }
+
+.vorschlag-grund.freigabe {
+  color: var(--warn);
+}

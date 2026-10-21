@@ -237,9 +237,14 @@ export function KampfkarteTab(props: {
           <h2>Vorschläge für Wartende</h2>
           <ul className="vorschlaege">
             {[
-              ...vorschlaege.paarungen.map((p) => ({ p, text: 'entspricht den Regeln', status: 'ok' })),
-              ...vorschlaege.freigabeVorschlaege.map((p) => ({ p, text: 'nur mit Freigabe', status: 'freigabe' })),
-            ].map(({ p, text, status }) => (
+              ...vorschlaege.paarungen.map((p) => ({ p, text: 'entspricht den Regeln', status: 'ok', hinweise: p.hinweise })),
+              ...vorschlaege.freigabeVorschlaege.map((p) => ({
+                p,
+                text: 'nur mit Freigabe',
+                status: 'freigabe',
+                hinweise: p.pruefung.hinweise,
+              })),
+            ].map(({ p, text, status, hinweise }) => (
               <li key={`${p.a.id}-${p.b.id}`} className={`vorschlag ${status}`}>
                 <div className="kampfkopf">
                   <span className="nr">{text}</span>
@@ -255,6 +260,11 @@ export function KampfkarteTab(props: {
                   <span className="gegen">gegen</span>
                   <BoxerZelle b={p.b} datum={datum} ecke="blau" />
                 </div>
+                {hinweise.map((h) => (
+                  <p key={h} className={`hinweis vorschlag-grund ${status}`}>
+                    {h}
+                  </p>
+                ))}
               </li>
             ))}
           </ul>
