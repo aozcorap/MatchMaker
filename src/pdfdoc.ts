@@ -3,13 +3,15 @@ import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
 export interface PdfBoxer {
   name: string;
   verein: string;
-  /** z. B. "U13 · 46–48 kg" */
-  klassen: string;
+  /** Meldegewicht in kg */
+  gewicht: number;
 }
 
 export interface PdfKampf {
   nr: number;
   start: string;
+  /** Alters- und Leistungsklasse, z. B. "U17 C" oder "Männer B" */
+  klasse: string;
   rot: PdfBoxer;
   blau: PdfBoxer;
   /** Pausen unmittelbar vor diesem Kampf */
@@ -35,10 +37,11 @@ const BLAU_FLAECHE = '#e8eef9';
 const SEITE_BREIT = 841.89 - 2 * 28;
 const NR = 22;
 const UHR = 36;
-const VEREIN = 108;
-const KLASSE = 96;
-const NAME = (SEITE_BREIT - NR - UHR - 2 * (VEREIN + KLASSE)) / 2;
-const BREITEN = [NR, UHR, '*', VEREIN, KLASSE, '*', VEREIN, KLASSE];
+const KLASSE = 84;
+const VEREIN = 100;
+const KG = 30;
+const NAME = (SEITE_BREIT - NR - UHR - KLASSE - 2 * (VEREIN + KG)) / 2;
+const BREITEN = [NR, UHR, KLASSE, '*', VEREIN, KG, '*', VEREIN, KG];
 
 const RASTER = {
   hLineWidth: (i: number) => (i === 1 ? 0.5 : 0),
@@ -94,11 +97,13 @@ function pauseBlock(p: PdfKampf['pausenDavor'][number]): Content {
   };
 }
 
+const zahl = (n: number) => String(n).replace('.', ',');
+
 function kampfZeile(k: PdfKampf): Content {
   const ecke = (b: PdfBoxer, flaeche: string): Content[] => [
     feld(b.name, NAME, 9, { bold: true, fillColor: flaeche }),
     feld(b.verein || '–', VEREIN, 8, { color: '#555555', fillColor: flaeche }),
-    feld(b.klassen, KLASSE, 8, { fillColor: flaeche }),
+    zelle(zahl(b.gewicht), { fillColor: flaeche, alignment: 'right' }),
   ];
   return {
     table: {
@@ -108,6 +113,7 @@ function kampfZeile(k: PdfKampf): Content {
         [
           zelle(String(k.nr), { bold: true, alignment: 'center' }),
           zelle(k.start, { bold: true }),
+          feld(k.klasse, KLASSE, 8.5),
           ...ecke(k.rot, ROT_FLAECHE),
           ...ecke(k.blau, BLAU_FLAECHE),
         ],
@@ -117,30 +123,35 @@ function kampfZeile(k: PdfKampf): Content {
   };
 }
 
+/** Zweizeilige Kopfzeile: oben Nr., Uhr, Klasse und die farbigen Eckenfelder, darunter Name, Verein, kg. */
 function kopfZeile(): Content {
-  const kopf = (text: string, extra: Record<string, unknown> = {}) =>
+  const klein = (text: string, extra: Record<string, unknown> = {}) =>
     zelle(text, { bold: true, fontSize: 7.5, fillColor: GRAU, ...extra });
+  const ecke = (text: string, farbe: string) =>
+    zelle(text, { bold: true, color: '#ffffff', fillColor: farbe, alignment: 'center', fontSize: 9, colSpan: 3 });
   return {
     table: {
       widths: BREITEN,
       body: [
         [
-          kopf('Nr.', { alignment: 'center' }),
-          kopf('Uhr'),
-          kopf('ROTE ECKE', { color: ROT, colSpan: 3 }),
+          klein('Nr.', { alignment: 'center', rowSpan: 2 }),
+          klein('Uhr', { rowSpan: 2 }),
+          klein('Klasse', { rowSpan: 2 }),
+          ecke('ROTE ECKE', ROT),
           {},
           {},
-          kopf('BLAUE ECKE', { color: BLAU, colSpan: 3 }),
+          ecke('BLAUE ECKE', BLAU),
           {},
           {},
         ],
+        [{}, {}, {}, klein('Name'), klein('Verein'), klein('kg', { alignment: 'right' }), klein('Name'), klein('Verein'), klein('kg', { alignment: 'right' })],
       ],
     },
     layout: { ...RASTER, hLineWidth: () => 0.5 },
   };
 }
 
-/** Kampfkarte als Dokumentbeschreibung: Querformat, eine Zeile je Kampf (ohne Zeilenumbruch), Kopfzeile auf jeder Seite. Jeder Kampf bleibt mit den Pausen davor auf einer Seite. */
+/** Kampfkarte als Dokumentbeschreibung: Querformat, eine Zeile je Kampf (ohne Zeilenumbruch), Kopfzeile mit farbigen Ecken auf jeder Seite. Jeder Kampf bleibt mit den Pausen davor auf einer Seite. */
 export function baueKampfkartePdf(karte: PdfKarte): TDocumentDefinitions {
   const inhalt: Content[] = karte.kaempfe.map((k) => ({
     unbreakable: true,
@@ -150,7 +161,7 @@ export function baueKampfkartePdf(karte: PdfKarte): TDocumentDefinitions {
   return {
     pageSize: 'A4',
     pageOrientation: 'landscape',
-    pageMargins: [28, 54, 28, 30],
+    pageMargins: [28, 68, 28, 30],
     defaultStyle: { font: 'Roboto', fontSize: 9 },
     info: { title: `${karte.titel} ${karte.datum}` },
     header: {

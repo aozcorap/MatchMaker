@@ -4,8 +4,9 @@ import { baueKampfkartePdf, einzeilig, type PdfKampf, type PdfKarte } from './pd
 const kampf = (nr: number, pause = false): PdfKampf => ({
   nr,
   start: '14:00',
-  rot: { name: 'A', verein: 'V1', klassen: 'Erw. · 71–75 kg' },
-  blau: { name: 'B', verein: 'V2', klassen: 'Erw. · 71–75 kg' },
+  klasse: 'Männer B',
+  rot: { name: 'A', verein: 'V1', gewicht: 72.5 },
+  blau: { name: 'B', verein: 'V2', gewicht: 73 },
   pausenDavor: pause ? [{ text: 'Große Pause', von: '15:30', bis: '16:00', minuten: 30 }] : [],
 });
 
