@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import { richtePausenAus } from './ablauf';
 import { BoxerTab } from './BoxerTab';
 import { KEIN_FILTER, type Filter } from './filter';
 import { ImportTab } from './ImportTab';
@@ -25,7 +26,12 @@ interface Props {
 }
 
 export function App({ start, userId = null, startVersion = 1, nurLesen = false, testdaten = false, kontoLeiste }: Props) {
-  const [zustand, setZustand] = useState<Zustand>(start);
+  const [zustand, setRohZustand] = useState<Zustand>(start);
+  // Jede Änderung hält die eigenen Pausen an ihrem Kampf fest (siehe richtePausenAus)
+  const setZustand: Dispatch<SetStateAction<Zustand>> = useCallback(
+    (neu) => setRohZustand((alt) => richtePausenAus(typeof neu === 'function' ? neu(alt) : neu)),
+    [],
+  );
   const cloudNutzer = nurLesen ? null : userId;
   const { status, erzwinge, konfliktGrund } = useCloud(zustand, cloudNutzer, startVersion);
   const [tab, setTab] = useState<Tab>('boxer');
