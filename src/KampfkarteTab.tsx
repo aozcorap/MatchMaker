@@ -8,7 +8,7 @@ import { filterOptionen, istAktiv, passt, passtEiner, type Filter } from './filt
 import { PaarungsDialog } from './PaarungsDialog';
 import { erzeugePaarungen } from './regeln/generator';
 import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
-import { baueKampf, leichterZuerst, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
+import { baueKampf, leichterZuerst, type Kampf, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
 import { rundenzeitFuer } from './regeln/klassen';
 import { ladeKampfkartePdf, ladeVorab } from './pdf';
 import { altersdifferenzMonate, paarungsGuete } from './regeln/paarung';
@@ -215,9 +215,15 @@ export function KampfkarteTab(props: {
   useEffect(() => {
     if (kampfkarte.length > 0) ladeVorab();
   }, [kampfkarte.length]);
-  const pdfBoxer = (b: Boxer) => {
-    const info = boxerInfo(b, datum);
-    return { name: b.name, verein: b.verein, klassen: `${altersklasseText(info.altersklasse)} · ${gewichtsklasseText(info.gewichtsklasse)}` };
+  const pdfBoxer = (b: Boxer) => ({ name: b.name, verein: b.verein, gewicht: b.gewicht });
+  /** Alters- und Leistungsklasse des Kampfes, z. B. "U17 C", "Männer B" oder bei Nachbarklassen "Männer B/A". */
+  const pdfKlasse = (kampf: Kampf) => {
+    const rot = boxerInfo(kampf.rot, datum);
+    const blau = boxerInfo(kampf.blau, datum);
+    const ak = kampf.altersklasse ?? rot.altersklasse;
+    const alter = ak === 'Erwachsene' ? (kampf.rot.geschlecht === 'W' ? 'Frauen' : 'Männer') : (ak ?? '');
+    const lk = [rot.leistungsklasse, blau.leistungsklasse].filter((l, i, a): l is NonNullable<typeof l> => l !== null && a.indexOf(l) === i).join('/');
+    return [alter, lk].filter(Boolean).join(' ');
   };
   async function erstellePdf() {
     const offen = kaempfe.filter((k) => k.kampf.pruefung.status === 'freigabe' && !k.geplant.freigabe).length;
@@ -245,6 +251,7 @@ export function KampfkarteTab(props: {
             return {
               nr: i + 1,
               start: uhrzeit(slot.start),
+              klasse: pdfKlasse(kampf),
               rot: pdfBoxer(kampf.rot),
               blau: pdfBoxer(kampf.blau),
               pausenDavor: [
