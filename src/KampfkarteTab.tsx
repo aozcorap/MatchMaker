@@ -6,6 +6,7 @@ import { altersdifferenzMonate } from './regeln/paarung';
 import { rundenzeitFuer } from './regeln/klassen';
 import type { Boxer } from './regeln/typen';
 import type { GeplanterKampf, Zustand } from './speicher';
+import { bestaetige } from './umgebung';
 
 function minutenText(m: number): string {
   return String(m).replace('.', ',');
@@ -60,7 +61,7 @@ export function KampfkarteTab(props: {
   }
 
   function erzeugeAlle() {
-    if (kampfkarte.length > 0 && !window.confirm('Die bisherige Kampfkarte wird ersetzt. Fortfahren?')) {
+    if (kampfkarte.length > 0 && !bestaetige('Die bisherige Kampfkarte wird ersetzt. Fortfahren?')) {
       return;
     }
     const ergebnis = erzeugePaarungen(boxer, datum);
@@ -113,7 +114,7 @@ export function KampfkarteTab(props: {
         {kampfkarte.length > 0 && (
           <button
             onClick={() => {
-              if (window.confirm('Alle Kämpfe verwerfen? Die Boxer bleiben erhalten.')) {
+              if (bestaetige('Alle Kämpfe verwerfen? Die Boxer bleiben erhalten.')) {
                 setZustand((z) => ({ ...z, kampfkarte: [] }));
               }
             }}

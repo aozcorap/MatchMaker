@@ -1,4 +1,6 @@
 import type { Boxer } from './regeln/typen';
+import { simulation } from './testdaten';
+import { DEMO } from './umgebung';
 
 export interface GeplanterKampf {
   aId: string;
@@ -43,6 +45,7 @@ export function liesZustand(roh: unknown): Zustand | null {
 }
 
 export function laden(): Zustand {
+  if (DEMO) return simulation(true);
   try {
     const text = localStorage.getItem(SCHLUESSEL);
     if (text) return liesZustand(JSON.parse(text)) ?? leererZustand();
@@ -53,6 +56,7 @@ export function laden(): Zustand {
 }
 
 export function speichern(z: Zustand): void {
+  if (DEMO) return;
   try {
     localStorage.setItem(SCHLUESSEL, JSON.stringify(z));
   } catch {

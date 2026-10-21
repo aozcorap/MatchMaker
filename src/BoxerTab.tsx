@@ -2,6 +2,7 @@ import { useState, type Dispatch, type SetStateAction } from 'react';
 import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
 import type { Boxer, Geschlecht } from './regeln/typen';
 import type { Zustand } from './speicher';
+import { bestaetige } from './umgebung';
 
 interface Eingabe {
   name: string;
@@ -78,6 +79,7 @@ export function BoxerTab(props: {
   const [eingabe, setEingabe] = useState<Eingabe>(LEER);
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null);
   const [fehler, setFehler] = useState('');
+  const [filterVerein, setFilterVerein] = useState('');
 
   const feld = <K extends keyof Eingabe>(k: K, v: Eingabe[K]) => setEingabe({ ...eingabe, [k]: v });
 
@@ -101,7 +103,7 @@ export function BoxerTab(props: {
   }
 
   function loesche(b: Boxer) {
-    if (!window.confirm(`${b.name} löschen? Geplante Kämpfe mit diesem Boxer entfallen.`)) return;
+    if (!bestaetige(`${b.name} löschen? Geplante Kämpfe mit diesem Boxer entfallen.`)) return;
     setZustand((z) => ({
       ...z,
       boxer: z.boxer.filter((x) => x.id !== b.id),
@@ -113,7 +115,10 @@ export function BoxerTab(props: {
     }
   }
 
-  const sortiert = [...zustand.boxer].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  const vereine = [...new Set(zustand.boxer.map((b) => b.verein))].sort((a, b) => a.localeCompare(b, 'de'));
+  const sortiert = zustand.boxer
+    .filter((b) => !filterVerein || b.verein === filterVerein)
+    .sort((a, b) => a.verein.localeCompare(b.verein, 'de') || a.name.localeCompare(b.name, 'de'));
 
   return (
     <section>
@@ -204,6 +209,19 @@ export function BoxerTab(props: {
       </form>
 
       <h2>Gemeldete Boxer</h2>
+      {vereine.length > 1 && (
+        <label className="filter">
+          Verein
+          <select id="filter-verein" value={filterVerein} onChange={(e) => setFilterVerein(e.target.value)}>
+            <option value="">Alle ({zustand.boxer.length})</option>
+            {vereine.map((v) => (
+              <option key={v} value={v}>
+                {v} ({zustand.boxer.filter((b) => b.verein === v).length})
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {sortiert.length === 0 ? (
         <p className="leer">Noch keine Boxer erfasst.</p>
       ) : (
