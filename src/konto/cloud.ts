@@ -70,3 +70,40 @@ export async function ladeAlle(): Promise<Uebersicht[]> {
   }
   return liste;
 }
+
+export interface Sicherung {
+  id: number;
+  erstellt: string;
+  manuell: boolean;
+  boxer: number;
+  kaempfe: number;
+}
+
+export async function ladeSicherungen(): Promise<Sicherung[]> {
+  const { data, error } = await supabase
+    .from('sicherungen')
+    .select('id, erstellt, manuell, boxer, kaempfe')
+    .order('erstellt', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []) as Sicherung[];
+}
+
+export async function ladeSicherung(id: number): Promise<Zustand> {
+  const { data, error } = await supabase.from('sicherungen').select('zustand').eq('id', id).single();
+  if (error) throw error;
+  const zustand = liesZustand(data.zustand);
+  if (!zustand) throw new Error('Sicherung ist beschädigt');
+  return zustand;
+}
+
+export async function legeSicherungAn(userId: string, zustand: Zustand): Promise<void> {
+  const { error } = await supabase.from('sicherungen').insert({
+    user_id: userId,
+    zustand,
+    manuell: true,
+    boxer: zustand.boxer.length,
+    kaempfe: zustand.kampfkarte.length,
+  });
+  if (error) throw error;
+}

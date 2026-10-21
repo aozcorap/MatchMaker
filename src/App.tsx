@@ -3,6 +3,7 @@ import { BoxerTab } from './BoxerTab';
 import { KEIN_FILTER, type Filter } from './filter';
 import { ImportTab } from './ImportTab';
 import { KampfkarteTab } from './KampfkarteTab';
+import { Sicherungen } from './konto/Sicherungen';
 import { useCloud } from './konto/useCloud';
 import { exportiere, liesZustand, speichern, type Zustand } from './speicher';
 import { simulation } from './testdaten';
@@ -29,6 +30,7 @@ export function App({ start, userId = null, startVersion = 1, nurLesen = false, 
   const { status, erzwinge } = useCloud(zustand, cloudNutzer, startVersion);
   const [tab, setTab] = useState<Tab>('boxer');
   const [meldung, setMeldung] = useState('');
+  const [sicherungenOffen, setSicherungenOffen] = useState(false);
   const [filter, setFilter] = useState<Filter>(KEIN_FILTER);
   const dateiRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +116,22 @@ export function App({ start, userId = null, startVersion = 1, nurLesen = false, 
         </div>
       </header>
       </fieldset>
+      {userId && !nurLesen && (
+        <div className="aktionen">
+          <button onClick={() => setSicherungenOffen((o) => !o)}>Sicherungen</button>
+        </div>
+      )}
+      {sicherungenOffen && userId && !nurLesen && (
+        <Sicherungen
+          userId={userId}
+          aktuell={zustand}
+          stelleHer={(z) => {
+            setZustand(z);
+            setFilter(KEIN_FILTER);
+          }}
+          schliessen={() => setSicherungenOffen(false)}
+        />
+      )}
       {meldung && (
         <p className="meldung" role="status">
           {meldung}

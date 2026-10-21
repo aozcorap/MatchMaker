@@ -79,3 +79,4 @@ Unter der untersten Klasse: keine Klasse, Warteliste.
 - Zwei Fenster/Geräte: Wurde woanders neuer gespeichert, erscheint eine Warnung mit der Wahl „Neu laden“ oder „Meine Version speichern“.
 - Beim ersten Login werden Daten, die zuvor nur im Browser lagen, auf Nachfrage ins Konto übernommen.
 - Die Demo-Version bleibt ohne Konto.
+- **Datensicherung:** Vor jeder Änderung legt die Datenbank automatisch den alten Stand ab (höchstens alle 10 Minuten). Zusätzlich „Jetzt sichern“ von Hand. Unter „Sicherungen“ stehen die letzten 50 Stände zur Wiederherstellung; vorher wird der jetzige Stand gesichert. Die Datenbank-Backups von Supabase im kostenlosen Plan sind keine verlässliche Sicherung.
