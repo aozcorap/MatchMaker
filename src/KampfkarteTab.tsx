@@ -10,7 +10,7 @@ import { erzeugePaarungen } from './regeln/generator';
 import { altersklasseText, boxerInfo } from './regeln/info';
 import { baueKampf, leichterZuerst, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
 import { rundenzeitFuer } from './regeln/klassen';
-import { ladeKampfkartePdf } from './pdf';
+import { erstelleKampfkartePdf } from './pdf';
 import { altersdifferenzMonate, paarungsGuete } from './regeln/paarung';
 import type { Boxer } from './regeln/typen';
 import { kampfdauer, plane, uhrzeit } from './regeln/zeitplan';
@@ -211,11 +211,16 @@ export function KampfkarteTab(props: {
   }
 
   const [pdfLaeuft, setPdfLaeuft] = useState(false);
+  const [pdfLink, setPdfLink] = useState<string | null>(null);
+  const [pdfFehler, setPdfFehler] = useState(false);
+  // Ein erzeugtes PDF gilt nur für den Stand, aus dem es entstanden ist
+  useEffect(() => setPdfLink(null), [kaempfe, zeiten]);
   async function erstellePdf() {
     setPdfLaeuft(true);
+    setPdfFehler(false);
     try {
       const [j, m, t] = datum.split('-');
-      await ladeKampfkartePdf(
+      const link = await erstelleKampfkartePdf(
         {
           titel: 'Kampfkarte',
           datum: `${t}.${m}.${j}`,
@@ -246,8 +251,13 @@ export function KampfkarteTab(props: {
             };
           }),
         },
-        `Kampfkarte-${datum}.pdf`,
       );
+      setPdfLink((alt) => {
+        if (alt) URL.revokeObjectURL(alt);
+        return link;
+      });
+    } catch {
+      setPdfFehler(true);
     } finally {
       setPdfLaeuft(false);
     }
@@ -434,6 +444,12 @@ export function KampfkarteTab(props: {
             {pdfLaeuft ? 'PDF wird erstellt …' : 'PDF erstellen'}
           </button>
         )}
+        {pdfLink && kampfkarte.length > 0 && (
+          <a className="pdf-link" href={pdfLink} download={`Kampfkarte-${datum}.pdf`} target="_blank" rel="noreferrer">
+            PDF herunterladen / öffnen
+          </a>
+        )}
+        {pdfFehler && <span className="fehler">Das PDF konnte nicht erstellt werden.</span>}
         {kampfkarte.length > 0 && (
           <button
             onClick={() => {
