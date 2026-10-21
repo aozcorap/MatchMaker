@@ -147,9 +147,23 @@ describe('pruefePaarung', () => {
     expect(pruefePaarung(leicht, boxer({ gewicht: 61 }), TAG).status).toBe('ok');
     expect(pruefePaarung(leicht, boxer({ gewicht: 61.1 }), TAG).status).toBe('verboten');
   });
-  it('Offene Klasse: 92 kg gegen 140 kg erlaubt', () => {
-    const r = pruefePaarung(boxer({ gewicht: 92, siege: 30 }), boxer({ gewicht: 140, siege: 30 }), TAG);
-    expect(r.status).toBe('ok');
+  it('Offene Klasse: innerhalb von 10 % erlaubt, darüber verboten', () => {
+    const ok = pruefePaarung(boxer({ gewicht: 92, siege: 30 }), boxer({ gewicht: 101, siege: 30 }), TAG);
+    expect(ok.status).toBe('ok');
+    const zuViel = pruefePaarung(boxer({ gewicht: 92, siege: 30 }), boxer({ gewicht: 140, siege: 30 }), TAG);
+    expect(zuViel.status).toBe('verboten');
+    expect(zuViel.gruende.join(' ')).toContain('über der Grenze von 10 %');
+  });
+  it('Gewichtsgrenze in Prozent des Leichteren, genau 10 % ist noch erlaubt', () => {
+    const a = boxer({ gewicht: 100, siege: 30 });
+    expect(pruefePaarung(a, boxer({ gewicht: 110, siege: 30 }), TAG).status).toBe('ok');
+    expect(pruefePaarung(a, boxer({ gewicht: 110.1, siege: 30 }), TAG).status).toBe('verboten');
+  });
+  it('Grenze ist einstellbar', () => {
+    const a = boxer({ gewicht: 100, siege: 30 });
+    const b = boxer({ gewicht: 108, siege: 30 });
+    const streng = { maxGewichtProzent: 5, maxSiegdifferenzFreigabe: 5 };
+    expect(pruefePaarung(a, b, TAG, streng).status).toBe('verboten');
   });
   it('Schwergewicht (85-90) gegen 140 kg verboten', () => {
     const r = pruefePaarung(boxer({ gewicht: 88 }), boxer({ gewicht: 140 }), TAG);
@@ -160,12 +174,24 @@ describe('pruefePaarung', () => {
     expect(r.status).toBe('verboten');
   });
   it('Nachbar-Leistungsklasse braucht Freigabe, A gegen C verboten', () => {
-    const c = boxer({ siege: 2 });
-    const b = boxer({ siege: 10 });
-    const a = boxer({ siege: 20 });
+    const c = boxer({ siege: 4 }); // C
+    const b = boxer({ siege: 8 }); // B
+    const b12 = boxer({ siege: 12 }); // B
+    const a = boxer({ siege: 16 }); // A
     expect(pruefePaarung(c, b, TAG).status).toBe('freigabe');
-    expect(pruefePaarung(b, a, TAG).status).toBe('freigabe');
-    expect(pruefePaarung(c, a, TAG).status).toBe('verboten');
+    expect(pruefePaarung(b12, a, TAG).status).toBe('freigabe');
+    expect(pruefePaarung(b, a, TAG).status).toBe('verboten'); // 8 Siege Unterschied
+    expect(pruefePaarung(c, a, TAG).status).toBe('verboten'); // C gegen A nie
+  });
+  it('Nachbar-Leistungsklassen: Siegdifferenz über 5 wird nicht vorgeschlagen', () => {
+    // 12 Siege (B) gegen 1 Sieg (C), wie im Praxisbeispiel
+    const r = pruefePaarung(boxer({ siege: 12 }), boxer({ siege: 1 }), TAG);
+    expect(r.status).toBe('verboten');
+    expect(r.gruende.join(' ')).toContain('Siegdifferenz 11');
+    // 12 gegen 7 ist mit Freigabe möglich
+    expect(pruefePaarung(boxer({ siege: 12 }), boxer({ siege: 7 }), TAG).status).toBe('ok'); // beide B
+    expect(pruefePaarung(boxer({ siege: 6 }), boxer({ siege: 11 }), TAG).status).toBe('freigabe'); // Differenz genau 5
+    expect(pruefePaarung(boxer({ siege: 6 }), boxer({ siege: 12 }), TAG).status).toBe('verboten'); // Differenz 6
   });
   it('Elite nur gegen Elite, auch nicht mit Freigabe', () => {
     const elite = boxer({ siege: 30 });

@@ -38,6 +38,11 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 2. kleinste Gewichtsdifferenz
 3. ähnliche **Siegzahl** (z. B. 4 Kämpfe/0 Siege passt zu 0 Kämpfen/0 Siegen)
 
+## 6b. Einstellbare Grenzen (Erfahrungswerte, nicht aus den WB)
+- **Gewicht:** Höchstens 10 % Unterschied, bezogen auf den leichteren Boxer. Das gilt zusätzlich zur Klassenbreite und auch in offenen Klassen.
+- **Siege bei Nachbar-Leistungsklassen:** Höchstens 5 Siege Unterschied, sonst kein Vorschlag (12 gegen 7 ist noch möglich, 12 gegen 1 nicht).
+- Beide Werte stehen oben auf der Kampfkarte und lassen sich ändern.
+
 ## 6a. Ausfälle und Zeitplan
 - **Ausfall:** Jeder Boxer kann als Ausfall gemeldet werden (Verletzung, Krankheit, Sonstiges, mit Notiz), auch wenn er schon einen Kampf hat. Der Kampf entfällt, der Gegner kommt auf die Warteliste. Ausgefallene Boxer werden bei neuen Paarungen übergangen und können wieder aufgenommen werden.
 - **Uhrzeiten:** Die Kampfkarte zeigt je Kampf die voraussichtliche Startzeit. Grundlage ist der eingegebene Beginn (Annahme 14:00 Uhr), die Rundenzeit der Altersklasse mit einer Minute Pause zwischen den Runden und 2 Minuten zwischen den Kämpfen.

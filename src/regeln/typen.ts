@@ -36,3 +36,16 @@ export interface Pruefung {
   hinweise: string[];
   rundenzeit?: Rundenzeit;
 }
+
+/** Einstellbare Grenzen für Paarungen (Erfahrungswerte des Veranstalters, nicht aus den WB). */
+export interface RegelOptionen {
+  /** Höchste Gewichtsdifferenz in Prozent des leichteren Boxers */
+  maxGewichtProzent: number;
+  /** Höchste Siegdifferenz bei Nachbar-Leistungsklassen (Freigabe) */
+  maxSiegdifferenzFreigabe: number;
+}
+
+export const STANDARD_OPTIONEN: RegelOptionen = {
+  maxGewichtProzent: 10,
+  maxSiegdifferenzFreigabe: 5,
+};

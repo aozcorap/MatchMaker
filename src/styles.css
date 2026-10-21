@@ -622,3 +622,22 @@ button.klein {
   font-size: 0.85rem;
   color: var(--leise);
 }
+
+.grenzen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 12px;
+}
+
+.grenzen label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--leise);
+}
+
+.grenzen input {
+  width: 9rem;
+}

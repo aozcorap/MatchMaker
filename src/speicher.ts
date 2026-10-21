@@ -1,4 +1,4 @@
-import type { Boxer } from './regeln/typen';
+import { STANDARD_OPTIONEN, type Boxer, type RegelOptionen } from './regeln/typen';
 import { simulation } from './testdaten';
 import { DEMO } from './umgebung';
 
@@ -27,6 +27,7 @@ export interface Zustand {
   kampfkarte: GeplanterKampf[];
   /** Ausgefallene Boxer nach ID */
   ausfaelle: Record<string, Ausfall>;
+  regeln: RegelOptionen;
 }
 
 export const STANDARD_BEGINN = '14:00';
@@ -38,7 +39,7 @@ export function heute(): string {
 }
 
 export function leererZustand(): Zustand {
-  return { datum: heute(), beginn: STANDARD_BEGINN, boxer: [], kampfkarte: [], ausfaelle: {} };
+  return { datum: heute(), beginn: STANDARD_BEGINN, boxer: [], kampfkarte: [], ausfaelle: {}, regeln: { ...STANDARD_OPTIONEN } };
 }
 
 /** Prüft grob die Form, damit kaputte Dateien die App nicht lahmlegen. */
@@ -64,7 +65,12 @@ export function liesZustand(roh: unknown): Zustand | null {
       ausfaelle[id] = { grund: a.grund, notiz: typeof a.notiz === 'string' ? a.notiz : '', gegnerId: a.gegnerId };
     }
   }
-  return { datum: z.datum, beginn, boxer: z.boxer, kampfkarte, ausfaelle };
+  const gueltig = (n: unknown, standard: number) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? n : standard);
+  const regeln: RegelOptionen = {
+    maxGewichtProzent: gueltig(z.regeln?.maxGewichtProzent, STANDARD_OPTIONEN.maxGewichtProzent),
+    maxSiegdifferenzFreigabe: gueltig(z.regeln?.maxSiegdifferenzFreigabe, STANDARD_OPTIONEN.maxSiegdifferenzFreigabe),
+  };
+  return { datum: z.datum, beginn, boxer: z.boxer, kampfkarte, ausfaelle, regeln };
 }
 
 export function laden(): Zustand {

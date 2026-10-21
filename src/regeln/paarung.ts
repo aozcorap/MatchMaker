@@ -8,7 +8,7 @@ import {
   leistungsklasseVon,
   rundenzeitFuer,
 } from './klassen';
-import type { Boxer, Pruefung, Status } from './typen';
+import { STANDARD_OPTIONEN, type Boxer, type Pruefung, type RegelOptionen, type Status } from './typen';
 
 type Datum = [number, number, number];
 
@@ -39,7 +39,12 @@ export function altersdifferenzMonate(a: string, b: string): number {
 
 const LEISTUNG_REIHE = ['C', 'B', 'A'];
 
-export function pruefePaarung(a: Boxer, b: Boxer, veranstaltung: string): Pruefung {
+export function pruefePaarung(
+  a: Boxer,
+  b: Boxer,
+  veranstaltung: string,
+  optionen: RegelOptionen = STANDARD_OPTIONEN,
+): Pruefung {
   const gruende: string[] = [];
   const hinweise: string[] = [];
   let freigabe = false;
@@ -96,12 +101,25 @@ export function pruefePaarung(a: Boxer, b: Boxer, veranstaltung: string): Pruefu
       }
     }
 
+    // Gewichtsdifferenz in Prozent des leichteren Boxers (Zehntel-kg, damit nichts durch Rundung kippt)
+    const leichtZ = Math.round(Math.min(a.gewicht, b.gewicht) * 10);
+    const diffZ = Math.round(Math.abs(a.gewicht - b.gewicht) * 10);
+    if (diffZ * 100 > leichtZ * optionen.maxGewichtProzent) {
+      const prozent = ((diffZ / leichtZ) * 100).toFixed(1).replace('.', ',');
+      gruende.push(`Gewichtsdifferenz ${prozent} % über der Grenze von ${optionen.maxGewichtProzent} %`);
+    }
+
     const lkA = leistungsklasseVon(a, akA);
     const lkB = leistungsklasseVon(b, akB);
     if (lkA !== lkB) {
       const ia = LEISTUNG_REIHE.indexOf(lkA);
       const ib = LEISTUNG_REIHE.indexOf(lkB);
-      if (ia >= 0 && ib >= 0 && Math.abs(ia - ib) === 1) {
+      const siegDiff = Math.abs(a.siege - b.siege);
+      if (ia >= 0 && ib >= 0 && Math.abs(ia - ib) === 1 && siegDiff > optionen.maxSiegdifferenzFreigabe) {
+        gruende.push(
+          `Siegdifferenz ${siegDiff} über der Grenze von ${optionen.maxSiegdifferenzFreigabe} bei Nachbar-Leistungsklassen ${lkA}/${lkB}`,
+        );
+      } else if (ia >= 0 && ib >= 0 && Math.abs(ia - ib) === 1) {
         freigabe = true;
         hinweise.push(
           `Nachbar-Leistungsklassen ${lkA}/${lkB}: Zustimmung beider Trainer, des Veranstalters und des obersten Ringrichters nötig`,

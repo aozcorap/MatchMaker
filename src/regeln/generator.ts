@@ -1,7 +1,15 @@
 import { juengereAltersklasse, leichterZuerst, vergleicheKampf, vergleicheWartende } from './kampfkarte';
 import { altersklasseVon, gewichtsklasseVon, leistungsklasseVon } from './klassen';
 import { paarungsGuete, pruefePaarung } from './paarung';
-import type { Altersklasse, Boxer, Leistungsklasse, Pruefung, Rundenzeit } from './typen';
+import {
+  STANDARD_OPTIONEN,
+  type Altersklasse,
+  type Boxer,
+  type Leistungsklasse,
+  type Pruefung,
+  type RegelOptionen,
+  type Rundenzeit,
+} from './typen';
 
 export type Guete = [number, number, number];
 
@@ -77,14 +85,18 @@ function waehleExklusiv(kanten: Kante[]): Kante[] {
   return gewaehlt;
 }
 
-export function erzeugePaarungen(boxer: Boxer[], veranstaltung: string): Ergebnis {
+export function erzeugePaarungen(
+  boxer: Boxer[],
+  veranstaltung: string,
+  optionen: RegelOptionen = STANDARD_OPTIONEN,
+): Ergebnis {
   const okKanten: Kante[] = [];
   const freigabeKanten: Kante[] = [];
 
   for (let i = 0; i < boxer.length; i++) {
     for (let j = i + 1; j < boxer.length; j++) {
       const [a, b] = leichterZuerst(boxer[i], boxer[j]);
-      const pruefung = pruefePaarung(a, b, veranstaltung);
+      const pruefung = pruefePaarung(a, b, veranstaltung, optionen);
       if (pruefung.status === 'verboten') continue;
       const kante = { a, b, pruefung, guete: paarungsGuete(a, b, veranstaltung) };
       (pruefung.status === 'ok' ? okKanten : freigabeKanten).push(kante);

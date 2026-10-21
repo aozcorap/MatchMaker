@@ -1,6 +1,6 @@
 import { ALTERSKLASSEN, altersklasseVon, leistungsklasseVon } from './klassen';
 import { paarungsGuete, pruefePaarung } from './paarung';
-import type { Altersklasse, Boxer, Pruefung } from './typen';
+import { STANDARD_OPTIONEN, type Altersklasse, type Boxer, type Pruefung, type RegelOptionen } from './typen';
 
 export interface Kampf {
   /** Erstgenannter Boxer: rote Ecke */
@@ -26,7 +26,12 @@ export function leichterZuerst(a: Boxer, b: Boxer): [Boxer, Boxer] {
 }
 
 /** Baut einen Kampf aus zwei Boxern und prüft ihn gegen die Regeln. x boxt in der roten, y in der blauen Ecke. */
-export function baueKampf(x: Boxer, y: Boxer, veranstaltung: string): Kampf {
+export function baueKampf(
+  x: Boxer,
+  y: Boxer,
+  veranstaltung: string,
+  optionen: RegelOptionen = STANDARD_OPTIONEN,
+): Kampf {
   const [a, b] = leichterZuerst(x, y);
   const akA = altersklasseVon(a.geburtsdatum, veranstaltung);
   const akB = altersklasseVon(b.geburtsdatum, veranstaltung);
@@ -39,7 +44,7 @@ export function baueKampf(x: Boxer, y: Boxer, veranstaltung: string): Kampf {
     b,
     altersklasse: akA && akB ? juengereAltersklasse(akA, akB) : null,
     leistungsklasse: lkA === lkB ? lkA : `${lkA}/${lkB}`,
-    pruefung: pruefePaarung(a, b, veranstaltung),
+    pruefung: pruefePaarung(a, b, veranstaltung, optionen),
   };
 }
 

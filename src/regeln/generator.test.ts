@@ -112,7 +112,7 @@ describe('erzeugePaarungen', () => {
 
   it('Nachbar-Leistungsklassen nur als Vorschlag, nie in der Kampfkarte', () => {
     const r = erzeugePaarungen(
-      [boxer({ id: 'C', siege: 2 }), boxer({ id: 'B', siege: 10 })],
+      [boxer({ id: 'C', siege: 4 }), boxer({ id: 'B', siege: 8 })],
       TAG,
     );
     expect(r.paarungen).toHaveLength(0);

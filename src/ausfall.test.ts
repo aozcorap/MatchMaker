@@ -23,6 +23,7 @@ const start: Zustand = {
   boxer: [boxer('A'), boxer('B'), boxer('C')],
   kampfkarte: [{ aId: 'A', bId: 'B', freigabe: false }],
   ausfaelle: {},
+  regeln: { maxGewichtProzent: 10, maxSiegdifferenzFreigabe: 5 },
 };
 
 describe('Ausfall', () => {

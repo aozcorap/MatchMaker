@@ -35,7 +35,7 @@ export function KampfkarteTab(props: {
   setZustand: Dispatch<SetStateAction<Zustand>>;
 }) {
   const { zustand, setZustand } = props;
-  const { datum, beginn, boxer, kampfkarte, ausfaelle } = zustand;
+  const { datum, beginn, boxer, kampfkarte, ausfaelle, regeln } = zustand;
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [ausfallFuer, setAusfallFuer] = useState<Boxer | null>(null);
 
@@ -46,10 +46,10 @@ export function KampfkarteTab(props: {
       kampfkarte
         .map((geplant) => ({
           geplant,
-          kampf: baueKampf(nachId.get(geplant.aId)!, nachId.get(geplant.bId)!, datum),
+          kampf: baueKampf(nachId.get(geplant.aId)!, nachId.get(geplant.bId)!, datum, regeln),
         }))
         .sort((x, y) => vergleicheKampf(x.kampf, y.kampf)),
-    [kampfkarte, nachId, datum],
+    [kampfkarte, nachId, datum, regeln],
   );
 
   // Voraussichtliche Zeiten; ohne Altersklasse (nur bei manuell angelegten Regelverstößen) gilt 3 × 3 Minuten
@@ -84,7 +84,7 @@ export function KampfkarteTab(props: {
     for (let i = 0; i < wartende.length; i++) {
       for (let j = i + 1; j < wartende.length; j++) {
         const [a, b] = leichterZuerst(wartende[i], wartende[j]);
-        const k = baueKampf(a, b, datum);
+        const k = baueKampf(a, b, datum, regeln);
         if (k.pruefung.status === 'verboten') continue;
         const eintrag = { a, b, hinweise: k.pruefung.hinweise, guete: paarungsGuete(a, b, datum) };
         (k.pruefung.status === 'ok' ? ok : freigabe).push(eintrag);
@@ -93,14 +93,15 @@ export function KampfkarteTab(props: {
     const vergleiche = (x: Vorschlag, y: Vorschlag) =>
       x.guete[1] - y.guete[1] || x.guete[2] - y.guete[2] || x.a.name.localeCompare(y.a.name, 'de');
     return { ok: ok.sort(vergleiche), freigabe: freigabe.sort(vergleiche) };
-  }, [wartende, datum]);
+  }, [wartende, datum, regeln]);
   const mitFreigabe = useMemo(
     () => new Set(moeglich.freigabe.flatMap((v) => [v.a.id, v.b.id])),
     [moeglich],
   );
 
   const gewaehlt = auswahl.filter((id) => !belegt.has(id)).map((id) => nachId.get(id)!).filter(Boolean);
-  const vorschauAuswahl = gewaehlt.length === 2 ? baueKampf(gewaehlt[0], gewaehlt[1], datum) : null;
+  const vorschauAuswahl =
+    gewaehlt.length === 2 ? baueKampf(gewaehlt[0], gewaehlt[1], datum, regeln) : null;
 
   function ergaenze(neu: GeplanterKampf[]) {
     setZustand((z) => ({ ...z, kampfkarte: [...z.kampfkarte, ...neu] }));
@@ -114,6 +115,7 @@ export function KampfkarteTab(props: {
     const ergebnis = erzeugePaarungen(
       boxer.filter((b) => !ausfaelle[b.id]),
       datum,
+      regeln,
     );
     setZustand((z) => ({
       ...z,
@@ -185,6 +187,40 @@ export function KampfkarteTab(props: {
 
   return (
     <section>
+      <div className="grenzen">
+        <label>
+          Max. Gewichtsdifferenz (%)
+          <input
+            id="max-gewicht"
+            type="number"
+            min="0"
+            step="0.5"
+            value={regeln.maxGewichtProzent}
+            onChange={(e) =>
+              e.target.value !== '' &&
+              setZustand((z) => ({ ...z, regeln: { ...z.regeln, maxGewichtProzent: Number(e.target.value) } }))
+            }
+          />
+        </label>
+        <label>
+          Max. Siegdifferenz bei Freigabe
+          <input
+            id="max-siege"
+            type="number"
+            min="0"
+            step="1"
+            value={regeln.maxSiegdifferenzFreigabe}
+            onChange={(e) =>
+              e.target.value !== '' &&
+              setZustand((z) => ({
+                ...z,
+                regeln: { ...z.regeln, maxSiegdifferenzFreigabe: Number(e.target.value) },
+              }))
+            }
+          />
+        </label>
+      </div>
+
       <div className="aktionen">
         <button className="primaer" onClick={erzeugeAlle} disabled={boxer.length < 2}>
           Paarungen erzeugen
