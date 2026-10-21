@@ -39,7 +39,7 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 3. ähnliche **Siegzahl** (z. B. 4 Kämpfe/0 Siege passt zu 0 Kämpfen/0 Siegen)
 
 ## 6b. Einstellbare Grenzen (Erfahrungswerte, nicht aus den WB)
-- **Gewicht:** Höchstens 10 % Unterschied, bezogen auf den leichteren Boxer. Das gilt zusätzlich zur Klassenbreite und auch in offenen Klassen.
+- **Gewicht:** Höchstens 10 % Unterschied, bezogen auf den leichteren Boxer, zusätzlich zur Klassenbreite. In nach oben offenen Gewichtsklassen gilt keine Prozentgrenze.
 - **Siege bei Nachbar-Leistungsklassen:** Höchstens 5 Siege Unterschied, sonst kein Vorschlag (12 gegen 7 ist noch möglich, 12 gegen 1 nicht).
 - Beide Werte stehen oben auf der Kampfkarte und lassen sich ändern.
 

@@ -147,23 +147,21 @@ describe('pruefePaarung', () => {
     expect(pruefePaarung(leicht, boxer({ gewicht: 61 }), TAG).status).toBe('ok');
     expect(pruefePaarung(leicht, boxer({ gewicht: 61.1 }), TAG).status).toBe('verboten');
   });
-  it('Offene Klasse: innerhalb von 10 % erlaubt, darüber verboten', () => {
-    const ok = pruefePaarung(boxer({ gewicht: 92, siege: 30 }), boxer({ gewicht: 101, siege: 30 }), TAG);
-    expect(ok.status).toBe('ok');
-    const zuViel = pruefePaarung(boxer({ gewicht: 92, siege: 30 }), boxer({ gewicht: 140, siege: 30 }), TAG);
-    expect(zuViel.status).toBe('verboten');
-    expect(zuViel.gruende.join(' ')).toContain('über der Grenze von 10 %');
+  it('Offene Klasse: keine Prozentgrenze, 92 kg gegen 140 kg erlaubt', () => {
+    const r = pruefePaarung(boxer({ gewicht: 92, siege: 30 }), boxer({ gewicht: 140, siege: 30 }), TAG);
+    expect(r.status).toBe('ok');
   });
-  it('Gewichtsgrenze in Prozent des Leichteren, genau 10 % ist noch erlaubt', () => {
-    const a = boxer({ gewicht: 100, siege: 30 });
-    expect(pruefePaarung(a, boxer({ gewicht: 110, siege: 30 }), TAG).status).toBe('ok');
-    expect(pruefePaarung(a, boxer({ gewicht: 110.1, siege: 30 }), TAG).status).toBe('verboten');
+  it('Prozentgrenze gilt in geschlossenen Klassen, genau an der Grenze noch erlaubt', () => {
+    const vier = { maxGewichtProzent: 4, maxSiegdifferenzFreigabe: 5 };
+    const leicht = boxer({ gewicht: 50 }); // Klasse 47-50
+    expect(pruefePaarung(leicht, boxer({ gewicht: 52 }), TAG, vier).status).toBe('ok'); // 4,0 %
+    const r = pruefePaarung(leicht, boxer({ gewicht: 52.1 }), TAG, vier); // 4,2 %
+    expect(r.status).toBe('verboten');
+    expect(r.gruende.join(' ')).toContain('über der Grenze von 4 %');
   });
-  it('Grenze ist einstellbar', () => {
-    const a = boxer({ gewicht: 100, siege: 30 });
-    const b = boxer({ gewicht: 108, siege: 30 });
-    const streng = { maxGewichtProzent: 5, maxSiegdifferenzFreigabe: 5 };
-    expect(pruefePaarung(a, b, TAG, streng).status).toBe('verboten');
+  it('Standard 10 %: bei geschlossenen Klassen schränkt die Klassenbreite zuerst ein', () => {
+    expect(pruefePaarung(boxer({ gewicht: 55.1 }), boxer({ gewicht: 60.1 }), TAG).status).toBe('ok');
+    expect(pruefePaarung(boxer({ gewicht: 55.1 }), boxer({ gewicht: 60.2 }), TAG).status).toBe('verboten');
   });
   it('Schwergewicht (85-90) gegen 140 kg verboten', () => {
     const r = pruefePaarung(boxer({ gewicht: 88 }), boxer({ gewicht: 140 }), TAG);

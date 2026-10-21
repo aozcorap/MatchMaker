@@ -104,7 +104,9 @@ export function pruefePaarung(
     // Gewichtsdifferenz in Prozent des leichteren Boxers (Zehntel-kg, damit nichts durch Rundung kippt)
     const leichtZ = Math.round(Math.min(a.gewicht, b.gewicht) * 10);
     const diffZ = Math.round(Math.abs(a.gewicht - b.gewicht) * 10);
-    if (diffZ * 100 > leichtZ * optionen.maxGewichtProzent) {
+    // In nach oben offenen Gewichtsklassen gilt keine Prozentgrenze (Festlegung des Auftraggebers)
+    const beideOffen = gkA?.bis === null && gkB?.bis === null;
+    if (!beideOffen && diffZ * 100 > leichtZ * optionen.maxGewichtProzent) {
       const prozent = ((diffZ / leichtZ) * 100).toFixed(1).replace('.', ',');
       gruende.push(`Gewichtsdifferenz ${prozent} % über der Grenze von ${optionen.maxGewichtProzent} %`);
     }
