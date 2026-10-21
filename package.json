@@ -25,6 +25,7 @@
     "vitest": "^5.0.5"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "@tesseract.js-data/deu": "^1.0.0",
     "pdfmake": "^0.3.12",
     "react": "^19.3.1",

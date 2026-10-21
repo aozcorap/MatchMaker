@@ -897,3 +897,84 @@ td.pruefung .quelle {
   min-height: 1.2em;
 }
 
+
+.anmeldung {
+  max-width: 420px;
+}
+
+.anmeldekarte {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.anmeldekarte h2 {
+  margin: 0;
+}
+
+.anmeldekarte label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.anmelde-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+button.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--akzent);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.kontoleiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--leise);
+  margin-bottom: 8px;
+}
+
+.kontoleiste .aktionen {
+  align-items: center;
+}
+
+.speicherstatus.fehler,
+.speicherstatus.konflikt {
+  color: var(--fehler);
+  font-weight: 600;
+}
+
+.nurlesen {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.adminliste {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.adminliste th,
+.adminliste td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--rand);
+}

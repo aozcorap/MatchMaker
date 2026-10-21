@@ -70,3 +70,12 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 **Junioren U17 (w/m):** 40–42, 42–44, 44–46, 46–48, 48–50, 50–52, 52–54, 54–57, 57–60, 60–63, 63–66, 66–70, 70–75, 75–80, über 80 (offen).
 **Kadetten U15 und Schüler U13 (w/m):** wie U17, zusätzlich 38–40.
 Unter der untersten Klasse: keine Klasse, Warteliste.
+
+## 7. Konten und Speicherung (Supabase, EU-Region Frankfurt)
+- Anmeldung und Registrierung mit E-Mail und Passwort (mindestens 8 Zeichen), „Passwort vergessen“ per E-Mail.
+- Jeder Veranstalter hat genau eine Veranstaltung. Alles (Boxer, Kampfkarte, Ausfälle, Einstellungen) wird nach jeder Änderung automatisch in der Datenbank gespeichert und beim nächsten Login geladen.
+- Die Trennung der Konten erzwingt die Datenbank (Row Level Security), nicht nur die Oberfläche.
+- Admin (ahmet@ozcorapci.de, Tabelle `admins`): sieht alle Veranstaltungen, nur lesend.
+- Zwei Fenster/Geräte: Wurde woanders neuer gespeichert, erscheint eine Warnung mit der Wahl „Neu laden“ oder „Meine Version speichern“.
+- Beim ersten Login werden Daten, die zuvor nur im Browser lagen, auf Nachfrage ins Konto übernommen.
+- Die Demo-Version bleibt ohne Konto.
