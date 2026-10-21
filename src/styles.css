@@ -15,6 +15,8 @@
   --rot: #b3261e;
   --blau: #1f4fb5;
   --ecke-text: #ffffff;
+  --pause-bg: #d6d3cb;
+  --pause-text: #1d1d1b;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -35,6 +37,8 @@
     --rot: #e0645c;
     --blau: #6f97f0;
     --ecke-text: #101010;
+    --pause-bg: #4b4a46;
+    --pause-text: #f2f0ea;
     color-scheme: dark;
   }
 }
@@ -56,6 +60,8 @@
   --rot: #e0645c;
   --blau: #6f97f0;
   --ecke-text: #101010;
+  --pause-bg: #4b4a46;
+  --pause-text: #f2f0ea;
   color-scheme: dark;
 }
 
@@ -653,15 +659,16 @@ button.klein {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 14px;
-  padding: 8px 12px;
-  border: 1px dashed var(--rand);
+  padding: 12px 14px;
+  border: none;
   border-radius: 8px;
-  color: var(--leise);
-  background: var(--flaeche);
+  color: var(--pause-text);
+  background: var(--pause-bg);
 }
 
 .pause-titel {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1rem;
 }
 
 .pause-zeile label,
@@ -687,6 +694,7 @@ button.klein {
 
 .pause-zeit {
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .pause-zeile .kampfknoepfe {
