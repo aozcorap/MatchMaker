@@ -41,4 +41,4 @@ Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 M
 4. Gewichtstoleranz (Klassenbreite des Leichteren, höchstens 10 %, einstellbar) und Rundenzeit sind bestätigt. Volltext der WB in `docs/Wettkampfbestimmungen-DBV-2025.pdf`. Heimverein und blaue Ecke (WB §4.6) entfallen: Bei diesen Veranstaltungen gibt es keinen Heimverein.
 5. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
 6. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
-7. Bezahlmethode: noch keine Überlegungen (Preismodell, Zahlungsanbieter, Rechnungen, Steuern). Muss später eingebaut werden, ist aktuell nicht dringend.
+7. Bezahlmethode: Konzept mit Stripe (10 Euro pro Veranstaltung inkl. USt, Kosten, Ablauf, offene Entscheidungen) in `docs/BEZAHLKONZEPT.md`. Noch nicht gebaut; erst Impressum und Datenschutz (Punkt 3) und die steuerliche Klärung.
