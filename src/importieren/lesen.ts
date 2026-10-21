@@ -15,8 +15,9 @@ export interface LeseOptionen {
   heute?: Date;
 }
 
-type Feld =
+export type Feld =
   | 'name'
+  | 'nameverein'
   | 'vorname'
   | 'nachname'
   | 'verein'
@@ -27,22 +28,27 @@ type Feld =
   | 'kaempfe'
   | 'siege'
   | 'niederlagen'
-  | 'bilanz';
+  | 'bilanz'
+  | 'ignoriert';
 
 /** Spaltenüberschriften, wie Trainer sie tatsächlich schreiben: klein, ohne Umlaute und Satzzeichen. */
 const SYNONYME: Record<Feld, string[]> = {
   name: ['name', 'boxer', 'boxerin', 'sportler', 'sportlerin', 'athlet', 'kaempfer', 'teilnehmer', 'vollername'],
+  nameverein: ['nameverein', 'namevereinteam', 'boxervereinen'],
   vorname: ['vorname'],
   nachname: ['nachname', 'familienname'],
   verein: ['verein', 'club', 'team', 'vereinsname', 'boxverein'],
-  geburtsdatum: ['geburtsdatum', 'geb', 'gebdatum', 'gebdat', 'geburtstag', 'geboren', 'gebam', 'geburtsdatumttmmjjjj'],
+  geburtsdatum: ['geburtsdatum', 'geb', 'jeb', 'gebdatum', 'gebdat', 'geburtstag', 'geboren', 'gebam', 'geburtsdatumttmmjjjj'],
   jahrgang: ['jahrgang', 'jg', 'geburtsjahr'],
   geschlecht: ['geschlecht', 'mw', 'mf', 'sex', 'gender', 'gesch'],
   gewicht: ['gewicht', 'kg', 'gewichtkg', 'koerpergewicht', 'wiegegewicht', 'meldegewicht', 'aktuellesgewicht'],
   kaempfe: ['kaempfe', 'kampfzahl', 'anzahlkaempfe', 'kaempfegesamt', 'gesamtkaempfe', 'kaempfeanzahl', 'k', 'kampf'],
-  siege: ['siege', 'sieg', 'gewonnen', 's', 'gew'],
+  // "ss" und "jeb": typische Lesefehler der Texterkennung für "S" und "geb."
+  siege: ['siege', 'sieg', 'gewonnen', 's', 'gew', 'ss'],
   niederlagen: ['niederlagen', 'niederlage', 'verloren', 'n', 'verl'],
   bilanz: ['bilanz', 'kampfbilanz', 'bilanzksn', 'bilanzsn'],
+  // Spalten, die vorkommen, aber nicht gebraucht werden (Alter wird aus dem Geburtsdatum berechnet)
+  ignoriert: ['alter', 'u', 'unentschieden', 'remis', 'nr', 'lfdnr', 'startnr', 'bemerkung', 'bemerkungen', 'anmerkung'],
 };
 
 function normalisiere(text: string): string {
@@ -55,7 +61,7 @@ function normalisiere(text: string): string {
     .replace(/[^a-z0-9]/g, '');
 }
 
-function erkenneFeld(ueberschrift: Zelle): Feld | null {
+export function erkenneFeld(ueberschrift: Zelle): Feld | null {
   const n = normalisiere(alsText(ueberschrift));
   if (!n) return null;
   for (const [feld, liste] of Object.entries(SYNONYME) as [Feld, string[]][]) {
@@ -68,8 +74,11 @@ function erkenneFeld(ueberschrift: Zelle): Feld | null {
 function findeKopfzeile(zeilen: Zelle[][]): { index: number; spalten: (Feld | null)[] } | null {
   for (let i = 0; i < Math.min(zeilen.length, 10); i++) {
     const spalten = zeilen[i].map(erkenneFeld);
-    const erkannt = spalten.filter((f) => f !== null);
-    const hatName = erkannt.some((f) => f === 'name' || f === 'nachname' || f === 'vorname');
+    // "K ? N": eine unlesbare Spalte zwischen Kämpfen und Niederlagen sind die Siege
+    const k = spalten.indexOf('kaempfe');
+    if (k >= 0 && spalten[k + 1] === null && spalten[k + 2] === 'niederlagen' && !spalten.includes('siege')) spalten[k + 1] = 'siege';
+    const erkannt = spalten.filter((f) => f !== null && f !== 'ignoriert');
+    const hatName = erkannt.some((f) => f === 'name' || f === 'nameverein' || f === 'nachname' || f === 'vorname');
     if (erkannt.length >= 2 && hatName) return { index: i, spalten };
   }
   return null;
@@ -140,6 +149,12 @@ function ausTabelleMitKopf(zeilen: Zelle[][], kopf: { index: number; spalten: (F
         case 'name':
           z.name = text;
           break;
+        case 'nameverein': {
+          const t = trenneNameVerein(text);
+          z.name = t.name;
+          if (t.verein) z.verein = t.verein;
+          break;
+        }
         case 'vorname':
           vorname = text;
           break;
@@ -178,6 +193,8 @@ function ausTabelleMitKopf(zeilen: Zelle[][], kopf: { index: number; spalten: (F
           else z.hinweise.push(`${feld === 'kaempfe' ? 'Kämpfe' : feld === 'siege' ? 'Siege' : 'Niederlagen'} nicht lesbar: ${text}`);
           break;
         }
+        case 'ignoriert':
+          break;
         case 'bilanz': {
           const b = findeBilanz(`bilanz ${text}`);
           if (b) setzeBilanz(z, b);

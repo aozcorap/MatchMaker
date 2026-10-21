@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateActio
 import { alsText, type Zelle } from './importieren/felder';
 import { liesTabelle, liesText } from './importieren/lesen';
 import { erkenneBild } from './importieren/ocr';
+import { ergaenzeAusAnderen } from './importieren/ocrbewertung';
 import { pruefeZeile, zaehleInEingabe } from './importieren/pruefen';
 import type { ImportZeile, LeseErgebnis } from './importieren/typen';
 import type { Zustand } from './speicher';
@@ -55,14 +56,16 @@ async function liesEine(
     case 'bild': {
       if (DEMO) throw new Hinweis('Die Texterkennung für Screenshots ist in der Demo nicht verfügbar.');
       meldeStatus('Screenshot wird gelesen …');
-      let text: string;
+      let texte: string[];
       try {
-        text = await erkenneBild(datei, meldeStatus);
+        texte = await erkenneBild(datei, meldeStatus);
       } catch {
         throw new Hinweis('Das Bild konnte nicht gelesen werden. Möglich sind PNG und JPG; Fotos im Format HEIC bitte umwandeln.');
       }
+      const text = texte[0] ?? '';
       if (!text.trim()) throw new Hinweis('Im Bild wurde kein Text erkannt.');
       const ergebnis = liesText(text, optionen);
+      ergaenzeAusAnderen(ergebnis, texte.slice(1).map((t) => liesText(t, optionen)));
       for (const z of ergebnis.zeilen) z.hinweise.push('Aus einem Bild gelesen, bitte alle Zahlen genau prüfen');
       return { ergebnis, text };
     }

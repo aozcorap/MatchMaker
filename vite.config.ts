@@ -8,6 +8,7 @@ import { defineConfig } from 'vitest/config';
 const OCR_DATEIEN: [string, string][] = [
   ['ocr/worker.min.js', 'node_modules/tesseract.js/dist/worker.min.js'],
   ['ocr/tesseract-core-simd-lstm.wasm.js', 'node_modules/tesseract.js-core/tesseract-core-simd-lstm.wasm.js'],
+  ['ocr/tesseract-core-relaxedsimd-lstm.wasm.js', 'node_modules/tesseract.js-core/tesseract-core-relaxedsimd-lstm.wasm.js'],
   ['ocr/deu.traineddata.gz', 'node_modules/@tesseract.js-data/deu/4.0.0_best_int/deu.traineddata.gz'],
 ];
 
