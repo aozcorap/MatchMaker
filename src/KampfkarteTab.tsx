@@ -231,14 +231,10 @@ export function KampfkarteTab(props: {
           beginn: uhrzeit(zeiten[0].start),
           ende: uhrzeit(zeiten[zeiten.length - 1].ende),
           kaempfe: kaempfe.map(({ kampf }, i) => {
-            const rz = rundenzeitFuer(kampf.altersklasse ?? 'Erwachsene', zeit.erwachsenenRundeMin);
             const slot = zeiten[i];
             return {
               nr: i + 1,
               start: uhrzeit(slot.start),
-              altersklasse: kampf.altersklasse ?? '',
-              runden: rz.runden,
-              minuten: rz.minuten,
               rot: pdfBoxer(kampf.rot),
               blau: pdfBoxer(kampf.blau),
               pausenDavor: [
