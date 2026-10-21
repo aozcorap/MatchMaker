@@ -45,4 +45,4 @@ Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 M
 
 
 ## Bewusst nicht gebaut (entschieden)
-KI-Bilderkennung für Fotos, Hinweis bei Ende nach Mitternacht, Prüfung des US-Datumsformats (03/04/2009), Ausschluss versteckter Excel-Blätter, Barrierefreiheit der Knöpfe, Heimverein und blaue Ecke.
+KI-Bilderkennung für Fotos, Hinweis bei Ende nach Mitternacht, Prüfung des US-Datumsformats (03/04/2009), Ausschluss versteckter Excel-Blätter, Barrierefreiheit der Knöpfe, Heimverein und blaue Ecke, Sonderdauer der automatischen Pause beim Verschieben aufräumen, zwei kleine Datenbank-Absicherungen (E-Mail im Konto, Form der gespeicherten Daten), Passwort-Mindestlänge in Supabase.
