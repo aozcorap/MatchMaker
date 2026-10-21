@@ -1,4 +1,5 @@
 import { STANDARD_OPTIONEN, type Boxer, type RegelOptionen } from './regeln/typen';
+import { STANDARD_ZEIT, type ExtraPause, type Zeiteinstellungen } from './regeln/zeitplan';
 import { simulation } from './testdaten';
 import { DEMO } from './umgebung';
 
@@ -28,6 +29,11 @@ export interface Zustand {
   /** Ausgefallene Boxer nach ID */
   ausfaelle: Record<string, Ausfall>;
   regeln: RegelOptionen;
+  zeit: Zeiteinstellungen;
+  /** Vom Veranstalter eingefügte Pausen (an einer Position, bleiben beim Verschieben von Kämpfen stehen) */
+  extraPausen: ExtraPause[];
+  /** Eigene Dauer (Minuten) der automatischen Pause vor einem Kampf, Schlüssel siehe kampfSchluessel */
+  autoPausen: Record<string, number>;
 }
 
 export const STANDARD_BEGINN = '14:00';
@@ -39,7 +45,7 @@ export function heute(): string {
 }
 
 export function leererZustand(): Zustand {
-  return { datum: heute(), beginn: STANDARD_BEGINN, boxer: [], kampfkarte: [], ausfaelle: {}, regeln: { ...STANDARD_OPTIONEN } };
+  return { datum: heute(), beginn: STANDARD_BEGINN, boxer: [], kampfkarte: [], ausfaelle: {}, regeln: { ...STANDARD_OPTIONEN }, zeit: { ...STANDARD_ZEIT }, extraPausen: [], autoPausen: {} };
 }
 
 /** Prüft grob die Form, damit kaputte Dateien die App nicht lahmlegen. */
@@ -70,7 +76,19 @@ export function liesZustand(roh: unknown): Zustand | null {
     maxGewichtProzent: gueltig(z.regeln?.maxGewichtProzent, STANDARD_OPTIONEN.maxGewichtProzent),
     maxSiegdifferenzFreigabe: gueltig(z.regeln?.maxSiegdifferenzFreigabe, STANDARD_OPTIONEN.maxSiegdifferenzFreigabe),
   };
-  return { datum: z.datum, beginn, boxer: z.boxer, kampfkarte, ausfaelle, regeln };
+  const zeit: Zeiteinstellungen = {
+    kampfPauseMin: gueltig(z.zeit?.kampfPauseMin, STANDARD_ZEIT.kampfPauseMin),
+    grossePauseMin: gueltig(z.zeit?.grossePauseMin, STANDARD_ZEIT.grossePauseMin),
+    blockMin: gueltig(z.zeit?.blockMin, STANDARD_ZEIT.blockMin),
+  };
+  const extraPausen: ExtraPause[] = (Array.isArray(z.extraPausen) ? z.extraPausen : [])
+    .filter((p) => p && typeof p.id === 'string' && Number.isInteger(p.vorKampf) && p.vorKampf >= 1)
+    .map((p) => ({ id: p.id, vorKampf: p.vorKampf, minuten: gueltig(p.minuten, 0), text: typeof p.text === 'string' ? p.text : '' }));
+  const autoPausen: Record<string, number> = {};
+  for (const [schluessel, minuten] of Object.entries(z.autoPausen ?? {})) {
+    if (typeof minuten === 'number' && Number.isFinite(minuten) && minuten >= 0) autoPausen[schluessel] = minuten;
+  }
+  return { datum: z.datum, beginn, boxer: z.boxer, kampfkarte, ausfaelle, regeln, zeit, extraPausen, autoPausen };
 }
 
 export function laden(): Zustand {

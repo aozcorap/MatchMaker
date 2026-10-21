@@ -24,6 +24,9 @@ const start: Zustand = {
   kampfkarte: [{ aId: 'A', bId: 'B', freigabe: false }],
   ausfaelle: {},
   regeln: { maxGewichtProzent: 10, maxSiegdifferenzFreigabe: 5 },
+  zeit: { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120 },
+  extraPausen: [],
+  autoPausen: {},
 };
 
 describe('Ausfall', () => {

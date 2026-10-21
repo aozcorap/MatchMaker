@@ -1,4 +1,5 @@
-import { Fragment, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import { Fragment, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import { fuegeSortiertEin, kampfSchluessel, verschiebe } from './ablauf';
 import { hebeAusfallAuf, meldeAusfall } from './ausfall';
 import { AusfallDialog } from './AusfallDialog';
 import { BoxerZelle } from './BoxerZelle';
@@ -15,6 +16,37 @@ import { bestaetige } from './umgebung';
 
 function minutenText(m: number): string {
   return String(m).replace('.', ',');
+}
+
+/** Zahlenfeld für die Position eines Kampfes; übernommen wird bei Enter oder beim Verlassen. */
+function PositionFeld(props: { wert: number; max: number; onWahl: (nummer: number) => void }) {
+  const { wert, max, onWahl } = props;
+  const [text, setText] = useState(String(wert));
+  useEffect(() => setText(String(wert)), [wert]);
+  const uebernehme = () => {
+    const n = Number(text);
+    if (Number.isInteger(n) && n >= 1 && n <= max && n !== wert) onWahl(n);
+    else setText(String(wert));
+  };
+  return (
+    <label className="position">
+      Position
+      <input
+        type="number"
+        min="1"
+        max={max}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={uebernehme}
+        onKeyDown={(e) => e.key === 'Enter' && uebernehme()}
+      />
+    </label>
+  );
+}
+
+function ganzeMinuten(text: string): number | null {
+  const n = Number(text);
+  return text.trim() !== '' && Number.isFinite(n) && n >= 0 ? n : null;
 }
 
 interface Vorschlag {
@@ -35,7 +67,7 @@ export function KampfkarteTab(props: {
   setZustand: Dispatch<SetStateAction<Zustand>>;
 }) {
   const { zustand, setZustand } = props;
-  const { datum, beginn, boxer, kampfkarte, ausfaelle, regeln } = zustand;
+  const { datum, beginn, boxer, kampfkarte, ausfaelle, regeln, zeit, extraPausen, autoPausen } = zustand;
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [ausfallFuer, setAusfallFuer] = useState<Boxer | null>(null);
 
@@ -47,8 +79,7 @@ export function KampfkarteTab(props: {
         .map((geplant) => ({
           geplant,
           kampf: baueKampf(nachId.get(geplant.aId)!, nachId.get(geplant.bId)!, datum, regeln),
-        }))
-        .sort((x, y) => vergleicheKampf(x.kampf, y.kampf)),
+        })),
     [kampfkarte, nachId, datum, regeln],
   );
 
@@ -57,11 +88,14 @@ export function KampfkarteTab(props: {
     () =>
       plane(
         beginn,
-        kaempfe.map((k) =>
-          kampfdauer(rundenzeitFuer(k.kampf.altersklasse ?? 'Erwachsene')),
-        ),
+        kaempfe.map((k) => kampfdauer(rundenzeitFuer(k.kampf.altersklasse ?? 'Erwachsene'))),
+        {
+          zeit,
+          extraPausen,
+          autoDauerMin: (i) => autoPausen[kampfSchluessel(kaempfe[i].geplant)],
+        },
       ),
-    [kaempfe, beginn],
+    [kaempfe, beginn, zeit, extraPausen, autoPausen],
   );
 
   const belegt = useMemo(() => new Set(kampfkarte.flatMap((k) => [k.aId, k.bId])), [kampfkarte]);
@@ -103,9 +137,55 @@ export function KampfkarteTab(props: {
   const vorschauAuswahl =
     gewaehlt.length === 2 ? baueKampf(gewaehlt[0], gewaehlt[1], datum, regeln) : null;
 
+  /** Standardreihenfolge der Kampfkarte: jüngste Altersklasse zuerst, darin leichtester Boxer zuerst. */
+  function vergleicheGeplant(x: GeplanterKampf, y: GeplanterKampf): number {
+    const kx = baueKampf(nachId.get(x.aId)!, nachId.get(x.bId)!, datum, regeln);
+    const ky = baueKampf(nachId.get(y.aId)!, nachId.get(y.bId)!, datum, regeln);
+    return vergleicheKampf(kx, ky);
+  }
+
   function ergaenze(neu: GeplanterKampf[]) {
-    setZustand((z) => ({ ...z, kampfkarte: [...z.kampfkarte, ...neu] }));
+    setZustand((z) => ({
+      ...z,
+      kampfkarte: neu.reduce((liste, k) => fuegeSortiertEin(liste, k, vergleicheGeplant), z.kampfkarte),
+    }));
     setAuswahl([]);
+  }
+
+  function bewege(von: number, nach: number) {
+    setZustand((z) => ({ ...z, kampfkarte: verschiebe(z.kampfkarte, von, nach) }));
+  }
+
+  function sortiereAutomatisch() {
+    if (!bestaetige('Die Reihenfolge der Kämpfe wird auf die Standardsortierung zurückgesetzt. Fortfahren?')) return;
+    setZustand((z) => ({ ...z, kampfkarte: [...z.kampfkarte].sort(vergleicheGeplant) }));
+  }
+
+  function fuegePauseEin(vorKampf: number) {
+    setZustand((z) => ({
+      ...z,
+      extraPausen: [...z.extraPausen, { id: crypto.randomUUID(), vorKampf, minuten: 15, text: 'Pause' }],
+    }));
+  }
+
+  function aenderePause(id: string, teil: Partial<{ vorKampf: number; minuten: number; text: string }>) {
+    setZustand((z) => ({
+      ...z,
+      extraPausen: z.extraPausen.map((p) => (p.id === id ? { ...p, ...teil } : p)),
+    }));
+  }
+
+  function loeschePause(id: string) {
+    setZustand((z) => ({ ...z, extraPausen: z.extraPausen.filter((p) => p.id !== id) }));
+  }
+
+  function setzeAutoPause(schluessel: string, minuten: number | null) {
+    setZustand((z) => {
+      const rest = { ...z.autoPausen };
+      if (minuten === null) delete rest[schluessel];
+      else rest[schluessel] = minuten;
+      return { ...z, autoPausen: rest };
+    });
   }
 
   function erzeugeAlle() {
@@ -221,10 +301,34 @@ export function KampfkarteTab(props: {
         </label>
       </div>
 
+      <div className="grenzen">
+        {[
+          { id: 'kampfpause', text: 'Pause zwischen Kämpfen (min)', feld: 'kampfPauseMin' },
+          { id: 'grossepause', text: 'Große Pause (min)', feld: 'grossePauseMin' },
+          { id: 'blockdauer', text: 'Große Pause nach (min Wettkampf)', feld: 'blockMin' },
+        ].map(({ id, text, feld }) => (
+          <label key={id}>
+            {text}
+            <input
+              id={id}
+              type="number"
+              min="0"
+              step="1"
+              value={zeit[feld as keyof typeof zeit]}
+              onChange={(e) => {
+                const m = ganzeMinuten(e.target.value);
+                if (m !== null) setZustand((z) => ({ ...z, zeit: { ...z.zeit, [feld]: m } }));
+              }}
+            />
+          </label>
+        ))}
+      </div>
+
       <div className="aktionen">
         <button className="primaer" onClick={erzeugeAlle} disabled={boxer.length < 2}>
           Paarungen erzeugen
         </button>
+        {kampfkarte.length > 1 && <button onClick={sortiereAutomatisch}>Automatisch sortieren</button>}
         {kampfkarte.length > 0 && (
           <button
             onClick={() => {
@@ -257,18 +361,89 @@ export function KampfkarteTab(props: {
           {kaempfe.map(({ geplant, kampf }, i) => {
             const status = kampf.pruefung.status;
             const rz = kampf.altersklasse ? rundenzeitFuer(kampf.altersklasse) : null;
-            const zeit = zeiten[i];
+            const slot = zeiten[i];
             return (
               <Fragment key={`${geplant.aId}-${geplant.bId}`}>
-                {zeit.pauseVorher && (
-                  <li className="grosse-pause">
-                    Pause 30 Minuten, {uhrzeit(zeit.pauseVorher.von)} bis {uhrzeit(zeit.pauseVorher.bis)} Uhr
+                {slot.auto && (
+                  <li className="pause-zeile">
+                    <span className="pause-titel">Automatische Pause nach {zeit.blockMin} Minuten Wettkampf</span>
+                    <label>
+                      Dauer
+                      <input
+                        id={`auto-pause-${i}`}
+                        type="number"
+                        min="0"
+                        value={autoPausen[kampfSchluessel(geplant)] ?? zeit.grossePauseMin}
+                        onChange={(e) => {
+                          const m = ganzeMinuten(e.target.value);
+                          if (m !== null) setzeAutoPause(kampfSchluessel(geplant), m);
+                        }}
+                      />
+                      min
+                    </label>
+                    <span className="pause-zeit">
+                      {uhrzeit(slot.auto.von)} bis {uhrzeit(slot.auto.bis)} Uhr
+                    </span>
+                    {autoPausen[kampfSchluessel(geplant)] !== undefined && (
+                      <button className="klein" onClick={() => setzeAutoPause(kampfSchluessel(geplant), null)}>
+                        Standard ({zeit.grossePauseMin} min)
+                      </button>
+                    )}
                   </li>
                 )}
+                {slot.extra.map(({ pause, von, bis }) => (
+                  <li key={pause.id} className="pause-zeile extra">
+                    <input
+                      id={`pause-text-${pause.id}`}
+                      className="pause-text"
+                      aria-label="Bezeichnung der Pause"
+                      value={pause.text}
+                      onChange={(e) => aenderePause(pause.id, { text: e.target.value })}
+                    />
+                    <label>
+                      Dauer
+                      <input
+                        id={`pause-dauer-${pause.id}`}
+                        type="number"
+                        min="0"
+                        value={pause.minuten}
+                        onChange={(e) => {
+                          const m = ganzeMinuten(e.target.value);
+                          if (m !== null) aenderePause(pause.id, { minuten: m });
+                        }}
+                      />
+                      min
+                    </label>
+                    <span className="pause-zeit">
+                      {uhrzeit(von)} bis {uhrzeit(bis)} Uhr
+                    </span>
+                    <span className="kampfknoepfe">
+                      <button
+                        className="klein"
+                        aria-label="Pause nach oben"
+                        disabled={pause.vorKampf <= 1}
+                        onClick={() => aenderePause(pause.id, { vorKampf: pause.vorKampf - 1 })}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        className="klein"
+                        aria-label="Pause nach unten"
+                        disabled={pause.vorKampf >= kaempfe.length}
+                        onClick={() => aenderePause(pause.id, { vorKampf: pause.vorKampf + 1 })}
+                      >
+                        ▼
+                      </button>
+                      <button className="klein" onClick={() => loeschePause(pause.id)}>
+                        Entfernen
+                      </button>
+                    </span>
+                  </li>
+                ))}
                 <li className={`kampf ${status}`}>
                   <div className="kampfkopf">
                     <span className="nr">Kampf {i + 1}</span>
-                    <span className="uhrzeit">ca. {uhrzeit(zeit.start)} Uhr</span>
+                    <span className="uhrzeit">ca. {uhrzeit(slot.start)} Uhr</span>
                     {status === 'verboten' && <span className="statusmarke verboten">Regelverstoß</span>}
                     {status === 'freigabe' && !geplant.freigabe && (
                       <span className="statusmarke freigabe">Zustimmung der Trainer offen</span>
@@ -280,6 +455,24 @@ export function KampfkarteTab(props: {
                       Altersdifferenz {altersdifferenzMonate(kampf.a.geburtsdatum, kampf.b.geburtsdatum)} Monate
                     </span>
                     <span className="kampfknoepfe">
+                      <button
+                        className="klein"
+                        aria-label="Kampf nach oben"
+                        disabled={i === 0}
+                        onClick={() => bewege(i, i - 1)}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        className="klein"
+                        aria-label="Kampf nach unten"
+                        disabled={i === kaempfe.length - 1}
+                        onClick={() => bewege(i, i + 1)}
+                      >
+                        ▼
+                      </button>
+                      <PositionFeld wert={i + 1} max={kaempfe.length} onWahl={(n) => bewege(i, n - 1)} />
+                      <button onClick={() => fuegePauseEin(i + 1)}>Pause davor</button>
                       <button onClick={() => tauscheEcken(geplant)}>Ecken tauschen</button>
                       <button onClick={() => entferne(geplant)}>Entfernen</button>
                     </span>
@@ -318,6 +511,22 @@ export function KampfkarteTab(props: {
             );
           })}
         </ol>
+      )}
+      {extraPausen.some((p) => p.vorKampf > kaempfe.length) && (
+        <ul className="warteliste">
+          {extraPausen
+            .filter((p) => p.vorKampf > kaempfe.length)
+            .map((p) => (
+              <li key={p.id}>
+                <span className="grund">
+                  Pause „{p.text}“ ({p.minuten} min) steht hinter dem letzten Kampf und hat keine Wirkung.
+                </span>
+                <button className="klein" onClick={() => loeschePause(p.id)}>
+                  Entfernen
+                </button>
+              </li>
+            ))}
+        </ul>
       )}
 
       {(moeglich.ok.length > 0 || moeglich.freigabe.length > 0) && (

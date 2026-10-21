@@ -1,16 +1,34 @@
 import type { Rundenzeit } from './typen';
 
-/** Alle Zeiten in Sekunden; Uhrzeiten als Sekunden seit Mitternacht. */
+/** Alle Zeiten intern in Sekunden; Uhrzeiten als Sekunden seit Mitternacht. */
 export const PAUSE_ZWISCHEN_RUNDEN = 60; // §22: eine Minute zwischen den Runden
-export const PAUSE_ZWISCHEN_KAEMPFEN = 2 * 60;
-export const BLOCKDAUER = 2 * 60 * 60;
-export const GROSSE_PAUSE = 30 * 60;
+
+export interface Zeiteinstellungen {
+  /** Pause zwischen zwei Kämpfen, Minuten */
+  kampfPauseMin: number;
+  /** Große Pause, Minuten */
+  grossePauseMin: number;
+  /** Nach so vielen Minuten Wettkampf folgt die große Pause */
+  blockMin: number;
+}
+
+export const STANDARD_ZEIT: Zeiteinstellungen = { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120 };
+
+/** Vom Veranstalter eingefügte Pause vor dem Kampf an Position `vorKampf` (ab 1). */
+export interface ExtraPause {
+  id: string;
+  vorKampf: number;
+  minuten: number;
+  text: string;
+}
 
 export interface Zeitslot {
   start: number;
   ende: number;
-  /** Große Pause unmittelbar vor diesem Kampf */
-  pauseVorher: { von: number; bis: number } | null;
+  /** Automatische große Pause unmittelbar vor diesem Kampf */
+  auto: { von: number; bis: number } | null;
+  /** Eingefügte Pausen vor diesem Kampf, in der Reihenfolge der Liste */
+  extra: { pause: ExtraPause; von: number; bis: number }[];
 }
 
 /** Dauer eines Kampfes inklusive der Pausen zwischen den Runden. */
@@ -30,26 +48,47 @@ export function uhrzeit(sekunden: number): string {
 }
 
 /**
- * Zeitplan: zwischen zwei Kämpfen 2 Minuten. Sind seit Beginn (oder seit der letzten großen Pause)
- * 2 Stunden Wettkampf vergangen, folgt nach dem laufenden Kampf eine Pause von 30 Minuten.
+ * Zeitplan. Zwischen zwei Kämpfen liegt die Kampfpause. Sind seit Beginn (oder seit der letzten großen
+ * Pause) die eingestellten Minuten Wettkampf vergangen, folgt nach dem laufenden Kampf die große Pause.
+ * Eingefügte Pausen kommen zusätzlich dazu; eine mindestens so lange wie die große Pause setzt den Takt zurück.
  */
-export function plane(beginn: string, dauern: number[]): Zeitslot[] {
+export function plane(
+  beginn: string,
+  dauern: number[],
+  optionen: {
+    zeit?: Zeiteinstellungen;
+    extraPausen?: ExtraPause[];
+    /** Eigene Dauer (Minuten) der automatischen Pause vor dem Kampf mit diesem Index */
+    autoDauerMin?: (index: number) => number | undefined;
+  } = {},
+): Zeitslot[] {
+  const zeit = optionen.zeit ?? STANDARD_ZEIT;
+  const extraPausen = optionen.extraPausen ?? [];
   const slots: Zeitslot[] = [];
   let blockStart = parseUhrzeit(beginn);
+
   dauern.forEach((dauer, i) => {
-    let start = blockStart;
-    let pauseVorher: Zeitslot['pauseVorher'] = null;
+    let t = blockStart;
+    let auto: Zeitslot['auto'] = null;
     if (i > 0) {
       const vorherEnde = slots[i - 1].ende;
-      if (vorherEnde - blockStart >= BLOCKDAUER) {
-        pauseVorher = { von: vorherEnde, bis: vorherEnde + GROSSE_PAUSE };
-        start = pauseVorher.bis;
-        blockStart = start;
+      if (zeit.blockMin > 0 && vorherEnde - blockStart >= zeit.blockMin * 60) {
+        const minuten = optionen.autoDauerMin?.(i) ?? zeit.grossePauseMin;
+        auto = { von: vorherEnde, bis: vorherEnde + minuten * 60 };
+        t = auto.bis;
+        blockStart = t;
       } else {
-        start = vorherEnde + PAUSE_ZWISCHEN_KAEMPFEN;
+        t = vorherEnde + zeit.kampfPauseMin * 60;
       }
     }
-    slots.push({ start, ende: start + dauer, pauseVorher });
+    const extra: Zeitslot['extra'] = [];
+    for (const pause of extraPausen.filter((p) => p.vorKampf === i + 1)) {
+      const von = t;
+      t += pause.minuten * 60;
+      extra.push({ pause, von, bis: t });
+      if (pause.minuten >= zeit.grossePauseMin) blockStart = t;
+    }
+    slots.push({ start: t, ende: t + dauer, auto, extra });
   });
   return slots;
 }

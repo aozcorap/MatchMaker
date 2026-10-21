@@ -647,3 +647,54 @@ button.klein {
 .statusmarke.verboten {
   color: var(--fehler);
 }
+
+.pause-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 8px 12px;
+  border: 1px dashed var(--rand);
+  border-radius: 8px;
+  color: var(--leise);
+  background: var(--flaeche);
+}
+
+.pause-titel {
+  font-weight: 600;
+}
+
+.pause-zeile label,
+.position {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.pause-zeile input[type='number'],
+.position input {
+  width: 4.5rem;
+  padding: 4px 6px;
+}
+
+.pause-text {
+  width: 12rem;
+  max-width: 100%;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+
+.pause-zeit {
+  font-variant-numeric: tabular-nums;
+}
+
+.pause-zeile .kampfknoepfe {
+  margin-left: auto;
+}
+
+.kampfknoepfe {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}

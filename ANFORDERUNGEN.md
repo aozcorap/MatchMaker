@@ -46,6 +46,9 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 ## 6a. Ausfälle und Zeitplan
 - **Ausfall:** Jeder Boxer kann als Ausfall gemeldet werden (Verletzung, Krankheit, Sonstiges, mit Notiz), auch wenn er schon einen Kampf hat. Der Kampf entfällt, der Gegner kommt auf die Warteliste. Ausgefallene Boxer werden bei neuen Paarungen übergangen und können wieder aufgenommen werden.
 - **Uhrzeiten:** Die Kampfkarte zeigt je Kampf die voraussichtliche Startzeit. Grundlage ist der eingegebene Beginn (Annahme 14:00 Uhr), die Rundenzeit der Altersklasse mit einer Minute Pause zwischen den Runden und 2 Minuten zwischen den Kämpfen.
+- **Verschieben:** Kämpfe lassen sich nach oben und unten oder auf eine Position verschieben. Neue Kämpfe werden an der Standardstelle einsortiert, "Automatisch sortieren" stellt die Standardreihenfolge wieder her.
+- **Eigene Pausen:** Vor jedem Kampf kann eine Pause mit Bezeichnung und Dauer eingefügt werden. Sie bleibt an ihrer Position stehen, wenn Kämpfe verschoben werden. Eine Pause von mindestens der Länge der großen Pause setzt den Zwei-Stunden-Takt zurück.
+- **Pausendauer:** Pause zwischen Kämpfen, große Pause und der Zwei-Stunden-Takt sind einstellbar. Die Dauer jeder automatischen Pause lässt sich einzeln ändern.
 - **Große Pause:** Sind seit Beginn (oder seit der letzten Pause) 2 Stunden Wettkampf vergangen, folgt nach dem laufenden Kampf eine Pause von 30 Minuten.
 
 ## 7. Offene Punkte
