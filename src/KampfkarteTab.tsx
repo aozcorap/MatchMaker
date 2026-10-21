@@ -148,16 +148,6 @@ export function KampfkarteTab(props: {
   const optionen = useMemo(() => filterOptionen(boxer, datum, filter), [boxer, datum, filter]);
   const zaehler = (sichtbar: number, gesamt: number) => (filterAktiv ? `${sichtbar} von ${gesamt}` : String(gesamt));
   const vorschlagAnzahl = moeglich.ok.length + moeglich.freigabe.length;
-  /** Beste regelkonforme Paarungen unter den Wartenden, jeder Boxer höchstens einmal */
-  const besteVorschlaege = useMemo(() => {
-    const vergeben = new Set<string>();
-    return moeglich.ok.filter((p) => {
-      if (vergeben.has(p.a.id) || vergeben.has(p.b.id)) return false;
-      vergeben.add(p.a.id);
-      vergeben.add(p.b.id);
-      return true;
-    });
-  }, [moeglich]);
 
   function springe(id: string) {
     const kurz = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -602,13 +592,6 @@ export function KampfkarteTab(props: {
       {vorschlagAnzahl > 0 && (
         <>
           <h2 id="abschnitt-vorschlaege">Vorschläge für Wartende</h2>
-          {besteVorschlaege.length > 0 && (
-            <p>
-              <button onClick={() => ergaenze(besteVorschlaege.map((p) => ({ aId: p.a.id, bId: p.b.id, freigabe: false })))}>
-                Beste regelkonforme Paarungen übernehmen ({besteVorschlaege.length})
-              </button>
-            </p>
-          )}
           {filterAktiv && okSichtbar.length + freigabeSichtbar.length === 0 && (
             <p className="leer">Kein Vorschlag passt zum Filter.</p>
           )}
