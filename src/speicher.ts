@@ -123,3 +123,26 @@ export function exportiere(z: Zustand): void {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+function stabil(wert: unknown): string {
+  if (Array.isArray(wert)) return `[${wert.map(stabil).join(',')}]`;
+  if (wert && typeof wert === 'object') {
+    const o = wert as Record<string, unknown>;
+    return `{${Object.keys(o)
+      .filter((k) => o[k] !== undefined)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${stabil(o[k])}`)
+      .join(',')}}`;
+  }
+  return JSON.stringify(wert);
+}
+
+/** Inhaltlich gleicher Stand, unabhängig von der Reihenfolge der Felder (die Datenbank sortiert sie um). */
+export function gleicherZustand(a: Zustand, b: Zustand): boolean {
+  return stabil(a) === stabil(b);
+}
+
+/** Hat die Veranstaltung weder Boxer noch Kämpfe? */
+export function istLeer(z: Zustand): boolean {
+  return z.boxer.length === 0 && z.kampfkarte.length === 0;
+}

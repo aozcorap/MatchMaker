@@ -48,7 +48,8 @@ export async function speichereCloud(userId: string, zustand: Zustand, version: 
 export async function ueberschreibe(userId: string, zustand: Zustand): Promise<number> {
   const { data, error } = await supabase.from('veranstaltungen').update({ zustand }).eq('user_id', userId).select('version');
   if (error) throw error;
-  if (!data || data.length === 0) throw new Error('Veranstaltung nicht gefunden');
+  // Wurde die Veranstaltung inzwischen gelöscht, wird sie mit dem eigenen Stand neu angelegt
+  if (!data || data.length === 0) return legeAn(userId, zustand);
   return data[0].version as number;
 }
 

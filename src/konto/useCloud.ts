@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Zustand } from '../speicher';
-import { speichereCloud, ueberschreibe } from './cloud';
+import { gleicherZustand, istLeer, type Zustand } from '../speicher';
+import { ladeVeranstaltung, speichereCloud, ueberschreibe } from './cloud';
 
 export type SpeicherStatus = 'gespeichert' | 'speichert' | 'fehler' | 'konflikt';
+/** Warum es einen Konflikt gibt: woanders neuer gespeichert, vom Admin geleert oder gelöscht. */
+export type KonfliktGrund = 'neuer' | 'geleert' | 'geloescht';
 
 /**
  * Speichert Änderungen kurz nach dem Bearbeiten in der Datenbank. Bei einem Fehler (z. B. keine Verbindung)
@@ -10,6 +12,7 @@ export type SpeicherStatus = 'gespeichert' | 'speichert' | 'fehler' | 'konflikt'
  */
 export function useCloud(zustand: Zustand, userId: string | null, startVersion: number) {
   const [status, setStatus] = useState<SpeicherStatus>('gespeichert');
+  const [konfliktGrund, setKonfliktGrund] = useState<KonfliktGrund>('neuer');
   const version = useRef(startVersion);
   const zuletztGespeichert = useRef(zustand);
   const aktuell = useRef(zustand);
@@ -28,10 +31,17 @@ export function useCloud(zustand: Zustand, userId: string | null, startVersion: 
     laeuft.current = true;
     setStatus('speichert');
     try {
-      const neu = await speichereCloud(userId, stand, version.current);
+      let neu = await speichereCloud(userId, stand, version.current);
       if (neu === null) {
-        setStatus('konflikt');
-        return;
+        // Vielleicht kam nur die Antwort eines früheren, erfolgreichen Speicherns nicht an: dann steht unser Stand schon dort
+        const dort = await ladeVeranstaltung(userId).catch(() => undefined);
+        if (dort && gleicherZustand(dort.zustand, stand)) {
+          neu = dort.version;
+        } else {
+          setKonfliktGrund(dort === null ? 'geloescht' : dort && istLeer(dort.zustand) && !istLeer(stand) ? 'geleert' : 'neuer');
+          setStatus('konflikt');
+          return;
+        }
       }
       version.current = neu;
       zuletztGespeichert.current = stand;
@@ -60,6 +70,23 @@ export function useCloud(zustand: Zustand, userId: string | null, startVersion: 
     return () => clearTimeout(t);
   }, [status, speichere, zustand]);
 
+  // Sofort speichern, wenn der Tab in den Hintergrund geht oder geschlossen wird (nicht erst nach der Pause)
+  useEffect(() => {
+    if (!userId) return;
+    const sofort = () => {
+      if (document.visibilityState === 'hidden' && aktuell.current !== zuletztGespeichert.current) void speichere();
+    };
+    const beimSchliessen = () => {
+      if (aktuell.current !== zuletztGespeichert.current) void speichere();
+    };
+    document.addEventListener('visibilitychange', sofort);
+    window.addEventListener('pagehide', beimSchliessen);
+    return () => {
+      document.removeEventListener('visibilitychange', sofort);
+      window.removeEventListener('pagehide', beimSchliessen);
+    };
+  }, [userId, speichere]);
+
   useEffect(() => {
     const warnen = (e: BeforeUnloadEvent) => {
       if (userId && aktuell.current !== zuletztGespeichert.current) e.preventDefault();
@@ -82,5 +109,5 @@ export function useCloud(zustand: Zustand, userId: string | null, startVersion: 
     }
   }, [userId]);
 
-  return { status, erzwinge };
+  return { status, erzwinge, konfliktGrund };
 }

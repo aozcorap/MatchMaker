@@ -27,7 +27,7 @@ interface Props {
 export function App({ start, userId = null, startVersion = 1, nurLesen = false, testdaten = false, kontoLeiste }: Props) {
   const [zustand, setZustand] = useState<Zustand>(start);
   const cloudNutzer = nurLesen ? null : userId;
-  const { status, erzwinge } = useCloud(zustand, cloudNutzer, startVersion);
+  const { status, erzwinge, konfliktGrund } = useCloud(zustand, cloudNutzer, startVersion);
   const [tab, setTab] = useState<Tab>('boxer');
   const [meldung, setMeldung] = useState('');
   const [sicherungenOffen, setSicherungenOffen] = useState(false);
@@ -55,7 +55,7 @@ export function App({ start, userId = null, startVersion = 1, nurLesen = false, 
       {status === 'gespeichert' && '✓ Gespeichert'}
       {status === 'speichert' && 'Speichert …'}
       {status === 'fehler' && '⚠ Nicht gespeichert (keine Verbindung?) – es wird erneut versucht'}
-      {status === 'konflikt' && '⚠ Woanders wurde neuer gespeichert'}
+      {status === 'konflikt' && (konfliktGrund === 'neuer' ? '⚠ Woanders wurde neuer gespeichert' : '⚠ Veranstaltung wurde zurückgesetzt')}
     </span>
   ) : null;
 
@@ -64,8 +64,9 @@ export function App({ start, userId = null, startVersion = 1, nurLesen = false, 
       {kontoLeiste?.(speicherstand)}
       {status === 'konflikt' && cloudNutzer && (
         <p className="fehler" role="alert">
-          In einem anderen Fenster oder auf einem anderen Gerät wurde eine neuere Version gespeichert. Laden Sie die Seite neu,
-          um sie zu sehen (Ihre letzten Änderungen hier gehen dann verloren), oder speichern Sie Ihre Version trotzdem.{' '}
+          {konfliktGrund === 'neuer'
+            ? 'In einem anderen Fenster oder auf einem anderen Gerät wurde eine neuere Version gespeichert. Laden Sie die Seite neu, um sie zu sehen (Ihre letzten Änderungen hier gehen dann verloren), oder speichern Sie Ihre Version trotzdem.'
+            : 'Diese Veranstaltung wurde vom Administrator geleert oder gelöscht. Wenn das nicht gewollt war, speichern Sie Ihre Version hier jetzt: Dann ist sie wiederhergestellt. Sonst laden Sie die Seite neu.'}{' '}
           <button onClick={() => window.location.reload()}>Neu laden</button>{' '}
           <button onClick={() => void erzwinge()}>Meine Version speichern</button>
         </p>
