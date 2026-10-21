@@ -58,7 +58,7 @@ describe('Zeitplan: anpassbare Pausen', () => {
   const pause = (vorKampf: number, minuten: number, text = 'Pause'): ExtraPause => ({ id: `p${vorKampf}`, vorKampf, minuten, text });
 
   it('Pause zwischen Kämpfen einstellbar', () => {
-    const s = plane('14:00', [kampf, kampf, kampf], { zeit: { kampfPauseMin: 5, grossePauseMin: 30, blockMin: 120 } });
+    const s = plane('14:00', [kampf, kampf, kampf], { zeit: { kampfPauseMin: 5, grossePauseMin: 30, blockMin: 120, erwachsenenRundeMin: 3 } });
     expect(s.map((x) => uhrzeit(x.start))).toEqual(['14:00', '14:16', '14:32']);
   });
 
@@ -91,11 +91,11 @@ describe('Zeitplan: anpassbare Pausen', () => {
   });
 
   it('große Pause und Blockdauer einstellbar', () => {
-    const s = plane('14:00', Array(12).fill(kampf), { zeit: { kampfPauseMin: 2, grossePauseMin: 20, blockMin: 60 } });
+    const s = plane('14:00', Array(12).fill(kampf), { zeit: { kampfPauseMin: 2, grossePauseMin: 20, blockMin: 60, erwachsenenRundeMin: 3 } });
     const erste = s.findIndex((x) => x.auto);
     expect(erste).toBe(5); // 5 Kämpfe enden bei 11 + 13 * 4 = 63 Minuten
     expect(uhrzeit(s[5].auto!.bis)).toBe('15:23');
-    expect(plane('14:00', Array(12).fill(kampf), { zeit: { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 0 } }).some((x) => x.auto)).toBe(false);
+    expect(plane('14:00', Array(12).fill(kampf), { zeit: { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 0, erwachsenenRundeMin: 3 } }).some((x) => x.auto)).toBe(false);
   });
 
   it('eine eingefügte Pause von mindestens 30 Minuten setzt den Zwei-Stunden-Takt zurück', () => {

@@ -74,8 +74,8 @@ export function breiteZehntel(k: Gewichtsklasse): number | null {
   return k.bis === null ? null : Math.round((k.bis - k.ueber) * 10);
 }
 
-/** §22: Runden je Altersklasse. */
-export function rundenzeitFuer(ak: Altersklasse): Rundenzeit {
+/** §22: Runden je Altersklasse. U19 und Erwachsene boxen 3 Minuten, der Veranstalter kann kürzer einstellen. */
+export function rundenzeitFuer(ak: Altersklasse, erwachsenenRundeMin = 3): Rundenzeit {
   switch (ak) {
     case 'U13':
       return { runden: 3, minuten: 1 };
@@ -84,7 +84,7 @@ export function rundenzeitFuer(ak: Altersklasse): Rundenzeit {
     case 'U17':
       return { runden: 3, minuten: 2 };
     default:
-      return { runden: 3, minuten: 3 };
+      return { runden: 3, minuten: erwachsenenRundeMin };
   }
 }
 

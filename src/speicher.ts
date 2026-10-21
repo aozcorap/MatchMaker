@@ -82,6 +82,7 @@ export function liesZustand(roh: unknown): Zustand | null {
     kampfPauseMin: gueltig(z.zeit?.kampfPauseMin, STANDARD_ZEIT.kampfPauseMin),
     grossePauseMin: gueltig(z.zeit?.grossePauseMin, STANDARD_ZEIT.grossePauseMin),
     blockMin: gueltig(z.zeit?.blockMin, STANDARD_ZEIT.blockMin),
+    erwachsenenRundeMin: z.zeit?.erwachsenenRundeMin === 2 ? 2 : 3,
   };
   const extraPausen: ExtraPause[] = (Array.isArray(z.extraPausen) ? z.extraPausen : [])
     .filter((p) => p && typeof p.id === 'string' && Number.isInteger(p.vorKampf) && p.vorKampf >= 1)

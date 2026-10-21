@@ -10,9 +10,11 @@ export interface Zeiteinstellungen {
   grossePauseMin: number;
   /** Nach so vielen Minuten Wettkampf folgt die große Pause */
   blockMin: number;
+  /** Minuten je Runde bei U19 und Erwachsenen (WB: 3, viele Veranstaltungen boxen 2) */
+  erwachsenenRundeMin: number;
 }
 
-export const STANDARD_ZEIT: Zeiteinstellungen = { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120 };
+export const STANDARD_ZEIT: Zeiteinstellungen = { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120, erwachsenenRundeMin: 3 };
 
 /** Vom Veranstalter eingefügte Pause vor dem Kampf an Position `vorKampf` (ab 1). */
 export interface ExtraPause {
