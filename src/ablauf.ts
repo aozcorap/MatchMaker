@@ -25,3 +25,8 @@ export function fuegeSortiertEin(
 export function kampfSchluessel(k: Pick<GeplanterKampf, 'aId' | 'bId'>): string {
   return [k.aId, k.bId].sort().join('|');
 }
+
+/** Wurden Daten eines Boxers geändert, die eine Paarung betreffen, gilt die Zustimmung der Trainer nicht mehr. */
+export function hebeFreigabeAuf(kampfkarte: GeplanterKampf[], boxerId: string): GeplanterKampf[] {
+  return kampfkarte.map((k) => ((k.aId === boxerId || k.bId === boxerId) && k.freigabe ? { ...k, freigabe: false } : k));
+}

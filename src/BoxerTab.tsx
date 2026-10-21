@@ -3,6 +3,7 @@ import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
 import type { Boxer, Geschlecht } from './regeln/typen';
 import { FilterLeiste } from './FilterLeiste';
 import { filterOptionen, istAktiv, passt, type Filter } from './filter';
+import { hebeFreigabeAuf } from './ablauf';
 import type { Zustand } from './speicher';
 import { bestaetige } from './umgebung';
 
@@ -95,12 +96,24 @@ export function BoxerTab(props: {
       setFehler(ergebnis);
       return;
     }
-    setZustand((z) => ({
-      ...z,
-      boxer: bearbeiteId
-        ? z.boxer.map((b) => (b.id === id ? ergebnis : b))
-        : [...z.boxer, ergebnis],
-    }));
+    setZustand((z) => {
+      if (!bearbeiteId) return { ...z, boxer: [...z.boxer, ergebnis] };
+      const alt = z.boxer.find((b) => b.id === id);
+      const paarungsrelevant =
+        !alt ||
+        alt.gewicht !== ergebnis.gewicht ||
+        alt.geburtsdatum !== ergebnis.geburtsdatum ||
+        alt.geschlecht !== ergebnis.geschlecht ||
+        alt.verein !== ergebnis.verein ||
+        alt.kaempfe !== ergebnis.kaempfe ||
+        alt.siege !== ergebnis.siege ||
+        alt.niederlagen !== ergebnis.niederlagen;
+      return {
+        ...z,
+        boxer: z.boxer.map((b) => (b.id === id ? ergebnis : b)),
+        kampfkarte: paarungsrelevant ? hebeFreigabeAuf(z.kampfkarte, id) : z.kampfkarte,
+      };
+    });
     setEingabe(LEER);
     setBearbeiteId(null);
     setFehler('');

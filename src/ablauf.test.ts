@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fuegeSortiertEin, kampfSchluessel, verschiebe } from './ablauf';
+import { fuegeSortiertEin, hebeFreigabeAuf, kampfSchluessel, verschiebe } from './ablauf';
 import type { GeplanterKampf } from './speicher';
 
 const k = (aId: string, bId = `${aId}2`): GeplanterKampf => ({ aId, bId, freigabe: false });
@@ -39,5 +39,21 @@ describe('fuegeSortiertEin', () => {
 describe('kampfSchluessel', () => {
   it('ist unabhängig von den Ecken', () => {
     expect(kampfSchluessel({ aId: 'x', bId: 'y' })).toBe(kampfSchluessel({ aId: 'y', bId: 'x' }));
+  });
+});
+
+describe('hebeFreigabeAuf', () => {
+  const karte = [
+    { aId: 'A', bId: 'B', freigabe: true },
+    { aId: 'C', bId: 'A', freigabe: true },
+    { aId: 'D', bId: 'E', freigabe: true },
+  ];
+
+  it('nimmt die Zustimmung nur bei Kämpfen mit dem geänderten Boxer zurück', () => {
+    expect(hebeFreigabeAuf(karte, 'A').map((k) => k.freigabe)).toEqual([false, false, true]);
+  });
+
+  it('ändert nichts bei einem Boxer ohne Kampf', () => {
+    expect(hebeFreigabeAuf(karte, 'Z')).toEqual(karte);
   });
 });
