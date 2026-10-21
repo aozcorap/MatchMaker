@@ -124,7 +124,7 @@ export function pruefePaarung(
       } else if (ia >= 0 && ib >= 0 && Math.abs(ia - ib) === 1) {
         freigabe = true;
         hinweise.push(
-          `Nachbar-Leistungsklassen ${lkA}/${lkB}: Zustimmung beider Trainer, des Veranstalters und des obersten Ringrichters nötig`,
+          `Nachbar-Leistungsklassen ${lkA}/${lkB}: Zustimmung beider Trainer nötig`,
         );
       } else {
         gruende.push(`Leistungsklassen ${lkA} und ${lkB} dürfen nicht gegeneinander`);

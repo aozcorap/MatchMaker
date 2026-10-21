@@ -30,7 +30,7 @@ Die Leistungsklasse (C/B/A/Elite) wird aus Alter und Siegen berechnet.
 6. **Gleicher Verein:** Keine Paarung zwischen Boxern desselben Vereins.
 
 ## 5. Ausnahme Nachbar-Leistungsklasse
-Nachbarn A–B und B–C sind möglich, wenn beide Trainer, der Veranstalter und der oberste Ringrichter zustimmen. A–C ist ausgeschlossen, Elite ist ausgeschlossen. Pro Paarung gibt es einen Freigabestatus.
+Nachbarn A–B und B–C sind möglich, wenn die beiden Trainer der Boxer zustimmen. Eine weitere Zustimmung (Veranstalter, oberster Ringrichter) ist nicht nötig. A–C ist ausgeschlossen, Elite ist ausgeschlossen. Pro Paarung gibt es einen Freigabestatus (Zustimmung beider Trainer liegt vor: ja/nein).
 
 ## 6. Qualität der Paarung
 Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl der Kämpfe. Kein fester Höchstunterschied bei den Siegen; die Grenze setzen die Leistungsklassen. Reihenfolge der Kriterien:

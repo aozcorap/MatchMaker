@@ -299,7 +299,7 @@ export function KampfkarteTab(props: {
                         checked={geplant.freigabe}
                         onChange={(e) => setzeFreigabe(geplant, e.target.checked)}
                       />
-                      Freigabe liegt vor (beide Trainer, Veranstalter, oberster Ringrichter)
+                      Zustimmung beider Trainer liegt vor
                     </label>
                   )}
                   {kampf.pruefung.hinweise
