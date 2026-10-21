@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { App } from './App';
 import { Anmeldung, NeuesPasswort } from './konto/Anmeldung';
 import { supabase } from './konto/client';
-import { istAdmin, ladeAlle, ladeVeranstaltung, legeAn, type Gespeichert, type Uebersicht } from './konto/cloud';
-import { laden, leererZustand, liesZustand, type Zustand } from './speicher';
+import { istAdmin, ladeAlle, ladeVeranstaltung, legeAn, loescheVeranstaltung, type Gespeichert, type Uebersicht } from './konto/cloud';
+import { heute, laden, leererZustand, liesZustand, type Zustand } from './speicher';
 import { bestaetige, DEMO } from './umgebung';
 
 const LOKAL = 'matchmaker-v1';
@@ -52,6 +52,7 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
   const [admin, setAdmin] = useState(false);
   const [ansicht, setAnsicht] = useState<Ansicht>({ art: 'eigene' });
   const [liste, setListe] = useState<Uebersicht[] | null>(null);
+  const [listenFehler, setListenFehler] = useState('');
 
   const lade = useCallback(async () => {
     setFehler('');
@@ -99,6 +100,28 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
     }
   }, [ansicht]);
 
+  async function loesche(e: Uebersicht) {
+    const datum = e.zustand.datum.split('-').reverse().join('.');
+    setListenFehler('');
+    if (
+      !bestaetige(
+        `Veranstaltung von ${e.email} (${datum}, ${e.zustand.boxer.length} Boxer, ${e.zustand.kampfkarte.length} Kämpfe) mit allen Sicherungen endgültig löschen? Das Konto bleibt bestehen und startet leer.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await loescheVeranstaltung(e.userId);
+      setListe((alt) => alt?.filter((x) => x.userId !== e.userId) ?? null);
+      if (e.userId === userId) {
+        setDaten(null);
+        void lade();
+      }
+    } catch {
+      setListenFehler('Löschen hat nicht geklappt.');
+    }
+  }
+
   async function abmelden() {
     await supabase.auth.signOut();
   }
@@ -135,6 +158,7 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
       <div className="seite">
         {leiste(null)}
         <h2>Alle Veranstaltungen</h2>
+        {listenFehler && <p className="fehler" role="alert">{listenFehler}</p>}
         {liste === null ? (
           <p className="hinweis">Wird geladen …</p>
         ) : liste.length === 0 ? (
@@ -155,12 +179,16 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
               {liste.map((e) => (
                 <tr key={e.userId}>
                   <td>{e.email}</td>
-                  <td>{e.zustand.datum.split('-').reverse().join('.')}</td>
+                  <td>
+                    {e.zustand.datum.split('-').reverse().join('.')}
+                    {e.zustand.datum < heute() && <span className="hinweis"> (vorbei)</span>}
+                  </td>
                   <td>{e.zustand.boxer.length}</td>
                   <td>{e.zustand.kampfkarte.length}</td>
                   <td>{new Date(e.aktualisiert).toLocaleString('de-DE')}</td>
                   <td>
-                    <button onClick={() => setAnsicht({ art: 'fremde', eintrag: e })}>Ansehen</button>
+                    <button onClick={() => setAnsicht({ art: 'fremde', eintrag: e })}>Ansehen</button>{' '}
+                    <button onClick={() => void loesche(e)}>Löschen</button>
                   </td>
                 </tr>
               ))}

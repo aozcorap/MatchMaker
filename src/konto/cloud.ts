@@ -79,10 +79,11 @@ export interface Sicherung {
   kaempfe: number;
 }
 
-export async function ladeSicherungen(): Promise<Sicherung[]> {
+export async function ladeSicherungen(userId: string): Promise<Sicherung[]> {
   const { data, error } = await supabase
     .from('sicherungen')
     .select('id, erstellt, manuell, boxer, kaempfe')
+    .eq('user_id', userId)
     .order('erstellt', { ascending: false })
     .limit(50);
   if (error) throw error;
@@ -106,4 +107,12 @@ export async function legeSicherungAn(userId: string, zustand: Zustand): Promise
     kaempfe: zustand.kampfkarte.length,
   });
   if (error) throw error;
+}
+
+/** Nur Admin: löscht die Veranstaltung samt Sicherungen. Das Konto selbst bleibt bestehen. */
+export async function loescheVeranstaltung(userId: string): Promise<void> {
+  const a = await supabase.from('sicherungen').delete().eq('user_id', userId);
+  if (a.error) throw a.error;
+  const b = await supabase.from('veranstaltungen').delete().eq('user_id', userId);
+  if (b.error) throw b.error;
 }

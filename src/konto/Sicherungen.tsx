@@ -24,7 +24,7 @@ export function Sicherungen({
   const [fehler, setFehler] = useState('');
   const [arbeitet, setArbeitet] = useState(false);
 
-  const lade = () => ladeSicherungen().then(setListe, () => setFehler('Die Sicherungen konnten nicht geladen werden.'));
+  const lade = () => ladeSicherungen(userId).then(setListe, () => setFehler('Die Sicherungen konnten nicht geladen werden.'));
   useEffect(() => {
     void lade();
   }, []);
