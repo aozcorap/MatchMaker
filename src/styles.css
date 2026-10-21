@@ -241,7 +241,7 @@ table {
 th,
 td {
   text-align: left;
-  padding: 8px 10px;
+  padding: 8px 8px;
   border-bottom: 1px solid var(--rand);
   white-space: nowrap;
 }
@@ -841,4 +841,22 @@ td.pruefung .quelle {
   margin-top: 14px;
   color: var(--leise);
   font-size: 0.85rem;
+}
+
+.listenkopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 8px 0;
+}
+
+.listenkopf h2 {
+  margin: 0;
+}
+
+.formular-titel {
+  font-size: 1.05rem;
+  margin: 14px 0 10px;
 }

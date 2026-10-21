@@ -83,6 +83,7 @@ export function BoxerTab(props: {
   const [eingabe, setEingabe] = useState<Eingabe>(LEER);
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null);
   const [fehler, setFehler] = useState('');
+  const [formularOffen, setFormularOffen] = useState(false);
 
   const feld = <K extends keyof Eingabe>(k: K, v: Eingabe[K]) => setEingabe({ ...eingabe, [k]: v });
 
@@ -126,8 +127,31 @@ export function BoxerTab(props: {
 
   return (
     <section>
-      <form className="formular" onSubmit={speichere}>
-        <h2>{bearbeiteId ? 'Boxer bearbeiten' : 'Boxer erfassen'}</h2>
+
+      <div className="listenkopf">
+        <h2>
+          Gemeldete Boxer ({istAktiv(filter) ? `${sortiert.length} von ${zustand.boxer.length}` : zustand.boxer.length})
+        </h2>
+        <button
+          className={formularOffen || bearbeiteId ? '' : 'primaer'}
+          aria-expanded={formularOffen || bearbeiteId !== null}
+          onClick={() => {
+            if (formularOffen || bearbeiteId) {
+              setFormularOffen(false);
+              setBearbeiteId(null);
+              setEingabe(LEER);
+              setFehler('');
+            } else {
+              setFormularOffen(true);
+            }
+          }}
+        >
+          {formularOffen || bearbeiteId ? 'Formular schließen' : 'Boxer erfassen'}
+        </button>
+      </div>
+      {(formularOffen || bearbeiteId) && (
+      <form id="boxer-formular" className="formular" onSubmit={speichere}>
+        <h3 className="formular-titel">{bearbeiteId ? 'Boxer bearbeiten' : 'Boxer erfassen'}</h3>
         <div className="raster">
           <label>
             Name
@@ -211,8 +235,7 @@ export function BoxerTab(props: {
           )}
         </div>
       </form>
-
-      <h2>Gemeldete Boxer</h2>
+      )}
       <FilterLeiste
         filter={filter}
         setFilter={setFilter}
@@ -265,9 +288,10 @@ export function BoxerTab(props: {
                       <button
                         onClick={() => {
                           setBearbeiteId(b.id);
+                          setFormularOffen(true);
                           setEingabe(alsEingabe(b));
                           setFehler('');
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                          document.getElementById('boxer-formular')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }}
                       >
                         Bearbeiten
