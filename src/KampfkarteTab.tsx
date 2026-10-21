@@ -4,7 +4,7 @@ import { BoxerZelle } from './BoxerZelle';
 import { PaarungsDialog } from './PaarungsDialog';
 import { altersklasseText, boxerInfo } from './regeln/info';
 import { baueKampf, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
-import { altersdifferenzMonate } from './regeln/paarung';
+import { altersdifferenzMonate, paarungsGuete } from './regeln/paarung';
 import { rundenzeitFuer } from './regeln/klassen';
 import type { Boxer } from './regeln/typen';
 import type { GeplanterKampf, Zustand } from './speicher';
@@ -47,6 +47,27 @@ export function KampfkarteTab(props: {
     [boxer, belegt, datum],
   );
   const vorschlaege = useMemo(() => erzeugePaarungen(wartende, datum), [wartende, datum]);
+
+  // Je Wartendem alle anderen Wartenden, die nur mit Freigabe passen würden, beste Paarung zuerst
+  const freigabeGegner = useMemo(() => {
+    const karte = new Map<string, Boxer[]>();
+    for (let i = 0; i < wartende.length; i++) {
+      for (let j = i + 1; j < wartende.length; j++) {
+        if (baueKampf(wartende[i], wartende[j], datum).pruefung.status !== 'freigabe') continue;
+        karte.set(wartende[i].id, [...(karte.get(wartende[i].id) ?? []), wartende[j]]);
+        karte.set(wartende[j].id, [...(karte.get(wartende[j].id) ?? []), wartende[i]]);
+      }
+    }
+    for (const [id, liste] of karte) {
+      const ich = wartende.find((w) => w.id === id)!;
+      liste.sort((x, y) => {
+        const gx = paarungsGuete(ich, x, datum);
+        const gy = paarungsGuete(ich, y, datum);
+        return gx[1] - gy[1] || gx[2] - gy[2];
+      });
+    }
+    return karte;
+  }, [wartende, datum]);
 
   const gewaehlt = auswahl.filter((id) => !belegt.has(id)).map((id) => nachId.get(id)!).filter(Boolean);
   const vorschauAuswahl = gewaehlt.length === 2 ? baueKampf(gewaehlt[0], gewaehlt[1], datum) : null;
@@ -205,7 +226,7 @@ export function KampfkarteTab(props: {
           </p>
           <ul className="warteliste">
             {wartende.map((b, i) => {
-              const frei = vorschlaege.warteliste.find((w) => w.boxer.id === b.id)?.freigabeMoeglich;
+              const gegner = freigabeGegner.get(b.id) ?? [];
               const gruppe = gruppenName(b, datum);
               const neueGruppe = i === 0 || gruppe !== gruppenName(wartende[i - 1], datum);
               return (
@@ -222,8 +243,23 @@ export function KampfkarteTab(props: {
                   </label>
                   <span className="grund">
                     {grund(b)}
-                    {frei ? ' · mit Freigabe wäre ein Gegner möglich' : ''}
+                    {gegner.length > 0 ? ' · mit Freigabe wäre ein Gegner möglich' : ''}
                   </span>
+                  {gegner.length > 0 && (
+                    <div className="freigabe-gegner">
+                      <span>Passt mit Freigabe zu:</span>
+                      {gegner.slice(0, 3).map((g) => {
+                        const gi = boxerInfo(g, datum);
+                        return (
+                          <button key={g.id} onClick={() => setAuswahl([b.id, g.id])}>
+                            {g.name} · {g.verein} · {g.gewicht} kg · {g.kaempfe} K / {g.siege} S ·{' '}
+                            {gi.leistungsklasse}
+                          </button>
+                        );
+                      })}
+                      {gegner.length > 3 && <span>+ {gegner.length - 3} weitere</span>}
+                    </div>
+                  )}
                 </li>
                 </Fragment>
               );
