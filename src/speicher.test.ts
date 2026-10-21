@@ -21,7 +21,7 @@ const voll: Zustand = {
   ausfaelle: { G: { grund: 'Verletzung', notiz: 'Nase', gegnerId: 'F' } },
   regeln: { maxGewichtProzent: 8, maxSiegdifferenzFreigabe: 4, klassenwechselFreigabe: false },
   zeit: { kampfPauseMin: 3, grossePauseMin: 20, blockMin: 90, erwachsenenRundeMin: 2 },
-  extraPausen: [{ id: 'p1', vorKampf: 2, minuten: 15, text: 'Siegerehrung' }],
+  extraPausen: [{ id: 'p1', vorKampf: 2, kampf: kampfSchluessel(kampfkarte[1]), minuten: 15, text: 'Siegerehrung' }],
   autoPausen: { [kampfSchluessel(kampfkarte[2])]: 10 },
 };
 
@@ -33,6 +33,12 @@ function durchDatenbank(z: Zustand): Zustand | null {
 describe('Speichern und Laden', () => {
   it('behält Kampfreihenfolge, Pausen, Ausfälle, Zeiten und Einstellungen', () => {
     expect(durchDatenbank(voll)).toEqual(voll);
+  });
+
+  it('eine ältere Pause ohne Kampf wird beim Laden an den Kampf ihrer Position gehängt', () => {
+    const alt = JSON.parse(JSON.stringify(voll));
+    delete alt.extraPausen[0].kampf;
+    expect(liesZustand(alt)?.extraPausen[0]).toMatchObject({ vorKampf: 2, kampf: kampfSchluessel(kampfkarte[1]) });
   });
 
   it('behält die Reihenfolge der Kämpfe exakt', () => {

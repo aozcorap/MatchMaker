@@ -1,3 +1,4 @@
+import { richtePausenAus } from './ablauf';
 import { STANDARD_OPTIONEN, type Boxer, type RegelOptionen } from './regeln/typen';
 import { STANDARD_ZEIT, type ExtraPause, type Zeiteinstellungen } from './regeln/zeitplan';
 import { simulation } from './testdaten';
@@ -86,12 +87,18 @@ export function liesZustand(roh: unknown): Zustand | null {
   };
   const extraPausen: ExtraPause[] = (Array.isArray(z.extraPausen) ? z.extraPausen : [])
     .filter((p) => p && typeof p.id === 'string' && Number.isInteger(p.vorKampf) && p.vorKampf >= 1)
-    .map((p) => ({ id: p.id, vorKampf: p.vorKampf, minuten: gueltig(p.minuten, 0), text: typeof p.text === 'string' ? p.text : '' }));
+    .map((p) => ({
+      id: p.id,
+      vorKampf: p.vorKampf,
+      ...(typeof p.kampf === 'string' ? { kampf: p.kampf } : {}),
+      minuten: gueltig(p.minuten, 0),
+      text: typeof p.text === 'string' ? p.text : '',
+    }));
   const autoPausen: Record<string, number> = {};
   for (const [schluessel, minuten] of Object.entries(z.autoPausen ?? {})) {
     if (typeof minuten === 'number' && Number.isFinite(minuten) && minuten >= 0) autoPausen[schluessel] = minuten;
   }
-  return { datum: z.datum, beginn, boxer: z.boxer, kampfkarte, ausfaelle, regeln, zeit, extraPausen, autoPausen };
+  return richtePausenAus({ datum: z.datum, beginn, boxer: z.boxer, kampfkarte, ausfaelle, regeln, zeit, extraPausen, autoPausen });
 }
 
 export function laden(): Zustand {

@@ -193,7 +193,10 @@ export function KampfkarteTab(props: {
   function aenderePause(id: string, teil: Partial<{ vorKampf: number; minuten: number; text: string }>) {
     setZustand((z) => ({
       ...z,
-      extraPausen: z.extraPausen.map((p) => (p.id === id ? { ...p, ...teil } : p)),
+      // Wird die Pause verschoben, löst sie sich vom alten Kampf und hängt sich an den an der neuen Position
+      extraPausen: z.extraPausen.map((p) =>
+        p.id === id ? { ...p, ...teil, ...(teil.vorKampf !== undefined ? { kampf: undefined } : {}) } : p,
+      ),
     }));
   }
 
