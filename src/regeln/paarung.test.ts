@@ -5,7 +5,7 @@ import {
   leistungsklasseVon,
   rundenzeitFuer,
 } from './klassen';
-import { altersdifferenzMonate, innerhalb24Monate, paarungsGuete, pruefePaarung as pruefe } from './paarung';
+import { altersdifferenzMonate, gleicherVerein, innerhalb24Monate, paarungsGuete, pruefePaarung as pruefe } from './paarung';
 import { STANDARD_OPTIONEN, type Boxer, type RegelOptionen } from './typen';
 
 const TAG = '2026-11-14';
@@ -239,5 +239,23 @@ describe('Klassenwechsel nur mit Freigabe (Standard)', () => {
   });
   it('gleiche Alters- und Gewichtsklasse bleibt ohne Freigabe', () => {
     expect(pruefe(boxer({ gewicht: 83 }), boxer({ gewicht: 84.5 }), TAG, strikt).status).toBe('ok');
+  });
+});
+
+describe('gleicherVerein', () => {
+  it('erkennt unterschiedliche Schreibweisen desselben Vereins', () => {
+    expect(gleicherVerein('TSV Foo', 'TSV Foo e.V.')).toBe(true);
+    expect(gleicherVerein('TSV Foo', 'tsv foo e. V.')).toBe(true);
+    expect(gleicherVerein('BC Duisburg-Süd', 'BC Duisburg Süd')).toBe(true);
+    expect(gleicherVerein(' BC Nord ', 'bc nord')).toBe(true);
+  });
+  it('unterscheidet verschiedene Vereine', () => {
+    expect(gleicherVerein('BC Nord', 'BC Nord 1920')).toBe(false);
+    expect(gleicherVerein('BC Nord', 'BC Süd')).toBe(false);
+    expect(gleicherVerein('', '')).toBe(false);
+  });
+  it('Paarung zwischen "TSV Foo" und "TSV Foo e.V." ist verboten', () => {
+    const r = pruefePaarung(boxer({ verein: 'TSV Foo' }), boxer({ verein: 'TSV Foo e.V.' }), TAG);
+    expect(r.status).toBe('verboten');
   });
 });

@@ -39,6 +39,23 @@ export function altersdifferenzMonate(a: string, b: string): number {
 
 const LEISTUNG_REIHE = ['C', 'B', 'A'];
 
+/** Vereinsname zum Vergleichen: ohne Groß-/Kleinschreibung, Satzzeichen und "e.V.", Bindestriche wie Leerzeichen. */
+function vereinSchluessel(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[.,]/g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/\be\s*v\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Gleicher Verein, auch bei unterschiedlicher Schreibweise ("TSV Foo" und "TSV Foo e.V."). Leere Namen sind nie gleich. */
+export function gleicherVerein(a: string, b: string): boolean {
+  const x = vereinSchluessel(a);
+  return x !== '' && x === vereinSchluessel(b);
+}
+
 export function pruefePaarung(
   a: Boxer,
   b: Boxer,
@@ -49,7 +66,7 @@ export function pruefePaarung(
   const hinweise: string[] = [];
   let freigabe = false;
 
-  if (a.verein.trim().toLowerCase() === b.verein.trim().toLowerCase()) {
+  if (gleicherVerein(a.verein, b.verein)) {
     gruende.push('Gleicher Verein');
   }
   if (a.geschlecht !== b.geschlecht) {
