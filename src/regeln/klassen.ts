@@ -14,10 +14,11 @@ export function jahrVon(iso: string): number {
   return Number(iso.slice(0, 4));
 }
 
-/** Altersklasse = Jahr der Veranstaltung minus Geburtsjahr (§11). Unter 10: keine Klasse. */
+/** Altersklasse = Jahr der Veranstaltung minus Geburtsjahr (§11). Wettkampf erst ab dem 10. Geburtstag (§11.3), davor keine Klasse. */
 export function altersklasseVon(geburtsdatum: string, veranstaltung: string): Altersklasse | null {
   const alter = jahrVon(veranstaltung) - jahrVon(geburtsdatum);
   if (alter < 10) return null;
+  if (alter === 10 && geburtsdatum.slice(5) > veranstaltung.slice(5)) return null;
   if (alter <= 12) return 'U13';
   if (alter <= 14) return 'U15';
   if (alter <= 16) return 'U17';

@@ -31,7 +31,8 @@ function boxer(teil: Partial<Boxer>): Boxer {
 describe('Altersklasse (§11)', () => {
   it.each([
     ['2017-01-01', null],
-    ['2016-01-01', 'U13'], // 10 im Jahr 2026
+    ['2016-01-01', 'U13'], // 10 im Jahr 2026, Geburtstag schon vorbei
+    ['2016-12-31', null], // wird erst nach dem Kampftag 10 (§11.3)
     ['2014-01-01', 'U13'], // 12
     ['2013-12-31', 'U15'], // 13
     ['2012-01-01', 'U15'], // 14
