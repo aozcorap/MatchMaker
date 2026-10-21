@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { kampfdauer, plane, uhrzeit, type ExtraPause } from './zeitplan';
+import { kampfdauer, plane, uhrzeit, type ExtraPause, parseUhrzeit } from './zeitplan';
 
 const MIN = 60;
 
@@ -123,3 +123,15 @@ describe('Zeitplan: anpassbare Pausen', () => {
   });
 });
 
+
+describe('parseUhrzeit', () => {
+  it('liest gültige Uhrzeiten', () => {
+    expect(parseUhrzeit('09:30')).toBe(9 * 3600 + 30 * 60);
+    expect(parseUhrzeit('0:05')).toBe(5 * 60);
+  });
+  it('ungültige Eingaben fallen auf 14:00 zurück', () => {
+    expect(parseUhrzeit('29:99')).toBe(14 * 3600);
+    expect(parseUhrzeit('24:00')).toBe(14 * 3600);
+    expect(parseUhrzeit('abc')).toBe(14 * 3600);
+  });
+});

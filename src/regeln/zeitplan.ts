@@ -40,7 +40,8 @@ export function kampfdauer(r: Rundenzeit): number {
 
 export function parseUhrzeit(text: string): number {
   const m = /^(\d{1,2}):(\d{2})$/.exec(text);
-  return m ? Number(m[1]) * 3600 + Number(m[2]) * 60 : 14 * 3600;
+  // Ungültige Eingaben wie "29:99" fallen auf die Standardzeit zurück
+  return m && Number(m[1]) < 24 && Number(m[2]) < 60 ? Number(m[1]) * 3600 + Number(m[2]) * 60 : 14 * 3600;
 }
 
 /** HH:MM, auf die nächste Minute gerundet. */
