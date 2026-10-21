@@ -1,9 +1,5 @@
-import {
-  ALTERSKLASSEN,
-  altersklasseVon,
-  gewichtsklasseVon,
-  leistungsklasseVon,
-} from './klassen';
+import { juengereAltersklasse, leichterZuerst, vergleicheKampf } from './kampfkarte';
+import { altersklasseVon, gewichtsklasseVon, leistungsklasseVon } from './klassen';
 import { paarungsGuete, pruefePaarung } from './paarung';
 import type { Altersklasse, Boxer, Leistungsklasse, Pruefung, Rundenzeit } from './typen';
 
@@ -81,10 +77,6 @@ function waehleExklusiv(kanten: Kante[]): Kante[] {
   return gewaehlt;
 }
 
-function leichterZuerst(a: Boxer, b: Boxer): [Boxer, Boxer] {
-  return a.gewicht < b.gewicht || (a.gewicht === b.gewicht && a.id <= b.id) ? [a, b] : [b, a];
-}
-
 export function erzeugePaarungen(boxer: Boxer[], veranstaltung: string): Ergebnis {
   const okKanten: Kante[] = [];
   const freigabeKanten: Kante[] = [];
@@ -106,11 +98,10 @@ export function erzeugePaarungen(boxer: Boxer[], veranstaltung: string): Ergebni
     .map((k) => {
       const akA = altersklasseVon(k.a.geburtsdatum, veranstaltung)!;
       const akB = altersklasseVon(k.b.geburtsdatum, veranstaltung)!;
-      const juenger = ALTERSKLASSEN.indexOf(akA) <= ALTERSKLASSEN.indexOf(akB) ? akA : akB;
       return {
         a: k.a,
         b: k.b,
-        altersklasse: juenger,
+        altersklasse: juengereAltersklasse(akA, akB),
         leistungsklasse: leistungsklasseVon(k.a, akA),
         rundenzeit: k.pruefung.rundenzeit!,
         hinweise: k.pruefung.hinweise,
@@ -118,13 +109,7 @@ export function erzeugePaarungen(boxer: Boxer[], veranstaltung: string): Ergebni
       };
     })
     // Jüngste Altersklasse zuerst, darin leichtester Boxer zuerst
-    .sort(
-      (x, y) =>
-        ALTERSKLASSEN.indexOf(x.altersklasse) - ALTERSKLASSEN.indexOf(y.altersklasse) ||
-        x.a.gewicht - y.a.gewicht ||
-        x.b.gewicht - y.b.gewicht ||
-        x.a.id.localeCompare(y.a.id),
-    )
+    .sort(vergleicheKampf)
     .map((p, i) => ({ nr: i + 1, ...p }));
 
   const wartende = boxer.filter((b) => !vergeben.has(b.id));
