@@ -74,7 +74,9 @@ export function plane(
     let auto: Zeitslot['auto'] = null;
     if (i > 0) {
       const vorherEnde = slots[i - 1].ende;
-      if (zeit.blockMin > 0 && vorherEnde - blockStart >= zeit.blockMin * 60) {
+      // Liegt vor diesem Kampf schon eine eigene Pause von mindestens der großen Pause, ersetzt sie die automatische
+      const langeExtra = extraPausen.some((p) => p.vorKampf === i + 1 && p.minuten >= zeit.grossePauseMin);
+      if (zeit.blockMin > 0 && vorherEnde - blockStart >= zeit.blockMin * 60 && !langeExtra) {
         const minuten = optionen.autoDauerMin?.(i) ?? zeit.grossePauseMin;
         auto = { von: vorherEnde, bis: vorherEnde + minuten * 60 };
         t = auto.bis;

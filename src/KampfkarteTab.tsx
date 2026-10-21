@@ -220,6 +220,16 @@ export function KampfkarteTab(props: {
     return { name: b.name, verein: b.verein, klassen: `${altersklasseText(info.altersklasse)} · ${gewichtsklasseText(info.gewichtsklasse)}` };
   };
   async function erstellePdf() {
+    const offen = kaempfe.filter((k) => k.kampf.pruefung.status === 'freigabe' && !k.geplant.freigabe).length;
+    const verboten = kaempfe.filter((k) => k.kampf.pruefung.status === 'verboten').length;
+    if (
+      (offen > 0 || verboten > 0) &&
+      !bestaetige(
+        `Achtung: ${offen} Kampf/Kämpfe ohne Zustimmung der Trainer und ${verboten} mit Regelverstoß. PDF trotzdem erstellen?`,
+      )
+    ) {
+      return;
+    }
     setPdfLaeuft(true);
     setPdfFehler(false);
     try {

@@ -107,5 +107,19 @@ describe('Zeitplan: anpassbare Pausen', () => {
     const kurz = plane('14:00', dauern, { extraPausen: [pause(5, 10)] }).map((x, i) => (x.auto ? i : -1)).filter((i) => i >= 0);
     expect(kurz[0]).toBeLessThanOrEqual(10); // eine kurze Pause setzt nichts zurück
   });
+
+  it('eine eigene Pause ab großer Pause ersetzt die automatische vor demselben Kampf (keine Doppelpause)', () => {
+    const dauern = Array(15).fill(kampf);
+    // Kampf 11 (Index 10) löst ohne eigene Pause die automatische große Pause aus
+    expect(plane('14:00', dauern)[10].auto).not.toBeNull();
+    const mit = plane('14:00', dauern, { extraPausen: [pause(11, 45)] });
+    expect(mit[10].auto).toBeNull();
+    expect(mit[10].extra).toHaveLength(1);
+    // Beginn des Kampfes: Ende Kampf 10 + 2 min Kampfpause + 45 min eigene Pause, nicht zusätzlich 30 min
+    const ohne = plane('14:00', dauern);
+    const ende10 = mit[9].ende;
+    expect(mit[10].start).toBe(ende10 + 2 * 60 + 45 * 60);
+    expect(mit[10].start).toBeLessThan(ohne[10].start + 45 * 60);
+  });
 });
 
