@@ -225,3 +225,20 @@ describe('Prüfen', () => {
     expect(pruefeZeile(a, [], zaehler, HEUTE).warnungen.join(' ')).toContain('mehrfach');
   });
 });
+
+describe('Verein aus dem Text', () => {
+  const heute = new Date(Date.UTC(2026, 9, 21));
+  it('nimmt den Verein aus der Signatur, wenn die Tabelle keine Vereinsspalte hat', () => {
+    const t = 'Hallo,\n\nanbei meine Meldung.\n\nName\tGeb.\tKg.\tK\tS\tN\nMax Muster\t01.02.2008\t55\t5\t3\t2\n\nGruß\nTrainer Meier\nBC Nordstern e.V.\nmeier@example.de';
+    const e = liesText(t, { heute });
+    expect(e.zeilen[0].verein).toBe('BC Nordstern e.V');
+  });
+  it('lässt den Verein leer, wenn nichts zu finden ist', () => {
+    const t = 'Name\tGeb.\tKg.\tK\tS\tN\nMax Muster\t01.02.2008\t55\t5\t3\t2';
+    expect(liesText(t, { heute }).zeilen[0].verein).toBe('');
+  });
+  it('überschreibt keinen vorhandenen Verein', () => {
+    const t = 'Name\tVerein\tGeb.\tKg.\nMax Muster\tTSV Eins\t01.02.2008\t55\n\nBC Nordstern';
+    expect(liesText(t, { heute }).zeilen[0].verein).toBe('TSV Eins');
+  });
+});

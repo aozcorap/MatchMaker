@@ -432,12 +432,43 @@ export function liesTabelle(zeilen: Zelle[][], o: LeseOptionen = {}): LeseErgebn
   );
 }
 
+/** Verein aus Textzeilen außerhalb der Tabelle, z. B. "Verein: BC Nord" oder die Signatur einer E-Mail. */
+export function findeVereinImText(zeilen: string[]): string | null {
+  let gefunden: string | null = null;
+  for (const roh of zeilen) {
+    const zeile = roh.trim();
+    if (!zeile || zeile.includes('\t') || zeile.includes('@') || /\d/.test(zeile)) continue;
+    const beschriftet = /^(?:verein|club|team)\s*[:=]\s*(.+)$/i.exec(zeile);
+    if (beschriftet) return saeubere(beschriftet[1]);
+    if (zeile.split(/\s+/).length > 8) continue;
+    const m = VEREIN_WORT.exec(zeile);
+    if (m) gefunden = saeubere(m[1]);
+  }
+  return gefunden;
+}
+
+/** Trägt einen im Text gefundenen Verein bei Zeilen ein, die selbst keinen haben. */
+function ergaenzeVerein(ergebnis: LeseErgebnis, zeilen: string[]) {
+  if (!ergebnis.zeilen.some((z) => z.verein === '')) return;
+  const verein = findeVereinImText(zeilen);
+  if (!verein) return;
+  for (const z of ergebnis.zeilen) {
+    if (z.verein !== '') continue;
+    z.verein = verein;
+    z.hinweise.push('Verein aus dem Text (z. B. Signatur) übernommen');
+  }
+}
+
 /** Eingefügter Text oder CSV: Tabelle mit Kopfzeile, sonst Freitext (eine Zeile je Boxer). */
 export function liesText(text: string, o: LeseOptionen = {}): LeseErgebnis {
   const zeilen = text.split(/\r?\n/);
   for (const trenner of ['\t', ';', ',']) {
     const tabelle = zeilen.map((z) => teileZeile(z, trenner));
-    if (findeKopfzeile(tabelle)) return liesTabelle(tabelle, o);
+    if (findeKopfzeile(tabelle)) {
+      const ergebnis = liesTabelle(tabelle, o);
+      ergaenzeVerein(ergebnis, zeilen);
+      return ergebnis;
+    }
   }
   return ausFreitext(zeilen, o);
 }
