@@ -12,6 +12,9 @@
   --warn-bg: #fdf1d6;
   --fehler: #a11d1d;
   --fehler-bg: #fbe6e6;
+  --rot: #b3261e;
+  --blau: #1f4fb5;
+  --ecke-text: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,6 +32,9 @@
     --warn-bg: #33291a;
     --fehler: #f08a86;
     --fehler-bg: #3a1f1f;
+    --rot: #e0645c;
+    --blau: #6f97f0;
+    --ecke-text: #101010;
     color-scheme: dark;
   }
 }
@@ -47,6 +53,9 @@
   --warn-bg: #33291a;
   --fehler: #f08a86;
   --fehler-bg: #3a1f1f;
+  --rot: #e0645c;
+  --blau: #6f97f0;
+  --ecke-text: #101010;
   color-scheme: dark;
 }
 
@@ -292,10 +301,6 @@ th {
   color: var(--text);
 }
 
-.kampfkopf button {
-  margin-left: auto;
-}
-
 .gegner {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -404,4 +409,53 @@ th {
 
 [hidden] {
   display: none !important;
+}
+
+.ecke {
+  border-top: 4px solid var(--rot);
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.ecke.blau {
+  border-top-color: var(--blau);
+}
+
+.boxer .eckenlabel {
+  align-self: flex-start;
+  background: var(--rot);
+  color: var(--ecke-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 8px;
+  border-radius: 3px;
+  margin-bottom: 4px;
+}
+
+.boxer.ecke.blau .eckenlabel {
+  background: var(--blau);
+}
+
+.kampfknoepfe {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.kampfknoepfe button {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.warteliste li.gruppe {
+  background: none;
+  border: none;
+  padding: 10px 0 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--leise);
+  display: block;
 }

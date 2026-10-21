@@ -1,7 +1,7 @@
-import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import { Fragment, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { erzeugePaarungen } from './regeln/generator';
 import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
-import { baueKampf, vergleicheKampf } from './regeln/kampfkarte';
+import { baueKampf, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
 import { altersdifferenzMonate } from './regeln/paarung';
 import { rundenzeitFuer } from './regeln/klassen';
 import type { Boxer } from './regeln/typen';
@@ -12,10 +12,17 @@ function minutenText(m: number): string {
   return String(m).replace('.', ',');
 }
 
-function BoxerZelle({ b, datum }: { b: Boxer; datum: string }) {
+function gruppenName(b: Boxer, datum: string): string {
+  const geschlecht = b.geschlecht === 'M' ? 'Männer' : 'Frauen';
+  const ak = boxerInfo(b, datum).altersklasse;
+  return `${geschlecht} · ${ak ? altersklasseText(ak) : 'keine Altersklasse'}`;
+}
+
+function BoxerZelle({ b, datum, ecke }: { b: Boxer; datum: string; ecke?: 'rot' | 'blau' }) {
   const info = boxerInfo(b, datum);
   return (
-    <div className="boxer">
+    <div className={ecke ? `boxer ecke ${ecke}` : 'boxer'}>
+      {ecke && <span className="eckenlabel">{ecke === 'rot' ? 'Rote Ecke' : 'Blaue Ecke'}</span>}
       <strong>{b.name}</strong>
       <span>{b.verein}</span>
       <span>
@@ -49,7 +56,10 @@ export function KampfkarteTab(props: {
   );
 
   const belegt = useMemo(() => new Set(kampfkarte.flatMap((k) => [k.aId, k.bId])), [kampfkarte]);
-  const wartende = useMemo(() => boxer.filter((b) => !belegt.has(b.id)), [boxer, belegt]);
+  const wartende = useMemo(
+    () => boxer.filter((b) => !belegt.has(b.id)).sort((x, y) => vergleicheWartende(x, y, datum)),
+    [boxer, belegt, datum],
+  );
   const vorschlaege = useMemo(() => erzeugePaarungen(wartende, datum), [wartende, datum]);
 
   const gewaehlt = auswahl.filter((id) => !belegt.has(id)).map((id) => nachId.get(id)!).filter(Boolean);
@@ -84,6 +94,15 @@ export function KampfkarteTab(props: {
       ...z,
       kampfkarte: z.kampfkarte.map((k) =>
         k.aId === g.aId && k.bId === g.bId ? { ...k, freigabe: wert } : k,
+      ),
+    }));
+  }
+
+  function tauscheEcken(g: GeplanterKampf) {
+    setZustand((z) => ({
+      ...z,
+      kampfkarte: z.kampfkarte.map((k) =>
+        k.aId === g.aId && k.bId === g.bId ? { ...k, aId: k.bId, bId: k.aId } : k,
       ),
     }));
   }
@@ -149,12 +168,15 @@ export function KampfkarteTab(props: {
                   <span>Leistungsklasse {kampf.leistungsklasse}</span>
                   <span>{rz ? `${rz.runden} × ${minutenText(rz.minuten)} min` : '–'}</span>
                   <span>Altersdifferenz {altersdifferenzMonate(kampf.a.geburtsdatum, kampf.b.geburtsdatum)} Monate</span>
-                  <button onClick={() => entferne(geplant)}>Entfernen</button>
+                  <span className="kampfknoepfe">
+                    <button onClick={() => tauscheEcken(geplant)}>Ecken tauschen</button>
+                    <button onClick={() => entferne(geplant)}>Entfernen</button>
+                  </span>
                 </div>
                 <div className="gegner">
-                  <BoxerZelle b={kampf.a} datum={datum} />
+                  <BoxerZelle b={kampf.rot} datum={datum} ecke="rot" />
                   <span className="gegen">gegen</span>
-                  <BoxerZelle b={kampf.b} datum={datum} />
+                  <BoxerZelle b={kampf.blau} datum={datum} ecke="blau" />
                 </div>
                 {status === 'verboten' && (
                   <ul className="fehler">
@@ -192,14 +214,18 @@ export function KampfkarteTab(props: {
       ) : (
         <>
           <p className="hinweis">
-            Zwei Boxer anhaken, um selbst einen Kampf anzulegen. Die App zeigt vorher, ob er den Regeln
-            entspricht.
+            Zwei Boxer anhaken, um selbst einen Kampf anzulegen. Wer zuerst angehakt wird, boxt in der roten
+            Ecke. Die App zeigt vorher, ob der Kampf den Regeln entspricht.
           </p>
           <ul className="warteliste">
-            {wartende.map((b) => {
+            {wartende.map((b, i) => {
               const frei = vorschlaege.warteliste.find((w) => w.boxer.id === b.id)?.freigabeMoeglich;
+              const gruppe = gruppenName(b, datum);
+              const neueGruppe = i === 0 || gruppe !== gruppenName(wartende[i - 1], datum);
               return (
-                <li key={b.id}>
+                <Fragment key={b.id}>
+                  {neueGruppe && <li className="gruppe">{gruppe}</li>}
+                <li>
                   <label>
                     <input
                       type="checkbox"
@@ -213,13 +239,14 @@ export function KampfkarteTab(props: {
                     {frei ? ' · mit Freigabe wäre ein Gegner möglich' : ''}
                   </span>
                 </li>
+                </Fragment>
               );
             })}
           </ul>
           {vorschauAuswahl && (
             <div className={`vorschau ${vorschauAuswahl.pruefung.status}`}>
               <strong>
-                {vorschauAuswahl.a.name} gegen {vorschauAuswahl.b.name}:{' '}
+                {vorschauAuswahl.rot.name} (rot) gegen {vorschauAuswahl.blau.name} (blau):{' '}
                 {vorschauAuswahl.pruefung.status === 'ok'
                   ? 'entspricht den Regeln'
                   : vorschauAuswahl.pruefung.status === 'freigabe'
@@ -251,7 +278,7 @@ export function KampfkarteTab(props: {
             {vorschlaege.paarungen.map((p) => (
               <li key={`${p.a.id}-${p.b.id}`}>
                 <span>
-                  {p.a.name} gegen {p.b.name} <em>(entspricht den Regeln)</em>
+                  {p.a.name} (rot) gegen {p.b.name} (blau) <em>(entspricht den Regeln)</em>
                 </span>
                 <button onClick={() => ergaenze([{ aId: p.a.id, bId: p.b.id, freigabe: false }])}>
                   Übernehmen
@@ -261,7 +288,7 @@ export function KampfkarteTab(props: {
             {vorschlaege.freigabeVorschlaege.map((p) => (
               <li key={`${p.a.id}-${p.b.id}`}>
                 <span>
-                  {p.a.name} gegen {p.b.name} <em>(nur mit Freigabe)</em>
+                  {p.a.name} (rot) gegen {p.b.name} (blau) <em>(nur mit Freigabe)</em>
                 </span>
                 <button onClick={() => ergaenze([{ aId: p.a.id, bId: p.b.id, freigabe: false }])}>
                   Übernehmen

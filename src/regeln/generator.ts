@@ -1,4 +1,4 @@
-import { juengereAltersklasse, leichterZuerst, vergleicheKampf } from './kampfkarte';
+import { juengereAltersklasse, leichterZuerst, vergleicheKampf, vergleicheWartende } from './kampfkarte';
 import { altersklasseVon, gewichtsklasseVon, leistungsklasseVon } from './klassen';
 import { paarungsGuete, pruefePaarung } from './paarung';
 import type { Altersklasse, Boxer, Leistungsklasse, Pruefung, Rundenzeit } from './typen';
@@ -8,7 +8,7 @@ export type Guete = [number, number, number];
 export interface Paarung {
   /** Kampfnummer in der sortierten Kampfkarte, ab 1 */
   nr: number;
-  /** a ist der leichtere Boxer */
+  /** a ist der erstgenannte Boxer (rote Ecke) und der leichtere, b der Gegner (blaue Ecke) */
   a: Boxer;
   b: Boxer;
   /** Jüngere der beiden Altersklassen, bestimmt Reihenfolge und Rundenzeit */
@@ -112,7 +112,9 @@ export function erzeugePaarungen(boxer: Boxer[], veranstaltung: string): Ergebni
     .sort(vergleicheKampf)
     .map((p, i) => ({ nr: i + 1, ...p }));
 
-  const wartende = boxer.filter((b) => !vergeben.has(b.id));
+  const wartende = boxer
+    .filter((b) => !vergeben.has(b.id))
+    .sort((x, y) => vergleicheWartende(x, y, veranstaltung));
   const wartendeIds = new Set(wartende.map((b) => b.id));
   const freigabeUnterWartenden = freigabeKanten.filter(
     (k) => wartendeIds.has(k.a.id) && wartendeIds.has(k.b.id),

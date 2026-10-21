@@ -3,7 +3,11 @@ import { paarungsGuete, pruefePaarung } from './paarung';
 import type { Altersklasse, Boxer, Pruefung } from './typen';
 
 export interface Kampf {
-  /** a ist der leichtere Boxer */
+  /** Erstgenannter Boxer: rote Ecke */
+  rot: Boxer;
+  /** Gegner: blaue Ecke */
+  blau: Boxer;
+  /** a ist der leichtere Boxer (für Prüfung und Sortierung) */
   a: Boxer;
   b: Boxer;
   /** Jüngere der beiden Altersklassen, null wenn eine fehlt */
@@ -21,7 +25,7 @@ export function leichterZuerst(a: Boxer, b: Boxer): [Boxer, Boxer] {
   return a.gewicht < b.gewicht || (a.gewicht === b.gewicht && a.id <= b.id) ? [a, b] : [b, a];
 }
 
-/** Baut einen Kampf aus zwei beliebigen Boxern und prüft ihn gegen die Regeln. */
+/** Baut einen Kampf aus zwei Boxern und prüft ihn gegen die Regeln. x boxt in der roten, y in der blauen Ecke. */
 export function baueKampf(x: Boxer, y: Boxer, veranstaltung: string): Kampf {
   const [a, b] = leichterZuerst(x, y);
   const akA = altersklasseVon(a.geburtsdatum, veranstaltung);
@@ -29,6 +33,8 @@ export function baueKampf(x: Boxer, y: Boxer, veranstaltung: string): Kampf {
   const lkA = akA ? leistungsklasseVon(a, akA) : '?';
   const lkB = akB ? leistungsklasseVon(b, akB) : '?';
   return {
+    rot: x,
+    blau: y,
     a,
     b,
     altersklasse: akA && akB ? juengereAltersklasse(akA, akB) : null,
@@ -52,5 +58,21 @@ export function vergleicheKampf(
     x.a.gewicht - y.a.gewicht ||
     x.b.gewicht - y.b.gewicht ||
     x.a.id.localeCompare(y.a.id)
+  );
+}
+
+/** Warteliste: erst Geschlecht (Männer vor Frauen), dann Altersklasse (jung vor alt), dann Gewicht. */
+export function vergleicheWartende(x: Boxer, y: Boxer, veranstaltung: string): number {
+  const alter = (b: Boxer) => {
+    const k = altersklasseVon(b.geburtsdatum, veranstaltung);
+    return k ? ALTERSKLASSEN.indexOf(k) : ALTERSKLASSEN.length;
+  };
+  const geschlecht = (b: Boxer) => (b.geschlecht === 'M' ? 0 : 1);
+  return (
+    geschlecht(x) - geschlecht(y) ||
+    alter(x) - alter(y) ||
+    x.gewicht - y.gewicht ||
+    x.name.localeCompare(y.name, 'de') ||
+    x.id.localeCompare(y.id)
   );
 }
