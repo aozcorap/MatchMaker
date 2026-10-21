@@ -105,11 +105,13 @@ export function ImportTab(props: {
   const gewaehlt = (i: number): boolean => {
     const p = pruefungen[i];
     if (!p || p.fehler.length > 0) return false;
-    return auswahl[zeilen![i].id] ?? !p.vorhanden;
+    // Ohne Kampfbilanz nicht vorgewählt: sonst würde der Boxer still als Anfänger (C) eingeplant
+    return auswahl[zeilen![i].id] ?? (!p.vorhanden && !p.ohneBilanz);
   };
   const anzahlGewaehlt = zeilen ? zeilen.filter((_, i) => gewaehlt(i)).length : 0;
   const anzahlFehler = pruefungen.filter((p) => p.fehler.length > 0).length;
   const anzahlVorhanden = pruefungen.filter((p) => p.vorhanden).length;
+  const anzahlOhneBilanz = pruefungen.filter((p) => p.ohneBilanz && p.fehler.length === 0).length;
 
   function uebernimm(ergebnis: LeseErgebnis) {
     setZeilen(ergebnis.zeilen);
@@ -303,6 +305,9 @@ export function ImportTab(props: {
             {zeilen.length} {zeilen.length === 1 ? 'Boxer' : 'Boxer'} erkannt
             {anzahlFehler > 0 && <span className="fehler"> · {anzahlFehler} mit Fehlern (nicht übernehmbar, bitte ergänzen)</span>}
             {anzahlVorhanden > 0 && <span className="warn"> · {anzahlVorhanden} schon vorhanden</span>}
+            {anzahlOhneBilanz > 0 && (
+              <span className="warn"> · {anzahlOhneBilanz} ohne Kampfbilanz (nicht vorgewählt, bitte Kämpfe und Siege ergänzen)</span>
+            )}
             {ignoriert.length > 0 && <span> · {ignoriert.length} Zeilen ohne Boxerdaten ignoriert</span>}
           </p>
           <div className="tabelle-rahmen">

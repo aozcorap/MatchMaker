@@ -203,6 +203,7 @@ describe('Prüfen', () => {
     expect(p.fehler).toEqual([]);
     expect(p.boxer).toMatchObject({ kaempfe: 0, siege: 0, niederlagen: 0 });
     expect(p.warnungen.join(' ')).toContain('Leistungsklasse C');
+    expect(p.ohneBilanz).toBe(true);
   });
 
   it('Siege plus Niederlagen über den Kämpfen ist ein Fehler', () => {
@@ -346,5 +347,19 @@ describe('W im Text und Geschlecht', () => {
   it('eine Spalte mit W in einer Tabelle ohne Überschrift', () => {
     const e = liesTabelle([['Clara', 'Probe', 'W', '01.02.2011', 48, 4, 4, 0]], o);
     expect(e.zeilen[0]).toMatchObject({ name: 'Clara Probe', geschlecht: 'W' });
+  });
+});
+
+describe('Boxer ohne Kampfbilanz', () => {
+  const heute = new Date('2026-10-21');
+  it('wird als "ohne Bilanz" markiert, mit Bilanz nicht', () => {
+    const ohne = liesText('Anton Beispiel, BC Nord, 05.08.2012, m, 59 kg', { heute }).zeilen[0];
+    const mit = liesText('Anton Beispiel, BC Nord, 05.08.2012, m, 59 kg, 9K 3S', { heute }).zeilen[0];
+    expect(pruefeZeile(ohne, [], new Map(), heute).ohneBilanz).toBe(true);
+    expect(pruefeZeile(mit, [], new Map(), heute).ohneBilanz).toBe(false);
+  });
+  it('0 Kämpfe ausdrücklich angegeben gilt als Angabe', () => {
+    const z = liesText('Anton Beispiel, BC Nord, 05.08.2012, m, 59 kg, 0K 0S', { heute }).zeilen[0];
+    expect(pruefeZeile(z, [], new Map(), heute).ohneBilanz).toBe(false);
   });
 });
