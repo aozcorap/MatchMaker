@@ -10,7 +10,7 @@ export function bewerteText(text: string, heute: Date = new Date()): number {
   const { zeilen } = liesText(text, { heute });
   let punkte = 0;
   for (const z of zeilen) {
-    const felder = [z.name, z.verein, z.geburtsdatum, z.geschlecht, z.gewicht, z.kaempfe, z.siege, z.niederlagen].filter(
+    const felder = [z.name, z.verein, z.geburtsdatum, z.geschlecht, z.gewicht, z.kaempfe, z.siege, z.niederlagen, z.unentschieden].filter(
       (f) => f !== '',
     ).length;
     punkte += felder + (z.geburtsdatum ? 1 : 0) + (z.gewicht ? 1 : 0);
@@ -28,10 +28,13 @@ export function vergroesserungsfaktor(breite: number): number {
 }
 
 /** Durchgänge, die nacheinander versucht werden; das beste Ergebnis gewinnt. */
-export const DURCHGAENGE: { linienEntfernen: boolean; parameter: Record<string, string> }[] = [
+export const DURCHGAENGE: { linienEntfernen: boolean; farbflaechenHell?: boolean; parameter: Record<string, string> }[] = [
   { linienEntfernen: true, parameter: { thresholding_method: '1' } },
   { linienEntfernen: true, parameter: { thresholding_method: '0' } },
   { linienEntfernen: false, parameter: { thresholding_method: '0' } },
+  // Dunkler Text auf roten oder blauen Zellen
+  { linienEntfernen: true, farbflaechenHell: true, parameter: { thresholding_method: '0' } },
+  { linienEntfernen: true, farbflaechenHell: true, parameter: { thresholding_method: '1' } },
 ];
 
 function gleicherName(a: string, b: string): boolean {

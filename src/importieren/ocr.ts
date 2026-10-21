@@ -68,19 +68,22 @@ export async function erkenneBild(
   const roh = vergroessern(alsRaster(bitmap), faktor);
   bitmap.close();
   const ohneLinien = entferneTabellenlinien(roh, faktor);
-  const blobs = new Map<boolean, Blob>();
+  let farbHell: Raster | null = null;
+  const blobs = new Map<string, Blob>();
 
   const ergebnisse: { text: string; punkte: number }[] = [];
   for (const [i, durchgang] of DURCHGAENGE.entries()) {
     meldeStatus(`Text wird erkannt (Durchgang ${i + 1} von ${DURCHGAENGE.length}) …`);
-    if (!blobs.has(durchgang.linienEntfernen)) {
-      blobs.set(durchgang.linienEntfernen, await alsBlob(durchgang.linienEntfernen ? ohneLinien : roh));
+    const art = durchgang.farbflaechenHell ? 'farbe' : durchgang.linienEntfernen ? 'linien' : 'roh';
+    if (!blobs.has(art)) {
+      if (art === 'farbe') farbHell ??= entferneTabellenlinien(roh, faktor, true);
+      blobs.set(art, await alsBlob(art === 'farbe' ? farbHell! : art === 'linien' ? ohneLinien : roh));
     }
     await w.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK, ...durchgang.parameter } as never);
-    const { data } = await w.recognize(blobs.get(durchgang.linienEntfernen)!, {}, { text: true, tsv: true });
+    const { data } = await w.recognize(blobs.get(art)!, {}, { text: true, tsv: true });
     const text = zeilenAusTsv(data.tsv ?? '');
     const punkte = bewerteText(text);
-    protokoll?.({ nr: i + 1, punkte, text, bild: blobs.get(durchgang.linienEntfernen)! });
+    protokoll?.({ nr: i + 1, punkte, text, bild: blobs.get(art)! });
     ergebnisse.push({ text, punkte });
   }
   // Bester Durchgang zuerst, die übrigen dahinter

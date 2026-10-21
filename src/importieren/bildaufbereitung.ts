@@ -14,11 +14,17 @@ export interface Raster {
 /** Ab diesem Helligkeitsunterschied (0 bis 255) zählt eine Stelle als Kante. */
 const KANTE = 22;
 
-function graustufen(r: Raster): Uint8Array {
+/**
+ * `maximum`: Helligkeit ist der größte der drei Farbwerte. Dunkler Text auf kräftig roten oder blauen Flächen
+ * (typisch für Meldetabellen) hebt sich so deutlich ab; bei der üblichen Gewichtung ist ein reines Rot fast so dunkel wie Schwarz.
+ */
+function graustufen(r: Raster, maximum = false): Uint8Array {
   const grau = new Uint8Array(r.width * r.height);
   for (let i = 0; i < grau.length; i++) {
     const o = i * 4;
-    grau[i] = Math.round(0.299 * r.data[o] + 0.587 * r.data[o + 1] + 0.114 * r.data[o + 2]);
+    grau[i] = maximum
+      ? Math.max(r.data[o], r.data[o + 1], r.data[o + 2])
+      : Math.round(0.299 * r.data[o] + 0.587 * r.data[o + 1] + 0.114 * r.data[o + 2]);
   }
   return grau;
 }
@@ -76,9 +82,9 @@ function uebermale(grau: Uint8Array, markiert: Uint8Array, breite: number, hoehe
 /**
  * `faktor` ist die bereits angewendete Vergrößerung des Bildes. Ergebnis: Graustufenbild ohne Tabellenlinien.
  */
-export function entferneTabellenlinien(r: Raster, faktor: number): Raster {
+export function entferneTabellenlinien(r: Raster, faktor: number, maximum = false): Raster {
   const { width: breite, height: hoehe } = r;
-  const grau = graustufen(r);
+  const grau = graustufen(r, maximum);
   const mindestLaenge = Math.max(24, Math.round(24 * faktor));
   // Zuerst beide Richtungen erkennen, dann übermalen, damit sich Kreuzungen nicht gegenseitig stören
   const waagerecht = langeKanten(grau, breite, hoehe, true, mindestLaenge);
