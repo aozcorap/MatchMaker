@@ -354,6 +354,17 @@ export function KampfkarteTab(props: {
             }
           />
         </label>
+        <label>
+          <input
+            id="klassenwechsel"
+            type="checkbox"
+            checked={regeln.klassenwechselFreigabe}
+            onChange={(e) =>
+              setZustand((z) => ({ ...z, regeln: { ...z.regeln, klassenwechselFreigabe: e.target.checked } }))
+            }
+          />{' '}
+          Andere Alters- oder Gewichtsklasse nur mit Freigabe
+        </label>
       </div>
 
       <div className="grenzen">

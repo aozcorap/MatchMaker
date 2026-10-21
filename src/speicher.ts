@@ -75,6 +75,8 @@ export function liesZustand(roh: unknown): Zustand | null {
   const regeln: RegelOptionen = {
     maxGewichtProzent: gueltig(z.regeln?.maxGewichtProzent, STANDARD_OPTIONEN.maxGewichtProzent),
     maxSiegdifferenzFreigabe: gueltig(z.regeln?.maxSiegdifferenzFreigabe, STANDARD_OPTIONEN.maxSiegdifferenzFreigabe),
+    klassenwechselFreigabe:
+      typeof z.regeln?.klassenwechselFreigabe === 'boolean' ? z.regeln.klassenwechselFreigabe : STANDARD_OPTIONEN.klassenwechselFreigabe,
   };
   const zeit: Zeiteinstellungen = {
     kampfPauseMin: gueltig(z.zeit?.kampfPauseMin, STANDARD_ZEIT.kampfPauseMin),

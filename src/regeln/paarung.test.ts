@@ -5,10 +5,12 @@ import {
   leistungsklasseVon,
   rundenzeitFuer,
 } from './klassen';
-import { altersdifferenzMonate, innerhalb24Monate, paarungsGuete, pruefePaarung } from './paarung';
-import type { Boxer } from './typen';
+import { altersdifferenzMonate, innerhalb24Monate, paarungsGuete, pruefePaarung as pruefe } from './paarung';
+import { STANDARD_OPTIONEN, type Boxer, type RegelOptionen } from './typen';
 
 const TAG = '2026-11-14';
+const LOCKER: RegelOptionen = { ...STANDARD_OPTIONEN, klassenwechselFreigabe: false };
+const pruefePaarung = (a: Boxer, b: Boxer, t: string, o: RegelOptionen = LOCKER) => pruefe(a, b, t, o);
 let zaehler = 0;
 function boxer(teil: Partial<Boxer>): Boxer {
   zaehler += 1;
@@ -152,7 +154,7 @@ describe('pruefePaarung', () => {
     expect(r.status).toBe('ok');
   });
   it('Prozentgrenze gilt in geschlossenen Klassen, genau an der Grenze noch erlaubt', () => {
-    const vier = { maxGewichtProzent: 4, maxSiegdifferenzFreigabe: 5 };
+    const vier = { maxGewichtProzent: 4, maxSiegdifferenzFreigabe: 5, klassenwechselFreigabe: false };
     const leicht = boxer({ gewicht: 50 }); // Klasse 47-50
     expect(pruefePaarung(leicht, boxer({ gewicht: 52 }), TAG, vier).status).toBe('ok'); // 4,0 %
     const r = pruefePaarung(leicht, boxer({ gewicht: 52.1 }), TAG, vier); // 4,2 %
@@ -205,5 +207,25 @@ describe('Paarungsgüte', () => {
     const schlecht = paarungsGuete(basis, boxer({ gewicht: 72, siege: 3 }), TAG);
     expect(gut[1]).toBeLessThan(schlecht[1]);
     expect(paarungsGuete(basis, boxer({ siege: 9 }), TAG)[0]).toBe(1);
+  });
+});
+
+describe('Klassenwechsel nur mit Freigabe (Standard)', () => {
+  const strikt = STANDARD_OPTIONEN;
+  it('U13 gegen U15 ist nur mit Freigabe möglich', () => {
+    const a = boxer({ geburtsdatum: '2015-05-28', gewicht: 48 });
+    const b = boxer({ geburtsdatum: '2013-06-17', gewicht: 49 });
+    const r = pruefe(a, b, TAG, strikt);
+    expect(r.status).toBe('freigabe');
+    expect(r.hinweise.join(' ')).toContain('Altersklassen');
+    expect(pruefe(a, b, TAG, LOCKER).status).not.toBe('freigabe');
+  });
+  it('verschiedene Gewichtsklassen sind nur mit Freigabe möglich', () => {
+    const r = pruefe(boxer({ gewicht: 89 }), boxer({ gewicht: 91.5 }), TAG, strikt);
+    expect(r.status).toBe('freigabe');
+    expect(r.hinweise.join(' ')).toContain('Gewichtsklassen');
+  });
+  it('gleiche Alters- und Gewichtsklasse bleibt ohne Freigabe', () => {
+    expect(pruefe(boxer({ gewicht: 83 }), boxer({ gewicht: 84.5 }), TAG, strikt).status).toBe('ok');
   });
 });

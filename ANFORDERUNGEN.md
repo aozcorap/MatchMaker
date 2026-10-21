@@ -29,6 +29,8 @@ Die Leistungsklasse (C/B/A/Elite) wird aus Alter und Siegen berechnet.
 5. **Leistungsklasse (§12):** Unter 7 Siege = C, 7 bis 14 = B, über 14 = A. **Elite** ist eine eigene Klasse: über 18 Jahre (Stichtag 31.12. des Vorjahres) und mehr als 25 Siege, sonst nichts. (Bewusste Festlegung des Auftraggebers; die WB nennen zusätzlich "international vertreten", das entfällt hier.) Standard: nur gleiche Klasse. Elite gegen Elite, keine Ausnahme.
 6. **Gleicher Verein:** Keine Paarung zwischen Boxern desselben Vereins.
 
+**Einstellung „Andere Alters- oder Gewichtsklasse nur mit Freigabe“ (Standard: an, Wunsch des Veranstalters):** Die WB erlauben solche Kämpfe ohne Zustimmung (§11.9, §19.6). Strenger gehandhabt: Paarungen über Alters- oder Gewichtsklassen hinweg erscheinen nur als Vorschlag mit Zustimmung beider Trainer, nie automatisch.
+
 ## 5. Ausnahme Nachbar-Leistungsklasse
 Nachbarn A–B und B–C sind möglich, wenn die beiden Trainer der Boxer zustimmen. Eine weitere Zustimmung (Veranstalter, oberster Ringrichter) ist nicht nötig. A–C ist ausgeschlossen, Elite ist ausgeschlossen. Pro Paarung gibt es einen Freigabestatus (Zustimmung beider Trainer liegt vor: ja/nein).
 

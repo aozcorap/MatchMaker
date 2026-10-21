@@ -62,6 +62,10 @@ export function pruefePaarung(
   if (!akB) gruende.push(`${b.name}: keine Altersklasse (unter 10 Jahre)`);
 
   if (akA && akB) {
+    if (akA !== akB && optionen.klassenwechselFreigabe) {
+      freigabe = true;
+      hinweise.push(`Verschiedene Altersklassen (${akA}/${akB}): Zustimmung beider Trainer nötig`);
+    }
     const jugendA = istJugend(akA);
     const jugendB = istJugend(akB);
     if (jugendA || jugendB) {
@@ -85,6 +89,10 @@ export function pruefePaarung(
     if (!gkA) gruende.push(`${a.name}: unter der untersten Gewichtsklasse`);
     if (!gkB) gruende.push(`${b.name}: unter der untersten Gewichtsklasse`);
     if (gkA && gkB && !gleicheGewichtsklasse(gkA, gkB)) {
+      if (optionen.klassenwechselFreigabe) {
+        freigabe = true;
+        hinweise.push(`Verschiedene Gewichtsklassen: Zustimmung beider Trainer nötig`);
+      }
       const [leicht, schwer, gkLeicht, gkSchwer] =
         a.gewicht <= b.gewicht ? [a, b, gkA, gkB] : [b, a, gkB, gkA];
       const diff = Math.round((schwer.gewicht - leicht.gewicht) * 10);

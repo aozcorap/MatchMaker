@@ -43,9 +43,12 @@ export interface RegelOptionen {
   maxGewichtProzent: number;
   /** Höchste Siegdifferenz bei Nachbar-Leistungsklassen (Freigabe) */
   maxSiegdifferenzFreigabe: number;
+  /** Paarungen über Alters- oder Gewichtsklassen hinweg nur mit Zustimmung beider Trainer (strenger als die WB) */
+  klassenwechselFreigabe: boolean;
 }
 
 export const STANDARD_OPTIONEN: RegelOptionen = {
   maxGewichtProzent: 10,
   maxSiegdifferenzFreigabe: 5,
+  klassenwechselFreigabe: true,
 };

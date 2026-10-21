@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { erzeugePaarungen } from './generator';
-import type { Boxer } from './typen';
+import { erzeugePaarungen as erzeuge } from './generator';
+import { STANDARD_OPTIONEN, type Boxer, type RegelOptionen } from './typen';
 
 const TAG = '2026-11-14';
+const LOCKER: RegelOptionen = { ...STANDARD_OPTIONEN, klassenwechselFreigabe: false };
+const erzeugePaarungen = (b: Boxer[], t: string, o: RegelOptionen = LOCKER) => erzeuge(b, t, o);
 let n = 0;
 function boxer(teil: Partial<Boxer> & { id: string }): Boxer {
   n += 1;
