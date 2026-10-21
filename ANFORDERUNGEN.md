@@ -24,7 +24,7 @@ Die Leistungsklasse (C/B/A/Elite) wird aus Alter und Siegen berechnet.
 ## 4. Harte Regeln (Standard)
 1. **Geschlecht (§19.6):** Nur gleiches Geschlecht. Ausnahme: Jugend (U19) gegen Männer, wenn der Altersunterschied höchstens 24 Monate beträgt (§11.10).
 2. **Altersklasse (§11):** Alter = Jahr der Veranstaltung minus Geburtsjahr. 10–12 U13, 13–14 U15, 15–16 U17, 17–18 U19, ab 19 Männer/Frauen. Zwischen Jugendklassen höchstens 24 Monate Unterschied, exakt nach Geburtsdatum (§11.9). Es gelten die Schutzbestimmungen der jüngeren Klasse.
-3. **Gewicht (§19):** Gewichtsklassen nach Tabellen (Männer/Frauen/U19, U17, U15, U13). Gleiche Klasse ist ideal. Bei verschiedenen Klassen gilt als erlaubte Differenz die Breite der Klasse des leichteren Boxers (§19.6), auch über Altersklassen hinweg. *Auslegung, bitte bestätigen.*
+3. **Gewicht (§19):** Gewichtsklassen nach Tabellen (Männer/Frauen/U19, U17, U15, U13). Gleiche Klasse ist ideal. Bei verschiedenen Klassen gilt als erlaubte Differenz die Breite der Klasse des leichteren Boxers (§19.6), auch über Altersklassen hinweg. *Auslegung, bitte bestätigen.* Boxer unter der untersten Klasse haben "keine Klasse" und kommen auf die Warteliste. Offene Klassen (z. B. Männer über 90 kg) haben keine Obergrenze: Innerhalb derselben offenen Klasse gibt es keine Gewichtsgrenze, die kleinste Differenz wird trotzdem bevorzugt.
 4. **Rundenzeit (§22):** Männer, Frauen, U19: 3×3 min. U17: 3×2. U15: 3×1,5. U13: 3×1. Bei gemischten Altersklassen gilt die Rundenzeit der jüngeren Klasse. *Auslegung, bitte bestätigen.*
 5. **Leistungsklasse (§12):** Unter 7 Siege = C, 7 bis 14 = B, über 14 = A. **Elite** ist eine eigene Klasse: über 18 Jahre (Stichtag 31.12. des Vorjahres) und mehr als 25 Siege, sonst nichts. (Bewusste Festlegung des Auftraggebers; die WB nennen zusätzlich "international vertreten", das entfällt hier.) Standard: nur gleiche Klasse. Elite gegen Elite, keine Ausnahme.
 6. **Gleicher Verein:** Keine Paarung zwischen Boxern desselben Vereins.
@@ -41,3 +41,10 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 ## 7. Offene Punkte
 - Bestätigung der Auslegungen in 4.3 (Gewichtstoleranz) und 4.4 (Rundenzeit).
 - Spätere Themen: Projektname, Ausgabeformat, Nutzerrollen.
+
+## Anhang: Gewichtsklassen (§19), "über" bis "bis einschließlich" in kg
+**Männer und männl. Jugend (U19):** 47–50, 50–55, 55–60, 60–65, 65–70, 70–75, 75–80, 80–85, 85–90, über 90 (offen).
+**Frauen und weibl. Jugend (U19):** 45–48, 48–51, 51–54, 54–57, 57–60, 60–65, 65–70, 70–75, 75–80, über 80 (offen).
+**Junioren U17 (w/m):** 40–42, 42–44, 44–46, 46–48, 48–50, 50–52, 52–54, 54–57, 57–60, 60–63, 63–66, 66–70, 70–75, 75–80, über 80 (offen).
+**Kadetten U15 und Schüler U13 (w/m):** wie U17, zusätzlich 38–40.
+Unter der untersten Klasse: keine Klasse, Warteliste.
