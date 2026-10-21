@@ -274,18 +274,11 @@ th {
 .kampf {
   background: var(--flaeche);
   border: 1px solid var(--rand);
-  border-left: 5px solid var(--ok);
   border-radius: 8px;
   padding: 10px 14px;
 }
 
-.kampf.freigabe {
-  border-left-color: var(--warn);
-}
 
-.kampf.verboten {
-  border-left-color: var(--fehler);
-}
 
 .kampfkopf {
   display: flex;
@@ -640,4 +633,17 @@ button.klein {
 
 .grenzen input {
   width: 9rem;
+}
+
+.statusmarke {
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.statusmarke.freigabe {
+  color: var(--warn);
+}
+
+.statusmarke.verboten {
+  color: var(--fehler);
 }

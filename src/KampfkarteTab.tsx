@@ -269,6 +269,10 @@ export function KampfkarteTab(props: {
                   <div className="kampfkopf">
                     <span className="nr">Kampf {i + 1}</span>
                     <span className="uhrzeit">ca. {uhrzeit(zeit.start)} Uhr</span>
+                    {status === 'verboten' && <span className="statusmarke verboten">Regelverstoß</span>}
+                    {status === 'freigabe' && !geplant.freigabe && (
+                      <span className="statusmarke freigabe">Zustimmung der Trainer offen</span>
+                    )}
                     <span>{altersklasseText(kampf.altersklasse)}</span>
                     <span>Leistungsklasse {kampf.leistungsklasse}</span>
                     <span>{rz ? `${rz.runden} × ${minutenText(rz.minuten)} min` : '–'}</span>
