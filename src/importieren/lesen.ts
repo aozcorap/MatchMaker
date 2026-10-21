@@ -2,6 +2,7 @@ import {
   alsText,
   findeBilanz,
   findeDatum,
+  geschlechtMitGewicht,
   parseGeschlecht,
   parseGewicht,
   parseZahl,
@@ -28,6 +29,7 @@ export type Feld =
   | 'kaempfe'
   | 'siege'
   | 'niederlagen'
+  | 'unentschieden'
   | 'bilanz'
   | 'ignoriert';
 
@@ -46,9 +48,10 @@ const SYNONYME: Record<Feld, string[]> = {
   // "ss" und "jeb": typische Lesefehler der Texterkennung für "S" und "geb."
   siege: ['siege', 'sieg', 'gewonnen', 's', 'gew', 'ss'],
   niederlagen: ['niederlagen', 'niederlage', 'verloren', 'n', 'verl'],
+  unentschieden: ['unentschieden', 'unent', 'remis', 'draw'],
   bilanz: ['bilanz', 'kampfbilanz', 'bilanzksn', 'bilanzsn'],
   // Spalten, die vorkommen, aber nicht gebraucht werden (Alter wird aus dem Geburtsdatum berechnet)
-  ignoriert: ['alter', 'u', 'unentschieden', 'remis', 'nr', 'lfdnr', 'startnr', 'bemerkung', 'bemerkungen', 'anmerkung'],
+  ignoriert: ['alter', 'u', 'nr', 'lfdnr', 'startnr', 'bemerkung', 'bemerkungen', 'anmerkung'],
 };
 
 function normalisiere(text: string): string {
@@ -102,14 +105,16 @@ function leereZeile(quelle: string, verein: string): ImportZeile {
     kaempfe: '',
     siege: '',
     niederlagen: '',
+    unentschieden: '',
     hinweise: [],
   };
 }
 
-function setzeBilanz(z: ImportZeile, b: { kaempfe?: number; siege?: number; niederlagen?: number; berechnet?: boolean }) {
+function setzeBilanz(z: ImportZeile, b: { kaempfe?: number; siege?: number; niederlagen?: number; unentschieden?: number; berechnet?: boolean }) {
   if (b.kaempfe !== undefined) z.kaempfe = String(b.kaempfe);
   if (b.siege !== undefined) z.siege = String(b.siege);
   if (b.niederlagen !== undefined) z.niederlagen = String(b.niederlagen);
+  if (b.unentschieden !== undefined) z.unentschieden = String(b.unentschieden);
   if (b.berechnet) z.hinweise.push('Kämpfe aus Siegen und Niederlagen berechnet');
 }
 
@@ -181,16 +186,24 @@ function ausTabelleMitKopf(zeilen: Zelle[][], kopf: { index: number; spalten: (F
         }
         case 'gewicht': {
           const g = parseGewicht(zelle);
+          const gg = g === null ? geschlechtMitGewicht(zelle) : null;
           if (g !== null) z.gewicht = String(g);
-          else z.hinweise.push(`Gewicht nicht lesbar: ${text}`);
+          else if (gg) {
+            z.gewicht = String(gg.gewicht);
+            if (!z.geschlecht) z.geschlecht = gg.geschlecht;
+          } else z.hinweise.push(`Gewicht nicht lesbar: ${text}`);
           break;
         }
         case 'kaempfe':
         case 'siege':
-        case 'niederlagen': {
+        case 'niederlagen':
+        case 'unentschieden': {
           const n = parseZahl(zelle);
           if (n !== null) z[feld] = String(n);
-          else z.hinweise.push(`${feld === 'kaempfe' ? 'Kämpfe' : feld === 'siege' ? 'Siege' : 'Niederlagen'} nicht lesbar: ${text}`);
+          else
+            z.hinweise.push(
+              `${feld === 'kaempfe' ? 'Kämpfe' : feld === 'siege' ? 'Siege' : feld === 'niederlagen' ? 'Niederlagen' : 'Unentschieden'} nicht lesbar: ${text}`,
+            );
           break;
         }
         case 'ignoriert':
@@ -206,6 +219,112 @@ function ausTabelleMitKopf(zeilen: Zelle[][], kopf: { index: number; spalten: (F
     if (!z.name && (vorname || nachname)) z.name = [vorname, nachname].filter(Boolean).join(' ');
     ergaenzeKaempfe(z);
     ergebnis.zeilen.push(z);
+  }
+  return ergebnis;
+}
+
+// ------------------------------------------------- Tabelle ohne Kopfzeile
+
+/** Zahl in einer Zelle ("59", 59, "59 kg", "59,5"), sonst null. */
+function zahlZelle(z: Zelle): number | null {
+  if (typeof z === 'number') return Number.isFinite(z) ? z : null;
+  const m = /^(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:kg)?$/i.exec(alsText(z));
+  return m ? Number(m[1].replace(',', '.')) : null;
+}
+
+/**
+ * Tabelle ohne Überschriften, wie sie Trainer per Excel oder WhatsApp schicken: Name (ein oder zwei Spalten),
+ * Geburtsdatum, Gewicht, dann Kämpfe, Siege, Niederlagen und gegebenenfalls Unentschieden. Zeilen ohne Geburtsdatum
+ * (z. B. leere Felder für den Gegner) werden übersprungen. Gibt null zurück, wenn keine Zeile dazu passt.
+ */
+function ausKopfloserTabelle(zeilen: Zelle[][], o: LeseOptionen): LeseErgebnis | null {
+  const heute = o.heute ?? new Date();
+  const ergebnis: LeseErgebnis = { zeilen: [], ignoriert: [] };
+  for (const zeile of zeilen) {
+    if (istLeer(zeile)) continue;
+    const zellen = zeile.map((z) => ({ roh: z, text: alsText(z) })).filter((z) => z.text !== '');
+    const datumIdx = zellen.findIndex((z) => findeDatum(z.roh, heute) !== null && (z.roh instanceof Date || /\d/.test(z.text)));
+    if (datumIdx < 0) {
+      ergebnis.ignoriert.push(zellen.map((z) => z.text).join(' | '));
+      continue;
+    }
+    const quelle = zellen.map((z) => z.text).join(' | ');
+    const z = leereZeile(quelle, o.standardVerein ?? '');
+    const datum = findeDatum(zellen[datumIdx].roh, heute)!;
+    if (datum.iso) z.geburtsdatum = datum.iso;
+    else z.hinweise.push(`Geburtsdatum nicht plausibel: ${datum.text}`);
+
+    // Vor dem Datum: Name(n), Verein, Geschlecht; reine Zahlen (laufende Nummer) werden übersprungen
+    const texte: string[] = [];
+    for (const c of zellen.slice(0, datumIdx)) {
+      const g = parseGeschlecht(c.roh);
+      if (g) z.geschlecht = g;
+      else if (/\p{L}/u.test(c.text)) texte.push(c.text);
+    }
+    if (texte.length >= 3) {
+      z.name = `${texte[0]} ${texte[1]}`;
+      z.verein = texte.slice(2).join(' ');
+    } else if (texte.length === 2) {
+      if (VEREIN_WORT.test(texte[1]) && !VEREIN_WORT.test(texte[0])) {
+        z.name = texte[0];
+        z.verein = texte[1];
+      } else {
+        z.name = `${texte[0]} ${texte[1]}`;
+        z.hinweise.push('Vor- und Nachname aus zwei Spalten ohne Überschrift gelesen');
+      }
+    } else if (texte.length === 1) {
+      const t = trenneNameVerein(texte[0]);
+      z.name = t.name;
+      if (t.verein) z.verein = t.verein;
+    }
+
+    // Nach dem Datum: Gewicht, dann die Zahlen der Bilanz
+    const danach = zellen.slice(datumIdx + 1);
+    const zahlen: number[] = [];
+    const sonstige: string[] = [];
+    for (const c of danach) {
+      const g = parseGeschlecht(c.roh);
+      if (g) {
+        z.geschlecht = g;
+        continue;
+      }
+      const gg = geschlechtMitGewicht(c.roh);
+      if (gg && z.gewicht === '') {
+        z.geschlecht = gg.geschlecht;
+        z.gewicht = String(gg.gewicht);
+        continue;
+      }
+      const n = zahlZelle(c.roh);
+      if (n === null) {
+        sonstige.push(c.text);
+        continue;
+      }
+      if (z.gewicht === '' && n >= 25 && n <= 200) z.gewicht = String(n);
+      else zahlen.push(n);
+    }
+    if (zahlen.length > 0 && zahlen.every(Number.isInteger)) {
+      const [k, s, n, u] = zahlen;
+      z.kaempfe = String(k);
+      if (zahlen.length >= 2) z.siege = String(s);
+      if (zahlen.length >= 3) z.niederlagen = String(n);
+      if (zahlen.length === 2) z.hinweise.push('Zwei Zahlen als Kämpfe und Siege gelesen');
+      if (zahlen.length >= 4) z.unentschieden = String(u);
+      if (zahlen.length >= 3 && k !== s + n + (u ?? 0)) z.hinweise.push('Kämpfe passen nicht zu Siegen, Niederlagen und Unentschieden: bitte prüfen');
+    } else if (sonstige.length > 0) {
+      const b = findeBilanz(sonstige.join(' '));
+      if (b) setzeBilanz(z, b);
+    }
+    ergaenzeKaempfe(z);
+    ergebnis.zeilen.push(z);
+  }
+  return ergebnis.zeilen.length > 0 ? ergebnis : null;
+}
+
+/** Fehlt das Geschlecht überall, gilt männlich (bei Frauen steht meist ein W dabei). */
+function nimmMaennlichAn(ergebnis: LeseErgebnis): LeseErgebnis {
+  for (const z of ergebnis.zeilen) {
+    if (z.geschlecht !== '' || z.hinweise.some((h) => h.startsWith('Geschlecht nicht eindeutig'))) continue;
+    z.geschlecht = 'M';
   }
   return ergebnis;
 }
@@ -258,7 +377,14 @@ function entnehme(segment: string, heute: Date): Funde {
     else f.hinweise.push(`Geburtsdatum nicht plausibel: ${d.text}`);
     f.rest = f.rest.replace(d.text, ' ');
   }
-  const g = /(\d{1,3}(?:[.,]\d{1,2})?)\s*kg\b/i.exec(f.rest);
+  // "w65 kg": Geschlecht und Gewicht zusammengeschrieben
+  const gk = /(?:^|\s)([wWmM])\s?(\d{2,3}(?:[.,]\d{1,2})?)\s*kg\b/.exec(f.rest);
+  if (gk) {
+    f.geschlecht = gk[1].toLowerCase() === 'w' ? 'W' : 'M';
+    f.gewicht = gk[2].replace(',', '.');
+    f.rest = `${f.rest.slice(0, gk.index)} ${f.rest.slice(gk.index + gk[0].length)}`;
+  }
+  const g = f.gewicht ? null : /(\d{1,3}(?:[.,]\d{1,2})?)\s*kg\b/i.exec(f.rest);
   if (g) {
     f.gewicht = g[1].replace(',', '.');
     f.rest = `${f.rest.slice(0, g.index)} ${f.rest.slice(g.index + g[0].length)}`;
@@ -272,6 +398,14 @@ function entnehme(segment: string, heute: Date): Funde {
   if (b) {
     f.bilanz = b;
     f.rest = b.rest;
+  }
+  // Einzelnes "W" irgendwo im Text (z. B. "Clara Probe 48kg W 4K 4S"): weiblich. Nur ohne Punkt, damit "Anna W." ein Namenskürzel bleibt.
+  if (!f.geschlecht) {
+    const w = /(?:^|\s)[wW](?=\s|$)/.exec(f.rest);
+    if (w) {
+      f.geschlecht = 'W';
+      f.rest = `${f.rest.slice(0, w.index)} ${f.rest.slice(w.index + w[0].length)}`;
+    }
   }
   // Loses Geschlecht am Ende ("... 72kg 10/7/3 m"): nur kleingeschriebenes m/w ohne Punkt oder ein ganzes Wort,
   // damit ein Namenskürzel wie "Anna M." nicht als Geschlecht gelesen wird
@@ -424,11 +558,15 @@ export function teileZeile(zeile: string, trenner: string): string[] {
 /** Excel-Tabelle (Zeilen aus Zellen), mit oder ohne Kopfzeile. */
 export function liesTabelle(zeilen: Zelle[][], o: LeseOptionen = {}): LeseErgebnis {
   const kopf = findeKopfzeile(zeilen);
-  if (kopf) return ausTabelleMitKopf(zeilen, kopf, o);
-  // Ohne Überschriften wird jede Zeile wie Freitext aus ihren Zellen gelesen
-  return ausFreitext(
-    zeilen.filter((z) => !istLeer(z)).map((z) => z.map(alsText).filter(Boolean).join(' ; ')),
-    o,
+  if (kopf) return nimmMaennlichAn(ausTabelleMitKopf(zeilen, kopf, o));
+  const kopflos = ausKopfloserTabelle(zeilen, o);
+  if (kopflos) return nimmMaennlichAn(kopflos);
+  // Sonst wird jede Zeile wie Freitext aus ihren Zellen gelesen
+  return nimmMaennlichAn(
+    ausFreitext(
+      zeilen.filter((z) => !istLeer(z)).map((z) => z.map(alsText).filter(Boolean).join(' ; ')),
+      o,
+    ),
   );
 }
 
@@ -470,5 +608,13 @@ export function liesText(text: string, o: LeseOptionen = {}): LeseErgebnis {
       return ergebnis;
     }
   }
-  return ausFreitext(zeilen, o);
+  // Aus Excel kopierter Text ohne Überschriften: Zellen durch Tabulator getrennt
+  if (zeilen.some((z) => z.includes('\t'))) {
+    const kopflos = ausKopfloserTabelle(zeilen.map((z) => teileZeile(z, '\t')), o);
+    if (kopflos) {
+      ergaenzeVerein(kopflos, zeilen);
+      return nimmMaennlichAn(kopflos);
+    }
+  }
+  return nimmMaennlichAn(ausFreitext(zeilen, o));
 }

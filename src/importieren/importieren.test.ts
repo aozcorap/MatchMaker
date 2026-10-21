@@ -160,7 +160,8 @@ describe('Text und CSV', () => {
   });
   it('ein Namenskürzel wie "Anna M." wird nicht als Geschlecht gelesen', () => {
     const e = liesText('Anna M., BC Nord, 12.03.2005, 55 kg', o);
-    expect(e.zeilen[0]).toMatchObject({ name: 'Anna M', verein: 'BC Nord', geschlecht: '' });
+    // Das Kürzel zählt nicht als Geschlecht; fehlt die Angabe, gilt männlich
+    expect(e.zeilen[0]).toMatchObject({ name: 'Anna M', verein: 'BC Nord', geschlecht: 'M' });
   });
   it('Standardverein gilt, wenn die Zeile keinen nennt', () => {
     const e = liesText('Max Mustermann, 12.03.2005, m, 72 kg', { ...o, standardVerein: 'BC Nord' });
@@ -192,7 +193,8 @@ describe('Prüfen', () => {
     const z = liesText('Max Mustermann, 72 kg', o).zeilen[0];
     const p = pruefeZeile(z, [], new Map(), HEUTE);
     expect(p.boxer).toBeNull();
-    expect(p.fehler).toEqual(expect.arrayContaining(['Verein fehlt', 'Geburtsdatum fehlt', 'Geschlecht fehlt']));
+    expect(p.fehler).toEqual(expect.arrayContaining(['Verein fehlt', 'Geburtsdatum fehlt']));
+    expect(p.fehler).not.toContain('Geschlecht fehlt');
   });
 
   it('fehlende Bilanz ist nur eine Warnung mit klarem Hinweis', () => {
@@ -205,7 +207,7 @@ describe('Prüfen', () => {
 
   it('Siege plus Niederlagen über den Kämpfen ist ein Fehler', () => {
     const z = { ...vollstaendig(), kaempfe: '5', siege: '4', niederlagen: '3' };
-    expect(pruefeZeile(z, [], new Map(), HEUTE).fehler).toContain('Siege plus Niederlagen sind mehr als die Kämpfe');
+    expect(pruefeZeile(z, [], new Map(), HEUTE).fehler).toContain('Siege, Niederlagen und Unentschieden sind zusammen mehr als die Kämpfe');
   });
 
   it('unplausibles Gewicht ist ein Fehler', () => {
@@ -240,5 +242,109 @@ describe('Verein aus dem Text', () => {
   it('überschreibt keinen vorhandenen Verein', () => {
     const t = 'Name\tVerein\tGeb.\tKg.\nMax Muster\tTSV Eins\t01.02.2008\t55\n\nBC Nordstern';
     expect(liesText(t, { heute }).zeilen[0].verein).toBe('TSV Eins');
+  });
+});
+
+describe('Tabelle ohne Überschriften (Meldung per Excel oder WhatsApp)', () => {
+  const o = { heute: new Date('2026-10-21') };
+  const zeilen = [
+    ['Anton', 'Beispiel', '05.08.2012', 59, 9, 3, 6, 0],
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', ''],
+    ['Berta', 'Muster', '18.04.2010', 75, 3, 2, 1, 0],
+    ['', '', '', '', '', '', '', ''],
+  ];
+
+  it('liest Vor- und Nachname, Datum, Gewicht und Bilanz, überspringt leere Gegnerzeilen', () => {
+    const e = liesTabelle(zeilen, o);
+    expect(e.zeilen).toHaveLength(2);
+    expect(e.zeilen[0]).toMatchObject({ name: 'Anton Beispiel', verein: '', geburtsdatum: '2012-08-05', gewicht: '59', kaempfe: '9', siege: '3', niederlagen: '6', geschlecht: 'M' });
+    expect(e.zeilen[1]).toMatchObject({ name: 'Berta Muster', geburtsdatum: '2010-04-18', gewicht: '75', kaempfe: '3', siege: '2', niederlagen: '1' });
+  });
+
+  it('als eingefügter Text mit Tabulatoren', () => {
+    const text = 'Anton\tBeispiel\t05.08.2012\t59\t9\t3\t6\t0\n\t\t\t\t\t\t\t\nBerta\tMuster\t18.04.2010\t75\t3\t2\t1\t0';
+    const e = liesText(text, o);
+    expect(e.zeilen.map((z) => [z.name, z.kaempfe, z.siege, z.niederlagen])).toEqual([
+      ['Anton Beispiel', '9', '3', '6'],
+      ['Berta Muster', '3', '2', '1'],
+    ]);
+  });
+
+  it('nur Kämpfe, oder Kämpfe und Siege, oder ohne Unentschieden', () => {
+    const e = liesTabelle(
+      [
+        ['Anton', 'Beispiel', '05.08.2012', 59, 9],
+        ['Berta', 'Muster', '18.04.2010', 75, 3, 2, 1],
+      ],
+      o,
+    );
+    expect(e.zeilen[0]).toMatchObject({ kaempfe: '9', siege: '', niederlagen: '' });
+    expect(e.zeilen[1]).toMatchObject({ kaempfe: '3', siege: '2', niederlagen: '1' });
+  });
+
+  it('zweite Textspalte mit Vereinskürzel ist der Verein, sonst der Nachname', () => {
+    const e = liesTabelle(
+      [
+        ['Anton Beispiel', 'BC Nord', '05.08.2012', 59, 9, 3, 6],
+        ['Berta', 'Muster', '18.04.2010', 75, 3, 2, 1],
+      ],
+      o,
+    );
+    expect(e.zeilen[0]).toMatchObject({ name: 'Anton Beispiel', verein: 'BC Nord' });
+    expect(e.zeilen[1]).toMatchObject({ name: 'Berta Muster', verein: '' });
+  });
+
+  it('warnt, wenn die Bilanz nicht zusammenpasst', () => {
+    const e = liesTabelle([['Anton', 'Beispiel', '05.08.2012', 59, 9, 3, 3, 0]], o);
+    expect(e.zeilen[0].hinweise.join(' ')).toContain('passen nicht');
+  });
+});
+
+describe('W im Text und Geschlecht', () => {
+  const o = { heute: new Date('2026-10-21') };
+
+  it('ein einzelnes W bedeutet weiblich, K und S werden gelesen', () => {
+    const e = liesText('Clara Probe 01.02.2011 48kg W 4K 4S', o);
+    expect(e.zeilen[0]).toMatchObject({ name: 'Clara Probe', geschlecht: 'W', kaempfe: '4', siege: '4' });
+  });
+
+  it('ohne Angabe gilt männlich, ohne Warnung', () => {
+    const e = liesText('Anton Beispiel 05.08.2012 59kg 9K 3S', o);
+    expect(e.zeilen[0].geschlecht).toBe('M');
+    expect(e.zeilen[0].hinweise).toEqual([]);
+  });
+
+  it('w65 kg: Geschlecht und Gewicht zusammen, in Text und Tabelle', () => {
+    const t = liesText('Clara Probe 01.02.2011 w65 kg 4K 4S', o);
+    expect(t.zeilen[0]).toMatchObject({ name: 'Clara Probe', geschlecht: 'W', gewicht: '65', kaempfe: '4', siege: '4' });
+    const z = liesTabelle([['Clara', 'Probe', '01.02.2011', 'w65 kg', 4, 4, 0, 0]], o);
+    expect(z.zeilen[0]).toMatchObject({ name: 'Clara Probe', geschlecht: 'W', gewicht: '65', kaempfe: '4', siege: '4', niederlagen: '0' });
+    const mit = liesText('Clara Probe 01.02.2011 W 65kg', o);
+    expect(mit.zeilen[0]).toMatchObject({ geschlecht: 'W', gewicht: '65' });
+  });
+
+  it('Unentschieden wird übernommen: Spalte, vierte Zahl und Text', () => {
+    const tab = liesTabelle([['Anton', 'Beispiel', '05.08.2012', 59, 9, 3, 4, 2]], o);
+    expect(tab.zeilen[0]).toMatchObject({ kaempfe: '9', siege: '3', niederlagen: '4', unentschieden: '2' });
+    const kopf = liesTabelle([['Name', 'Verein', 'Geburtsdatum', 'Gewicht', 'Kämpfe', 'Siege', 'Niederlagen', 'Unentschieden'], ['Anton Beispiel', 'BC Nord', '05.08.2012', 59, 9, 3, 4, 2]], o);
+    expect(kopf.zeilen[0]).toMatchObject({ siege: '3', niederlagen: '4', unentschieden: '2' });
+    const text = liesText('Anton Beispiel 05.08.2012 59kg 9K 3S 4N 2U', o);
+    expect(text.zeilen[0]).toMatchObject({ kaempfe: '9', siege: '3', niederlagen: '4', unentschieden: '2' });
+  });
+
+  it('prüft Siege, Niederlagen und Unentschieden gegen die Kämpfe und übernimmt das Unentschieden', () => {
+    const z = liesTabelle([['Anton', 'Beispiel', '05.08.2012', 59, 9, 3, 4, 2]], o).zeilen[0];
+    z.verein = 'BC Nord';
+    const p = pruefeZeile(z, [], new Map(), new Date('2026-10-21'));
+    expect(p.fehler).toEqual([]);
+    expect(p.boxer).toMatchObject({ kaempfe: 9, siege: 3, niederlagen: 4, unentschieden: 2 });
+    z.kaempfe = '8';
+    expect(pruefeZeile(z, [], new Map(), new Date('2026-10-21')).fehler.join(' ')).toContain('Unentschieden');
+  });
+
+  it('eine Spalte mit W in einer Tabelle ohne Überschrift', () => {
+    const e = liesTabelle([['Clara', 'Probe', 'W', '01.02.2011', 48, 4, 4, 0]], o);
+    expect(e.zeilen[0]).toMatchObject({ name: 'Clara Probe', geschlecht: 'W' });
   });
 });

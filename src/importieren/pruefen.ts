@@ -36,15 +36,16 @@ export function pruefeZeile(
   if (gewicht === null) fehler.push('Gewicht fehlt oder ist nicht lesbar');
   else if (gewicht < 25 || gewicht > 200) fehler.push('Gewicht unplausibel');
 
-  const bilanzLeer = z.kaempfe === '' && z.siege === '' && z.niederlagen === '';
+  const bilanzLeer = z.kaempfe === '' && z.siege === '' && z.niederlagen === '' && z.unentschieden === '';
   let kaempfe = parseZahl(z.kaempfe === '' ? '0' : z.kaempfe);
   let siege = parseZahl(z.siege === '' ? '0' : z.siege);
   let niederlagen = parseZahl(z.niederlagen === '' ? '0' : z.niederlagen);
-  if (kaempfe === null || siege === null || niederlagen === null) {
-    fehler.push('Kämpfe, Siege und Niederlagen müssen ganze Zahlen ab 0 sein');
-    kaempfe = siege = niederlagen = 0;
-  } else if (siege + niederlagen > kaempfe) {
-    fehler.push('Siege plus Niederlagen sind mehr als die Kämpfe');
+  let unentschieden = parseZahl(z.unentschieden === '' ? '0' : z.unentschieden);
+  if (kaempfe === null || siege === null || niederlagen === null || unentschieden === null) {
+    fehler.push('Kämpfe, Siege, Niederlagen und Unentschieden müssen ganze Zahlen ab 0 sein');
+    kaempfe = siege = niederlagen = unentschieden = 0;
+  } else if (siege + niederlagen + unentschieden > kaempfe) {
+    fehler.push('Siege, Niederlagen und Unentschieden sind zusammen mehr als die Kämpfe');
   } else if (bilanzLeer) {
     warnungen.push('Keine Kampfbilanz angegeben, mit 0 Kämpfen angenommen (zählt als Leistungsklasse C)');
   } else if (z.siege === '') {
@@ -69,6 +70,7 @@ export function pruefeZeile(
           kaempfe: kaempfe!,
           siege: siege!,
           niederlagen: niederlagen!,
+          ...(unentschieden! > 0 ? { unentschieden: unentschieden! } : {}),
         }
       : null;
   return { fehler, warnungen, boxer, vorhanden };

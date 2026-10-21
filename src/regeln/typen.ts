@@ -14,6 +14,8 @@ export interface Boxer {
   kaempfe: number;
   siege: number;
   niederlagen: number;
+  /** Unentschieden; fehlt bei älteren Meldungen */
+  unentschieden?: number;
 }
 
 /** "über" ist ausgeschlossen, "bis" eingeschlossen; bis = null ist eine offene Klasse. */

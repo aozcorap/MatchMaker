@@ -12,6 +12,7 @@ export interface ImportZeile {
   kaempfe: string;
   siege: string;
   niederlagen: string;
+  unentschieden: string;
   /** Hinweise vom Einlesen, z. B. "Kämpfe aus Siegen und Niederlagen berechnet" */
   hinweise: string[];
 }

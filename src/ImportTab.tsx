@@ -12,7 +12,7 @@ const BEISPIEL = `Name;Verein;Geburtsdatum;Geschlecht;Gewicht;Kämpfe;Siege;Nied
 Max Mustermann;BC Beispiel;12.03.2005;m;72,5;10;7;3
 Anna Beispiel;BC Beispiel;01.02.2008;w;55;3;1;2`;
 
-type Feld = 'name' | 'verein' | 'geburtsdatum' | 'geschlecht' | 'gewicht' | 'kaempfe' | 'siege' | 'niederlagen';
+type Feld = 'name' | 'verein' | 'geburtsdatum' | 'geschlecht' | 'gewicht' | 'kaempfe' | 'siege' | 'niederlagen' | 'unentschieden';
 
 function fasse(a: LeseErgebnis, b: LeseErgebnis): LeseErgebnis {
   return { zeilen: [...a.zeilen, ...b.zeilen], ignoriert: [...a.ignoriert, ...b.ignoriert] };
@@ -318,6 +318,7 @@ export function ImportTab(props: {
                   <th>Kämpfe</th>
                   <th>Siege</th>
                   <th>Niederl.</th>
+                  <th>Unent.</th>
                 </tr>
               </thead>
               <tbody>
@@ -421,10 +422,11 @@ function Zeile(props: {
         <td>{zelle('kaempfe', 'schmal')}</td>
         <td>{zelle('siege', 'schmal')}</td>
         <td>{zelle('niederlagen', 'schmal')}</td>
+        <td>{zelle('unentschieden', 'schmal')}</td>
       </tr>
       <tr className={fehler.length > 0 ? 'import-fehler import-info' : 'import-info'}>
         <td />
-        <td colSpan={8} className="pruefung">
+        <td colSpan={9} className="pruefung">
           {fehler.length === 0 && warnungen.length === 0 && <span className="ok-text">in Ordnung</span>}
           {fehler.map((f) => (
             <span key={f} className="fehler">
