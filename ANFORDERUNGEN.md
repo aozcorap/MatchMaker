@@ -1,6 +1,6 @@
 # Anforderungen Matchmaking-Webseite (Entwurf zur Bestätigung)
 
-Grundlage: DBV-Wettkampfbestimmungen (WB), gültig ab 01.01.2025. Paragraphen in Klammern.
+Grundlage: DBV-Wettkampfbestimmungen (WB), gültig ab 01.01.2025 (Volltext: [docs/Wettkampfbestimmungen-DBV-2025.pdf](docs/Wettkampfbestimmungen-DBV-2025.pdf)). Paragraphen in Klammern.
 Status: Anforderungen, noch keine technische Umsetzung.
 
 ## 1. Zweck und Umfang
@@ -25,7 +25,7 @@ Die Leistungsklasse (C/B/A/Elite) wird aus Alter und Siegen berechnet.
 1. **Geschlecht (§19.6):** Nur gleiches Geschlecht. Ausnahme: Jugend (U19) gegen Männer, wenn der Altersunterschied höchstens 24 Monate beträgt (§11.10).
 2. **Altersklasse (§11):** Alter = Jahr der Veranstaltung minus Geburtsjahr. 10–12 U13, 13–14 U15, 15–16 U17, 17–18 U19, ab 19 Männer/Frauen. Zwischen Jugendklassen höchstens 24 Monate Unterschied, exakt nach Geburtsdatum (§11.9). Es gelten die Schutzbestimmungen der jüngeren Klasse.
 3. **Gewicht (§19):** Gewichtsklassen nach Tabellen (Männer/Frauen/U19, U17, U15, U13). Gleiche Klasse ist ideal. Bei verschiedenen Klassen gilt als erlaubte Differenz die Breite der Klasse des leichteren Boxers (§19.6), auch über Altersklassen hinweg. *Auslegung, bitte bestätigen.* Boxer unter der untersten Klasse haben "keine Klasse" und kommen auf die Warteliste. Offene Klassen (z. B. Männer über 90 kg) haben keine Obergrenze: Innerhalb derselben offenen Klasse gibt es keine Gewichtsgrenze, die kleinste Differenz wird trotzdem bevorzugt.
-4. **Rundenzeit (§22):** Männer, Frauen, U19: 3×3 min. U17: 3×2. U15: 3×1,5. U13: 3×1. Bei gemischten Altersklassen gilt die Rundenzeit der jüngeren Klasse. *Auslegung, bitte bestätigen.*
+4. **Rundenzeit (§22):** Männer, Frauen, U19: 3×3 min. U17: 3×2. U15: 3×1,5. U13: 3×1. Bei gemischten Altersklassen gilt die Rundenzeit der jüngeren Klasse (WB Altersklassen, Abschnitt zu altersklassenüberschreitendem Boxen). Nach §22 kann die Rundendauer "nach vorheriger Vereinbarung unterschritten werden"; darauf beruht die Einstellung "Rundenzeit Erwachsene und U19" (3 × 3 oder 3 × 2, Standard 3 × 3). Die Leistungsklasse spielt für die Rundenzeit keine Rolle. Gegen die WB-Texte geprüft.
 5. **Leistungsklasse (§12):** Unter 7 Siege = C, 7 bis 14 = B, über 14 = A. **Elite** ist eine eigene Klasse: über 18 Jahre (Stichtag 31.12. des Vorjahres) und mehr als 25 Siege, sonst nichts. (Bewusste Festlegung des Auftraggebers; die WB nennen zusätzlich "international vertreten", das entfällt hier.) Standard: nur gleiche Klasse. Elite gegen Elite, keine Ausnahme.
 6. **Gleicher Verein:** Keine Paarung zwischen Boxern desselben Vereins.
 
@@ -61,7 +61,7 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 - **Große Pause:** Sind seit Beginn (oder seit der letzten Pause) 2 Stunden Wettkampf vergangen, folgt nach dem laufenden Kampf eine Pause von 30 Minuten.
 
 ## 7. Offene Punkte
-- Bestätigung der Auslegungen in 4.3 (Gewichtstoleranz) und 4.4 (Rundenzeit).
+- Bestätigung der Auslegung in 4.3 (Gewichtstoleranz). Die Rundenzeit (4.4) ist gegen die WB geprüft und bestätigt.
 - Spätere Themen: Projektname, Ausgabeformat, Nutzerrollen.
 
 ## Anhang: Gewichtsklassen (§19), "über" bis "bis einschließlich" in kg
