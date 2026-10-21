@@ -136,6 +136,13 @@ describe('pruefePaarung', () => {
     expect(r.status).toBe('ok');
     expect(r.rundenzeit).toEqual({ runden: 3, minuten: 2 });
   });
+  it('zwei verschiedene offene Gewichtsklassen: Prozentgrenze gilt', () => {
+    const u17 = boxer({ geburtsdatum: '2010-09-01', gewicht: 100 }); // U17, über 80 kg
+    const weit = boxer({ geburtsdatum: '2009-09-01', gewicht: 130 }); // U19, über 90 kg
+    const nah = boxer({ geburtsdatum: '2009-09-01', gewicht: 102 });
+    expect(pruefePaarung(u17, weit, TAG).status).toBe('verboten');
+    expect(pruefePaarung(u17, nah, TAG).status).toBe('ok');
+  });
   it('Jugend über 24 Monate Unterschied verboten', () => {
     const a = boxer({ geburtsdatum: '2012-09-01', gewicht: 50 }); // U15
     const b = boxer({ geburtsdatum: '2009-09-01', gewicht: 50 }); // U19
