@@ -16,14 +16,10 @@ export interface Zeiteinstellungen {
 
 export const STANDARD_ZEIT: Zeiteinstellungen = { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120, erwachsenenRundeMin: 3 };
 
-/**
- * Vom Veranstalter eingefügte Pause vor dem Kampf an Position `vorKampf` (ab 1).
- * `kampf` ist der Schlüssel dieses Kampfes: Die Pause bleibt an ihm, wenn er verschoben wird, `vorKampf` folgt nach.
- */
+/** Vom Veranstalter eingefügte Pause vor dem Kampf an Position `vorKampf` (ab 1). */
 export interface ExtraPause {
   id: string;
   vorKampf: number;
-  kampf?: string;
   minuten: number;
   text: string;
 }

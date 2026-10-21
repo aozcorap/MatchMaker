@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fuegeSortiertEin, hebeFreigabeAuf, kampfSchluessel, richtePausenAus, verschiebe } from './ablauf';
+import { fuegeSortiertEin, hebeFreigabeAuf, kampfSchluessel, verschiebe } from './ablauf';
 import type { GeplanterKampf } from './speicher';
 
 const k = (aId: string, bId = `${aId}2`): GeplanterKampf => ({ aId, bId, freigabe: false });
@@ -55,44 +55,5 @@ describe('hebeFreigabeAuf', () => {
 
   it('ändert nichts bei einem Boxer ohne Kampf', () => {
     expect(hebeFreigabeAuf(karte, 'Z')).toEqual(karte);
-  });
-});
-
-describe('richtePausenAus: Pausen bleiben am Kampf', () => {
-  const k = (a: string, b: string) => ({ aId: a, bId: b, freigabe: false });
-  const karte = [k('A', 'B'), k('C', 'D'), k('E', 'F'), k('G', 'H')];
-  const pause = (vorKampf: number, kampf?: string) => ({ id: 'p', vorKampf, kampf, minuten: 15, text: 'Pause' });
-
-  it('hängt eine neue Pause an den Kampf an ihrer Position', () => {
-    const z = richtePausenAus({ kampfkarte: karte, extraPausen: [pause(3)] });
-    expect(z.extraPausen[0]).toMatchObject({ vorKampf: 3, kampf: kampfSchluessel(karte[2]) });
-  });
-
-  it('die Pause wandert mit, wenn ihr Kampf verschoben wird', () => {
-    const angehaengt = richtePausenAus({ kampfkarte: karte, extraPausen: [pause(3)] });
-    const verschoben = richtePausenAus({ ...angehaengt, kampfkarte: verschiebe(karte, 2, 0) });
-    expect(verschoben.extraPausen[0].vorKampf).toBe(1);
-    const andererVerschoben = richtePausenAus({ ...verschoben, kampfkarte: verschiebe(verschoben.kampfkarte, 3, 0) });
-    expect(andererVerschoben.extraPausen[0].vorKampf).toBe(2); // ein Kampf kam davor
-  });
-
-  it('wird der Kampf entfernt, hängt die Pause am Kampf, der jetzt an der Stelle steht', () => {
-    const angehaengt = richtePausenAus({ kampfkarte: karte, extraPausen: [pause(2)] });
-    const ohne = richtePausenAus({ ...angehaengt, kampfkarte: karte.filter((x) => x !== karte[1]) });
-    expect(ohne.extraPausen[0]).toMatchObject({ vorKampf: 2, kampf: kampfSchluessel(karte[2]) });
-  });
-
-  it('steht sie nach dem Entfernen hinter dem letzten Kampf, hat sie keinen Kampf mehr', () => {
-    const angehaengt = richtePausenAus({ kampfkarte: karte, extraPausen: [pause(4)] });
-    const ohne = richtePausenAus({ ...angehaengt, kampfkarte: karte.slice(0, 3) });
-    expect(ohne.extraPausen[0].vorKampf).toBe(4);
-    expect(ohne.extraPausen[0].kampf).toBeUndefined();
-  });
-
-  it('Ecken tauschen ändert nichts, und ohne Änderung bleibt das Objekt gleich', () => {
-    const angehaengt = richtePausenAus({ kampfkarte: karte, extraPausen: [pause(1)] });
-    const getauscht = richtePausenAus({ ...angehaengt, kampfkarte: [k('B', 'A'), ...karte.slice(1)] });
-    expect(getauscht.extraPausen[0].vorKampf).toBe(1);
-    expect(richtePausenAus(angehaengt)).toBe(angehaengt);
   });
 });
