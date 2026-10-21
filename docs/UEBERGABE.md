@@ -19,7 +19,7 @@ Webseite für Veranstalter von Amateur-Boxveranstaltungen: Meldungen einlesen, E
 - Import: `src/importieren/` (Excel/CSV/Text/Chat; Screenshots per Texterkennung `tesseract.js` im Browser, Dateien werden vom Vite-Plugin in `dist/ocr/` bereitgestellt). Wichtig: Bilder mit `createImageBitmap(..., {colorSpaceConversion:'none'})` lesen, sonst verändert der Browser die Farben und die Tabellenlinien-Entfernung scheitert. `scripts/ocr-labor.ts` probiert die Bildaufbereitung in Node aus.
 - PDF: `src/pdfdoc.ts` (Layout, pdfmake) und `src/pdf.ts` (Download). Jeder Kampf bleibt mit den Pausen davor auf einer Seite.
 - Konten: `src/konto/` (Supabase-Anmeldung, Speichern mit Versionsprüfung, Sicherungen, Admin-Funktionen), Einstieg `src/Wurzel.tsx`. Die Demo (`DEMO`) läuft ohne Konto.
-- Veröffentlichung: `.github/workflows/pages.yml` baut und veröffentlicht bei jedem Push auf `main` und auf `claude/zen-cannon-ty3o2q` (Typprüfung, Tests, Build).
+- Veröffentlichung: `.github/workflows/pages.yml` baut und veröffentlicht bei jedem Push auf `main` (Typprüfung, Tests, Build).
 
 ## Funktionsstand
 Fertig und getestet: Regeln und Generator, Kampfkarte mit Zeitplan/Pausen/Ausfällen/Verschieben, Filter, Import (Excel, CSV, Text, Screenshots; Prüfansicht; Verein aus Signatur), PDF-Export (mit Alters- und Gewichtsklasse je Boxer), Konten mit Registrierung/Passwort vergessen, automatische Speicherung je Veranstalter, Datensicherung mit Wiederherstellung, Admin-Übersicht mit Ansehen (nur lesen) und Löschen.
@@ -35,11 +35,10 @@ Einstellungen in der Kampfkarte: max. Gewichtsdifferenz in % (10), max. Siegdiff
 - Hinweis zu den Werkzeugen: Über den Supabase-Zugang der Sitzung hängen Anweisungen mit `DELETE FROM` (vermutlich eine nicht beantwortete Bestätigung). Das nicht umgehen, sondern Löschen über die Oberfläche der App oder das Dashboard machen.
 
 ## Offene Punkte
-1. Vier Testkonten `zz-test-a/b/c/admin@example.com` (gesperrt, Passwort ersetzt) im Dashboard unter Authentication → Users löschen; dazu die Zeile `zz-test-admin@example.com` in der Tabelle `admins`. Ihre Veranstaltungen sind schon gelöscht.
-2. E-Mails kommen vom Standard-Absender von Supabase, englisch und stark begrenzt. Vor dem echten Betrieb: eigener SMTP-Dienst mit eigener Absenderadresse und deutsche Vorlagen.
-3. Datenschutz (Namen, Geburtsdaten, teils Minderjährige): Datenschutzerklärung und Auftragsverarbeitung klären, bevor echte Veranstalter die Seite nutzen. Der kostenlose Plan pausiert ungenutzte Projekte nach etwa einer Woche (Wissensstand, prüfen).
-4. Screenshots: Texterkennung ist bei stark komprimierten JPGs und schmalen Handy-Tabellen unzuverlässig; alle Zahlen müssen in der Prüfansicht kontrolliert werden. Mehr echte (anonymisierte) Beispiele wären hilfreich. Eine KI-Bilderkennung über einen Server wäre eine Datenschutzentscheidung.
-5. Offen aus den Anforderungen: Heimverein/blaue Ecke (WB §4.6), Bestätigung der Auslegungen (Gewichtstoleranz, Rundenzeit bei gemischten Klassen).
-6. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; Sicherungen werden nie automatisch bereinigt; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
-7. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
-8. Bezahlmethode: noch keine Überlegungen (Preismodell, Zahlungsanbieter, Rechnungen, Steuern). Muss später eingebaut werden, ist aktuell nicht dringend.
+1. E-Mails kommen vom Standard-Absender von Supabase, englisch und stark begrenzt. Vor dem echten Betrieb: eigener SMTP-Dienst mit eigener Absenderadresse und deutsche Vorlagen.
+2. Datenschutz (Namen, Geburtsdaten, teils Minderjährige): Datenschutzerklärung und Auftragsverarbeitung klären, bevor echte Veranstalter die Seite nutzen. Der kostenlose Plan pausiert ungenutzte Projekte nach etwa einer Woche (Wissensstand, prüfen).
+3. Screenshots: Texterkennung ist bei stark komprimierten JPGs und schmalen Handy-Tabellen unzuverlässig; alle Zahlen müssen in der Prüfansicht kontrolliert werden. Mehr echte (anonymisierte) Beispiele wären hilfreich. Eine KI-Bilderkennung über einen Server wäre eine Datenschutzentscheidung.
+4. Offen aus den Anforderungen: Heimverein/blaue Ecke (WB §4.6), Bestätigung der Auslegungen (Gewichtstoleranz, Rundenzeit bei gemischten Klassen).
+5. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; Sicherungen werden nie automatisch bereinigt; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
+6. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
+7. Bezahlmethode: noch keine Überlegungen (Preismodell, Zahlungsanbieter, Rechnungen, Steuern). Muss später eingebaut werden, ist aktuell nicht dringend.
