@@ -288,7 +288,21 @@ function istUeberschrift(zeile: string): string | null {
   return null;
 }
 
-function ausFreitext(zeilen: string[], o: LeseOptionen): LeseErgebnis {
+/** Beginnt mit einer Einheit wie "Niederlage" oder "Siege": der Rest einer umgebrochenen Zeile. */
+const FORTSETZUNG = /^\s*(?:niederlagen?|siege?|kämpfe|kaempfe|kampf|kg|verloren)\b/i;
+
+/** Hängt umgebrochene Zeilen (typisch bei Screenshots und Chatblasen) an die vorige Zeile an. */
+function fuegeUmbrueche(zeilen: string[]): string[] {
+  const ergebnis: string[] = [];
+  for (const zeile of zeilen) {
+    if (ergebnis.length > 0 && FORTSETZUNG.test(zeile)) ergebnis[ergebnis.length - 1] += ` ${zeile.trim()}`;
+    else ergebnis.push(zeile);
+  }
+  return ergebnis;
+}
+
+function ausFreitext(rohzeilen: string[], o: LeseOptionen): LeseErgebnis {
+  const zeilen = fuegeUmbrueche(rohzeilen);
   const heute = o.heute ?? new Date();
   const ergebnis: LeseErgebnis = { zeilen: [], ignoriert: [] };
   let aktuellerVerein = o.standardVerein ?? '';

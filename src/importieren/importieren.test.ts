@@ -144,6 +144,12 @@ describe('Text und CSV', () => {
     expect(e.zeilen[0]).toMatchObject({ name: 'Leon Winter', verein: 'SV Rheinkraft', geburtsdatum: '1999-09-04', gewicht: '70.8', kaempfe: '10', siege: '5', niederlagen: '4' });
     expect(e.zeilen[1]).toMatchObject({ name: 'Anna Roth', geschlecht: 'W', siege: '3', niederlagen: '1', kaempfe: '4' });
   });
+  it('eine umgebrochene Zeile (Chatblase, Screenshot) wird wieder zusammengesetzt', () => {
+    const e = liesText('Lisa Neu - 17.05.2008 - w - 52,5 kg - 4 Siege 1\nNiederlage', { ...o, standardVerein: 'TSV Dritt' });
+    expect(e.zeilen).toHaveLength(1);
+    expect(e.zeilen[0]).toMatchObject({ name: 'Lisa Neu', siege: '4', niederlagen: '1', kaempfe: '5' });
+    expect(e.ignoriert).toEqual([]);
+  });
   it('Vereinsname aus einem Satz mit Doppelpunkt', () => {
     const e = liesText('Hier die Meldung vom TSV Dritt:\nTom Beck - 12.03.2009 - m - 61 kg - 10/7/3', o);
     expect(e.zeilen[0].verein).toBe('TSV Dritt');

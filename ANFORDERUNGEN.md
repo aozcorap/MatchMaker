@@ -42,7 +42,8 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 - **Quellen:** Excel (.xlsx), CSV, eingefügter Text aus E-Mail oder WhatsApp. Jeder Trainer meldet in einem anderen Format, es gibt nur einen ungefähren Standard.
 - **Erkennung:** Spalten werden an ihrer Überschrift erkannt (Name oder Vor- und Nachname, Verein, Geburtsdatum, Geschlecht, Gewicht, Kämpfe, Siege, Niederlagen, Bilanz), auch in anderer Schreibweise. Ohne Überschriften wird jede Zeile als Text gelesen.
 - **Prüfansicht vor der Übernahme:** Jede Zeile ist bearbeitbar und zeigt Fehler und Warnungen. Pflicht sind Name, Verein, vollständiges Geburtsdatum, Geschlecht und Gewicht. Fehlt die Kampfbilanz, wird mit 0 gerechnet und gewarnt. Das Geschlecht wird nie aus dem Namen geraten. Schon vorhandene Boxer werden erkannt.
-- **Screenshots:** noch offen (Entscheidung zwischen Texterkennung im Browser und KI-Bilderkennung über einen Server).
+- **Screenshots:** Texterkennung direkt im Browser (die Bilder verlassen den Rechner nicht). Sie liest saubere Tabellen und Chatnachrichten gut, schmale Handy-Tabellen mit umgebrochenen Zellen und Ziffern wie "10 7 3" nur unzuverlässig. Alle Zahlen müssen in der Prüfansicht kontrolliert werden. Eine genauere KI-Bilderkennung über einen Server wäre möglich, ist aber eine Datenschutzentscheidung (Namen und Geburtsdaten Minderjähriger).
+- **Ziehen und Ablegen:** Dateien und Screenshots lassen sich auf die ganze Seite ziehen, mehrere gleichzeitig. Screenshots lassen sich auch mit Strg+V einfügen.
 
 ## 6b. Einstellbare Grenzen (Erfahrungswerte, nicht aus den WB)
 - **Gewicht:** Höchstens 10 % Unterschied, bezogen auf den leichteren Boxer, zusätzlich zur Klassenbreite. In nach oben offenen Gewichtsklassen gilt keine Prozentgrenze.

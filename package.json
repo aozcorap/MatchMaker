@@ -11,6 +11,7 @@
     "build:demo": "vite build --mode demo"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
@@ -21,8 +22,10 @@
     "vitest": "^5.0.5"
   },
   "dependencies": {
+    "@tesseract.js-data/deu": "^1.0.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "read-excel-file": "^9.3.12"
+    "read-excel-file": "^9.3.12",
+    "tesseract.js": "^7.0.0"
   }
 }

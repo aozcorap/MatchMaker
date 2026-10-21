@@ -1,9 +1,11 @@
-import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { alsText, type Zelle } from './importieren/felder';
 import { liesTabelle, liesText } from './importieren/lesen';
+import { erkenneBild } from './importieren/ocr';
 import { pruefeZeile, zaehleInEingabe } from './importieren/pruefen';
 import type { ImportZeile, LeseErgebnis } from './importieren/typen';
 import type { Zustand } from './speicher';
+import { DEMO } from './umgebung';
 
 const BEISPIEL = `Name;Verein;Geburtsdatum;Geschlecht;Gewicht;Kämpfe;Siege;Niederlagen
 Max Mustermann;BC Beispiel;12.03.2005;m;72,5;10;7;3
@@ -13,6 +15,62 @@ type Feld = 'name' | 'verein' | 'geburtsdatum' | 'geschlecht' | 'gewicht' | 'kae
 
 function fasse(a: LeseErgebnis, b: LeseErgebnis): LeseErgebnis {
   return { zeilen: [...a.zeilen, ...b.zeilen], ignoriert: [...a.ignoriert, ...b.ignoriert] };
+}
+
+/** Erwartete Probleme mit einer Datei, die dem Benutzer erklärt werden. */
+class Hinweis extends Error {}
+
+type Art = 'excel' | 'csv' | 'bild' | 'xls' | 'unbekannt';
+
+function artVon(d: File): Art {
+  const n = d.name.toLowerCase();
+  if (n.endsWith('.xlsx')) return 'excel';
+  if (n.endsWith('.xls')) return 'xls';
+  if (n.endsWith('.csv') || n.endsWith('.txt') || d.type === 'text/plain' || d.type === 'text/csv') return 'csv';
+  if (d.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp)$/.test(n)) return 'bild';
+  return 'unbekannt';
+}
+
+/** Liest eine Datei oder einen Screenshot; liefert die erkannten Zeilen und den zugehörigen Text. */
+async function liesEine(
+  datei: File,
+  standardVerein: string,
+  meldeStatus: (text: string) => void,
+): Promise<{ ergebnis: LeseErgebnis; text: string }> {
+  const optionen = { standardVerein };
+  switch (artVon(datei)) {
+    case 'excel': {
+      // Die Excel-Bibliothek wird erst bei Bedarf geladen
+      const { default: leseExcel } = await import('read-excel-file/browser');
+      const blaetter = await leseExcel(datei);
+      return {
+        ergebnis: blaetter.map((b) => liesTabelle(b.data as Zelle[][], optionen)).reduce(fasse, { zeilen: [], ignoriert: [] }),
+        text: blaetter.flatMap((b) => b.data.map((r) => (r as Zelle[]).map(alsText).join('\t'))).join('\n'),
+      };
+    }
+    case 'csv': {
+      const text = await datei.text();
+      return { ergebnis: liesText(text, optionen), text };
+    }
+    case 'bild': {
+      if (DEMO) throw new Hinweis('Die Texterkennung für Screenshots ist in der Demo nicht verfügbar.');
+      meldeStatus('Screenshot wird gelesen …');
+      let text: string;
+      try {
+        text = await erkenneBild(datei, meldeStatus);
+      } catch {
+        throw new Hinweis('Das Bild konnte nicht gelesen werden. Möglich sind PNG und JPG; Fotos im Format HEIC bitte umwandeln.');
+      }
+      if (!text.trim()) throw new Hinweis('Im Bild wurde kein Text erkannt.');
+      const ergebnis = liesText(text, optionen);
+      for (const z of ergebnis.zeilen) z.hinweise.push('Aus einem Bild gelesen, bitte alle Zahlen genau prüfen');
+      return { ergebnis, text };
+    }
+    case 'xls':
+      throw new Hinweis('Das alte Excel-Format (.xls) wird nicht gelesen. Bitte in Excel als .xlsx speichern.');
+    default:
+      throw new Hinweis('Dieses Format wird nicht unterstützt. Möglich sind .xlsx, .csv, .txt und Bilder (PNG, JPG).');
+  }
 }
 
 export function ImportTab(props: {
@@ -28,7 +86,10 @@ export function ImportTab(props: {
   /** Ausdrückliche Auswahl; ohne Eintrag gilt: übernehmen, wenn fehlerfrei und noch nicht vorhanden */
   const [auswahl, setAuswahl] = useState<Record<string, boolean>>({});
   const [meldung, setMeldung] = useState('');
+  const [status, setStatus] = useState('');
+  const [ziehe, setZiehe] = useState(false);
   const dateiRef = useRef<HTMLInputElement>(null);
+  const verarbeiteRef = useRef<(dateien: File[]) => void>(() => {});
 
   const vereine = useMemo(() => [...new Set(zustand.boxer.map((b) => b.verein))].sort((a, b) => a.localeCompare(b, 'de')), [zustand.boxer]);
 
@@ -62,39 +123,80 @@ export function ImportTab(props: {
     uebernimm(liesText(text, { standardVerein: standardVerein.trim() }));
   }
 
-  async function liesDatei(datei: File) {
-    const name = datei.name.toLowerCase();
-    setMeldung('');
-    try {
-      if (name.endsWith('.xlsx')) {
-        // Die Excel-Bibliothek wird erst bei Bedarf geladen
-        const { default: leseExcel } = await import('read-excel-file/browser');
-        const blaetter = await leseExcel(datei);
-        const optionen = { standardVerein: standardVerein.trim() };
-        const ergebnis = blaetter
-          .map((b) => liesTabelle(b.data as Zelle[][], optionen))
-          .reduce(fasse, { zeilen: [], ignoriert: [] });
-        setText(
-          blaetter
-            .flatMap((b) => b.data.map((r) => (r as Zelle[]).map(alsText).join('\t')))
-            .join('\n'),
-        );
-        uebernimm(ergebnis);
-      } else if (name.endsWith('.csv') || name.endsWith('.txt')) {
-        const inhalt = await datei.text();
-        setText(inhalt);
-        uebernimm(liesText(inhalt, { standardVerein: standardVerein.trim() }));
-      } else if (name.endsWith('.xls')) {
-        setMeldung('Das alte Excel-Format (.xls) wird nicht gelesen. Bitte in Excel als .xlsx speichern und erneut wählen.');
-      } else if (/\.(png|jpe?g|webp|gif|heic)$/.test(name)) {
-        setMeldung('Screenshots können noch nicht gelesen werden. Bitte die Daten als Excel-Datei oder als Text einfügen.');
-      } else {
-        setMeldung('Dieses Dateiformat wird nicht unterstützt. Möglich sind .xlsx, .csv und .txt.');
-      }
-    } catch {
-      setMeldung('Die Datei konnte nicht gelesen werden. Ist sie beschädigt oder mit Passwort geschützt?');
-    }
+  function fuegeHinzu(neu: LeseErgebnis) {
+    setZeilen((alt) => [...(alt ?? []), ...neu.zeilen]);
+    setIgnoriert((alt) => [...alt, ...neu.ignoriert]);
   }
+
+  /** Verarbeitet eine oder mehrere Dateien nacheinander und hängt die Ergebnisse an die Prüfliste an. */
+  async function verarbeite(dateien: File[]) {
+    if (dateien.length === 0) return;
+    setMeldung('');
+    let gesamt: LeseErgebnis = { zeilen: [], ignoriert: [] };
+    const texte: string[] = [];
+    const probleme: string[] = [];
+    for (const datei of dateien) {
+      setStatus(`${datei.name} wird gelesen …`);
+      try {
+        const r = await liesEine(datei, standardVerein.trim(), setStatus);
+        gesamt = fasse(gesamt, r.ergebnis);
+        texte.push(r.text);
+      } catch (fehler) {
+        probleme.push(`${datei.name}: ${fehler instanceof Hinweis ? fehler.message : 'konnte nicht gelesen werden (beschädigt oder mit Passwort geschützt?)'}`);
+      }
+    }
+    setStatus('');
+    setText((alt) => [alt.trim(), ...texte].filter(Boolean).join('\n'));
+    if (gesamt.zeilen.length > 0 || gesamt.ignoriert.length > 0) fuegeHinzu(gesamt);
+    const keine = gesamt.zeilen.length === 0 && probleme.length === 0 ? 'Es wurden keine Boxerdaten erkannt. ' : '';
+    setMeldung(keine + probleme.join(' '));
+  }
+  verarbeiteRef.current = (dateien) => void verarbeite(dateien);
+
+  // Ziehen und Ablegen sowie Einfügen von Screenshots (Strg+V) gelten für die ganze Seite, solange dieser Reiter offen ist
+  useEffect(() => {
+    let tiefe = 0;
+    const hatDateien = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files');
+    const hinein = (e: DragEvent) => {
+      if (!hatDateien(e)) return;
+      e.preventDefault();
+      tiefe += 1;
+      setZiehe(true);
+    };
+    const darueber = (e: DragEvent) => {
+      if (hatDateien(e)) e.preventDefault();
+    };
+    const hinaus = (e: DragEvent) => {
+      if (!hatDateien(e)) return;
+      tiefe = Math.max(0, tiefe - 1);
+      if (tiefe === 0) setZiehe(false);
+    };
+    const ablegen = (e: DragEvent) => {
+      if (!hatDateien(e)) return;
+      e.preventDefault();
+      tiefe = 0;
+      setZiehe(false);
+      verarbeiteRef.current(Array.from(e.dataTransfer?.files ?? []));
+    };
+    const einfuegen = (e: ClipboardEvent) => {
+      const dateien = Array.from(e.clipboardData?.files ?? []);
+      if (dateien.length === 0) return;
+      e.preventDefault();
+      verarbeiteRef.current(dateien);
+    };
+    window.addEventListener('dragenter', hinein);
+    window.addEventListener('dragover', darueber);
+    window.addEventListener('dragleave', hinaus);
+    window.addEventListener('drop', ablegen);
+    window.addEventListener('paste', einfuegen);
+    return () => {
+      window.removeEventListener('dragenter', hinein);
+      window.removeEventListener('dragover', darueber);
+      window.removeEventListener('dragleave', hinaus);
+      window.removeEventListener('drop', ablegen);
+      window.removeEventListener('paste', einfuegen);
+    };
+  }, []);
 
   function aendere(id: string, feld: Feld, wert: string) {
     setZeilen((alle) => alle && alle.map((z) => (z.id === id ? { ...z, [feld]: wert } : z)));
@@ -124,6 +226,23 @@ export function ImportTab(props: {
         Überschriften wie Name, Verein, Geburtsdatum, Gewicht, Kämpfe, Siege auch in anderer Schreibweise. Nichts wird
         übernommen, bevor Sie es unten geprüft haben.
       </p>
+      <div
+        className={ziehe ? 'ablage aktiv' : 'ablage'}
+        role="button"
+        tabIndex={0}
+        aria-label="Dateien oder Screenshots hierher ziehen, oder zum Auswählen drücken"
+        onClick={() => dateiRef.current?.click()}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), dateiRef.current?.click())}
+      >
+        <strong>{ziehe ? 'Jetzt loslassen' : 'Dateien oder Screenshots hierher ziehen oder klicken'}</strong>
+        <span>
+          Excel (.xlsx), CSV, Text oder Bild (PNG, JPG). Mehrere Dateien auf einmal sind möglich. Einen Screenshot
+          können Sie auch mit Strg+V einfügen.
+        </span>
+        <span className="ablage-status" role="status" aria-live="polite">
+          {status}
+        </span>
+      </div>
       <div className="formular import-eingabe">
         <label className="formular-feld">
           Text einfügen (eine Zeile je Boxer, oder eine Tabelle aus Excel kopiert)
@@ -153,7 +272,6 @@ export function ImportTab(props: {
           <button className="primaer" onClick={einlesen} disabled={text.trim() === ''}>
             Text einlesen
           </button>
-          <button onClick={() => dateiRef.current?.click()}>Datei wählen</button>
           <button onClick={() => setText(BEISPIEL)}>Beispiel einfügen</button>
           <input
             id="import-datei"
@@ -161,9 +279,9 @@ export function ImportTab(props: {
             type="file"
             accept=".xlsx,.xls,.csv,.txt,image/*"
             hidden
+            multiple
             onChange={(e) => {
-              const datei = e.target.files?.[0];
-              if (datei) void liesDatei(datei);
+              verarbeiteRef.current(Array.from(e.target.files ?? []));
               e.target.value = '';
             }}
           />

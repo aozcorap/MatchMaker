@@ -860,3 +860,39 @@ td.pruefung .quelle {
   font-size: 1.05rem;
   margin: 14px 0 10px;
 }
+
+.ablage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 22px 16px;
+  margin-bottom: 14px;
+  text-align: center;
+  border: 2px dashed var(--rand);
+  border-radius: 10px;
+  background: var(--flaeche);
+  cursor: pointer;
+}
+
+.ablage:hover,
+.ablage:focus-visible {
+  border-color: var(--leise);
+}
+
+.ablage.aktiv {
+  border-color: var(--akzent);
+  background: var(--fehler-bg);
+}
+
+.ablage span {
+  color: var(--leise);
+  font-size: 0.85rem;
+  max-width: 44rem;
+}
+
+.ablage .ablage-status {
+  color: var(--text);
+  font-weight: 600;
+  min-height: 1.2em;
+}
