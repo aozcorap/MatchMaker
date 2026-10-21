@@ -10,6 +10,7 @@ import { erzeugePaarungen } from './regeln/generator';
 import { altersklasseText, boxerInfo } from './regeln/info';
 import { baueKampf, leichterZuerst, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
 import { rundenzeitFuer } from './regeln/klassen';
+import { ladeKampfkartePdf } from './pdf';
 import { altersdifferenzMonate, paarungsGuete } from './regeln/paarung';
 import type { Boxer } from './regeln/typen';
 import { kampfdauer, plane, uhrzeit } from './regeln/zeitplan';
@@ -209,6 +210,49 @@ export function KampfkarteTab(props: {
     });
   }
 
+  const [pdfLaeuft, setPdfLaeuft] = useState(false);
+  async function erstellePdf() {
+    setPdfLaeuft(true);
+    try {
+      const [j, m, t] = datum.split('-');
+      await ladeKampfkartePdf(
+        {
+          titel: 'Kampfkarte',
+          datum: `${t}.${m}.${j}`,
+          beginn: uhrzeit(zeiten[0].start),
+          ende: uhrzeit(zeiten[zeiten.length - 1].ende),
+          kaempfe: kaempfe.map(({ kampf }, i) => {
+            const rz = rundenzeitFuer(kampf.altersklasse ?? 'Erwachsene');
+            const slot = zeiten[i];
+            return {
+              nr: i + 1,
+              start: uhrzeit(slot.start),
+              altersklasse: kampf.altersklasse ?? '',
+              runden: rz.runden,
+              minuten: rz.minuten,
+              rot: { name: kampf.rot.name, verein: kampf.rot.verein },
+              blau: { name: kampf.blau.name, verein: kampf.blau.verein },
+              pausenDavor: [
+                ...(slot.auto
+                  ? [{ text: 'Pause', von: uhrzeit(slot.auto.von), bis: uhrzeit(slot.auto.bis), minuten: Math.round((slot.auto.bis - slot.auto.von) / 60) }]
+                  : []),
+                ...slot.extra.map(({ pause, von, bis }) => ({
+                  text: pause.text || 'Pause',
+                  von: uhrzeit(von),
+                  bis: uhrzeit(bis),
+                  minuten: pause.minuten,
+                })),
+              ],
+            };
+          }),
+        },
+        `Kampfkarte-${datum}.pdf`,
+      );
+    } finally {
+      setPdfLaeuft(false);
+    }
+  }
+
   function erzeugeAlle() {
     if (kampfkarte.length > 0 && !bestaetige('Die bisherige Kampfkarte wird ersetzt. Fortfahren?')) {
       return;
@@ -385,6 +429,11 @@ export function KampfkarteTab(props: {
           Paarungen erzeugen
         </button>
         {kampfkarte.length > 1 && <button onClick={sortiereAutomatisch}>Automatisch sortieren</button>}
+        {kampfkarte.length > 0 && (
+          <button onClick={erstellePdf} disabled={pdfLaeuft}>
+            {pdfLaeuft ? 'PDF wird erstellt …' : 'PDF erstellen'}
+          </button>
+        )}
         {kampfkarte.length > 0 && (
           <button
             onClick={() => {
