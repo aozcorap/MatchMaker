@@ -459,3 +459,90 @@ th {
   color: var(--leise);
   display: block;
 }
+
+.vorschlag {
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: block;
+}
+
+.dialog-hintergrund {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: max(16px, env(safe-area-inset-top, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.dialog {
+  background: var(--flaeche);
+  color: var(--text);
+  border: 1px solid var(--rand);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 760px;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 4px 16px 16px;
+}
+
+.dialog-status {
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.dialog-status.freigabe {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.dialog-status.verboten {
+  background: var(--fehler-bg);
+  color: var(--fehler);
+}
+
+.fakten {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 14px 0 0;
+}
+
+.fakten dt {
+  font-size: 0.78rem;
+  color: var(--leise);
+}
+
+.fakten dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.dialog-gruende {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--ok);
+}
+
+.dialog-gruende.freigabe {
+  color: var(--warn);
+}
+
+.dialog-gruende.verboten {
+  color: var(--fehler);
+}
+
+.dialog-aktionen {
+  justify-content: flex-end;
+  margin-top: 16px;
+}

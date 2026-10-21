@@ -1,6 +1,8 @@
 import { Fragment, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { erzeugePaarungen } from './regeln/generator';
-import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
+import { BoxerZelle } from './BoxerZelle';
+import { PaarungsDialog } from './PaarungsDialog';
+import { altersklasseText, boxerInfo } from './regeln/info';
 import { baueKampf, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
 import { altersdifferenzMonate } from './regeln/paarung';
 import { rundenzeitFuer } from './regeln/klassen';
@@ -16,22 +18,6 @@ function gruppenName(b: Boxer, datum: string): string {
   const geschlecht = b.geschlecht === 'M' ? 'Männer' : 'Frauen';
   const ak = boxerInfo(b, datum).altersklasse;
   return `${geschlecht} · ${ak ? altersklasseText(ak) : 'keine Altersklasse'}`;
-}
-
-function BoxerZelle({ b, datum, ecke }: { b: Boxer; datum: string; ecke?: 'rot' | 'blau' }) {
-  const info = boxerInfo(b, datum);
-  return (
-    <div className={ecke ? `boxer ecke ${ecke}` : 'boxer'}>
-      {ecke && <span className="eckenlabel">{ecke === 'rot' ? 'Rote Ecke' : 'Blaue Ecke'}</span>}
-      <strong>{b.name}</strong>
-      <span>{b.verein}</span>
-      <span>
-        geb. {b.geburtsdatum.split('-').reverse().join('.')} · {b.gewicht} kg · {b.kaempfe} K / {b.siege} S ·{' '}
-        {altersklasseText(info.altersklasse)} ·{' '}
-        {gewichtsklasseText(info.gewichtsklasse)} · {info.leistungsklasse ?? '–'}
-      </span>
-    </div>
-  );
 }
 
 export function KampfkarteTab(props: {
@@ -243,31 +229,6 @@ export function KampfkarteTab(props: {
               );
             })}
           </ul>
-          {vorschauAuswahl && (
-            <div className={`vorschau ${vorschauAuswahl.pruefung.status}`}>
-              <strong>
-                {vorschauAuswahl.rot.name} (rot) gegen {vorschauAuswahl.blau.name} (blau):{' '}
-                {vorschauAuswahl.pruefung.status === 'ok'
-                  ? 'entspricht den Regeln'
-                  : vorschauAuswahl.pruefung.status === 'freigabe'
-                    ? 'nur mit Freigabe'
-                    : 'verstößt gegen die Regeln'}
-              </strong>
-              <ul>
-                {[...vorschauAuswahl.pruefung.gruende, ...vorschauAuswahl.pruefung.hinweise].map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-              <button
-                className="primaer"
-                onClick={() =>
-                  ergaenze([{ aId: gewaehlt[0].id, bId: gewaehlt[1].id, freigabe: false }])
-                }
-              >
-                Kampf anlegen
-              </button>
-            </div>
-          )}
         </>
       )}
 
@@ -275,28 +236,38 @@ export function KampfkarteTab(props: {
         <>
           <h2>Vorschläge für Wartende</h2>
           <ul className="vorschlaege">
-            {vorschlaege.paarungen.map((p) => (
-              <li key={`${p.a.id}-${p.b.id}`}>
-                <span>
-                  {p.a.name} (rot) gegen {p.b.name} (blau) <em>(entspricht den Regeln)</em>
-                </span>
-                <button onClick={() => ergaenze([{ aId: p.a.id, bId: p.b.id, freigabe: false }])}>
-                  Übernehmen
-                </button>
-              </li>
-            ))}
-            {vorschlaege.freigabeVorschlaege.map((p) => (
-              <li key={`${p.a.id}-${p.b.id}`}>
-                <span>
-                  {p.a.name} (rot) gegen {p.b.name} (blau) <em>(nur mit Freigabe)</em>
-                </span>
-                <button onClick={() => ergaenze([{ aId: p.a.id, bId: p.b.id, freigabe: false }])}>
-                  Übernehmen
-                </button>
+            {[
+              ...vorschlaege.paarungen.map((p) => ({ p, text: 'entspricht den Regeln', status: 'ok' })),
+              ...vorschlaege.freigabeVorschlaege.map((p) => ({ p, text: 'nur mit Freigabe', status: 'freigabe' })),
+            ].map(({ p, text, status }) => (
+              <li key={`${p.a.id}-${p.b.id}`} className={`vorschlag ${status}`}>
+                <div className="kampfkopf">
+                  <span className="nr">{text}</span>
+                  <span>Altersdifferenz {altersdifferenzMonate(p.a.geburtsdatum, p.b.geburtsdatum)} Monate</span>
+                  <span className="kampfknoepfe">
+                    <button onClick={() => ergaenze([{ aId: p.a.id, bId: p.b.id, freigabe: false }])}>
+                      Übernehmen
+                    </button>
+                  </span>
+                </div>
+                <div className="gegner">
+                  <BoxerZelle b={p.a} datum={datum} ecke="rot" />
+                  <span className="gegen">gegen</span>
+                  <BoxerZelle b={p.b} datum={datum} ecke="blau" />
+                </div>
               </li>
             ))}
           </ul>
         </>
+      )}
+      {vorschauAuswahl && (
+        <PaarungsDialog
+          kampf={vorschauAuswahl}
+          datum={datum}
+          onAnlegen={() => ergaenze([{ aId: gewaehlt[0].id, bId: gewaehlt[1].id, freigabe: false }])}
+          onTauschen={() => setAuswahl(([x, y]) => [y, x])}
+          onAbbrechen={() => setAuswahl([])}
+        />
       )}
     </section>
   );
