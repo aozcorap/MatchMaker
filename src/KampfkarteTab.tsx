@@ -7,10 +7,10 @@ import { FilterLeiste } from './FilterLeiste';
 import { filterOptionen, istAktiv, passt, passtEiner, type Filter } from './filter';
 import { PaarungsDialog } from './PaarungsDialog';
 import { erzeugePaarungen } from './regeln/generator';
-import { altersklasseText, boxerInfo } from './regeln/info';
+import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
 import { baueKampf, leichterZuerst, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
 import { rundenzeitFuer } from './regeln/klassen';
-import { erstelleKampfkartePdf } from './pdf';
+import { ladeKampfkartePdf, ladeVorab } from './pdf';
 import { altersdifferenzMonate, paarungsGuete } from './regeln/paarung';
 import type { Boxer } from './regeln/typen';
 import { kampfdauer, plane, uhrzeit } from './regeln/zeitplan';
@@ -211,16 +211,20 @@ export function KampfkarteTab(props: {
   }
 
   const [pdfLaeuft, setPdfLaeuft] = useState(false);
-  const [pdfLink, setPdfLink] = useState<string | null>(null);
   const [pdfFehler, setPdfFehler] = useState(false);
-  // Ein erzeugtes PDF gilt nur für den Stand, aus dem es entstanden ist
-  useEffect(() => setPdfLink(null), [kaempfe, zeiten]);
+  useEffect(() => {
+    if (kampfkarte.length > 0) ladeVorab();
+  }, [kampfkarte.length]);
+  const pdfBoxer = (b: Boxer) => {
+    const info = boxerInfo(b, datum);
+    return { name: b.name, verein: b.verein, klassen: `${altersklasseText(info.altersklasse)} · ${gewichtsklasseText(info.gewichtsklasse)}` };
+  };
   async function erstellePdf() {
     setPdfLaeuft(true);
     setPdfFehler(false);
     try {
       const [j, m, t] = datum.split('-');
-      const link = await erstelleKampfkartePdf(
+      await ladeKampfkartePdf(
         {
           titel: 'Kampfkarte',
           datum: `${t}.${m}.${j}`,
@@ -235,8 +239,8 @@ export function KampfkarteTab(props: {
               altersklasse: kampf.altersklasse ?? '',
               runden: rz.runden,
               minuten: rz.minuten,
-              rot: { name: kampf.rot.name, verein: kampf.rot.verein },
-              blau: { name: kampf.blau.name, verein: kampf.blau.verein },
+              rot: pdfBoxer(kampf.rot),
+              blau: pdfBoxer(kampf.blau),
               pausenDavor: [
                 ...(slot.auto
                   ? [{ text: 'Pause', von: uhrzeit(slot.auto.von), bis: uhrzeit(slot.auto.bis), minuten: Math.round((slot.auto.bis - slot.auto.von) / 60) }]
@@ -251,11 +255,8 @@ export function KampfkarteTab(props: {
             };
           }),
         },
+        `Kampfkarte-${datum}.pdf`,
       );
-      setPdfLink((alt) => {
-        if (alt) URL.revokeObjectURL(alt);
-        return link;
-      });
     } catch {
       setPdfFehler(true);
     } finally {
@@ -443,11 +444,6 @@ export function KampfkarteTab(props: {
           <button onClick={erstellePdf} disabled={pdfLaeuft}>
             {pdfLaeuft ? 'PDF wird erstellt …' : 'PDF erstellen'}
           </button>
-        )}
-        {pdfLink && kampfkarte.length > 0 && (
-          <a className="pdf-link" href={pdfLink} download={`Kampfkarte-${datum}.pdf`} target="_blank" rel="noreferrer">
-            PDF herunterladen / öffnen
-          </a>
         )}
         {pdfFehler && <span className="fehler">Das PDF konnte nicht erstellt werden.</span>}
         {kampfkarte.length > 0 && (

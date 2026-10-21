@@ -897,13 +897,3 @@ td.pruefung .quelle {
   min-height: 1.2em;
 }
 
-.pdf-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 14px;
-  border: 1px solid var(--rot, #9b1c1c);
-  border-radius: 8px;
-  color: var(--rot, #9b1c1c);
-  font-weight: 600;
-  text-decoration: none;
-}

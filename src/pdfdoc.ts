@@ -1,13 +1,20 @@
 import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
 
+export interface PdfBoxer {
+  name: string;
+  verein: string;
+  /** z. B. "U13 · 46–48 kg" */
+  klassen: string;
+}
+
 export interface PdfKampf {
   nr: number;
   start: string;
   altersklasse: string;
   runden: number;
   minuten: number;
-  rot: { name: string; verein: string };
-  blau: { name: string; verein: string };
+  rot: PdfBoxer;
+  blau: PdfBoxer;
   /** Pausen unmittelbar vor diesem Kampf */
   pausenDavor: { text: string; von: string; bis: string; minuten: number }[];
 }
@@ -47,12 +54,13 @@ function pauseBlock(p: PdfKampf['pausenDavor'][number]): Content {
   };
 }
 
-function eckenZelle(farbe: string, label: string, b: { name: string; verein: string }): Content {
+function eckenZelle(farbe: string, label: string, b: PdfBoxer): Content {
   return {
     stack: [
       { text: label, bold: true, fontSize: 8, color: farbe, characterSpacing: 0.6 },
       { text: b.name, bold: true, fontSize: 12, margin: [0, 2, 0, 0] },
       { text: b.verein || '–', fontSize: 10, color: '#555555' },
+      { text: b.klassen, fontSize: 10, margin: [0, 2, 0, 0] },
     ],
     margin: [6, 5, 6, 5],
   };
