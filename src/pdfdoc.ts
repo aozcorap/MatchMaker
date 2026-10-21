@@ -10,9 +10,6 @@ export interface PdfBoxer {
 export interface PdfKampf {
   nr: number;
   start: string;
-  altersklasse: string;
-  runden: number;
-  minuten: number;
   rot: PdfBoxer;
   blau: PdfBoxer;
   /** Pausen unmittelbar vor diesem Kampf */
@@ -34,20 +31,46 @@ const LINIE = '#b8b3aa';
 const ROT_FLAECHE = '#fbeceb';
 const BLAU_FLAECHE = '#e8eef9';
 
-const zahl = (n: number) => String(n).replace('.', ',');
-
-/** Spaltenbreiten, gemeinsam für Kopfzeile, Kämpfe und Pausen (Querformat A4, 28 pt Rand). */
-const BREITEN = [20, 34, 74, '*', 104, 70, '*', 104, 70];
+/** Spaltenbreiten (Querformat A4, 28 pt Rand). Die Namensspalten teilen sich den Rest. */
+const SEITE_BREIT = 841.89 - 2 * 28;
+const NR = 22;
+const UHR = 36;
+const VEREIN = 108;
+const KLASSE = 96;
+const NAME = (SEITE_BREIT - NR - UHR - 2 * (VEREIN + KLASSE)) / 2;
+const BREITEN = [NR, UHR, '*', VEREIN, KLASSE, '*', VEREIN, KLASSE];
 
 const RASTER = {
   hLineWidth: (i: number) => (i === 1 ? 0.5 : 0),
   vLineWidth: () => 0.5,
   hLineColor: () => LINIE,
   vLineColor: () => LINIE,
+  paddingLeft: () => 0,
+  paddingRight: () => 0,
 };
+
+const ZELLRAND = 6;
+
+/** Text darf nie umbrechen: Schrift verkleinern (bis `min`), notfalls mit … kürzen. Roboto-Breite geschätzt. */
+export function einzeilig(text: string, breite: number, groesse: number, fett = false, min = 6.5): { text: string; fontSize: number } {
+  const faktor = fett ? 0.58 : 0.52;
+  const platz = breite - ZELLRAND - 1;
+  let fontSize = groesse;
+  while (fontSize > min && text.length * fontSize * faktor > platz) fontSize = Math.max(min, fontSize - 0.25);
+  // Beim Kürzen etwas vorsichtiger rechnen, damit nichts an einem Bindestrich umbricht
+  const maxZeichen = Math.floor(platz / (fontSize * faktor * 1.05));
+  const gekuerzt = text.length > maxZeichen ? `${text.slice(0, Math.max(1, maxZeichen - 1))}…` : text;
+  // Geschützte Leerzeichen: kein Umbruch zwischen Vor- und Nachname
+  return { text: gekuerzt.replace(/ /g, '\u00a0'), fontSize };
+}
 
 function zelle(text: string, extra: Record<string, unknown> = {}): Content {
   return { text, margin: [3, 1.5, 3, 1.5], ...extra } as Content;
+}
+
+function feld(text: string, breite: number, groesse: number, extra: Record<string, unknown> = {}): Content {
+  const e = einzeilig(text, breite, groesse, extra.bold === true);
+  return zelle(e.text, { ...extra, fontSize: e.fontSize });
 }
 
 function pauseBlock(p: PdfKampf['pausenDavor'][number]): Content {
@@ -73,9 +96,9 @@ function pauseBlock(p: PdfKampf['pausenDavor'][number]): Content {
 
 function kampfZeile(k: PdfKampf): Content {
   const ecke = (b: PdfBoxer, flaeche: string): Content[] => [
-    zelle(b.name, { bold: true, fillColor: flaeche }),
-    zelle(b.verein || '–', { color: '#555555', fillColor: flaeche, fontSize: 8 }),
-    zelle(b.klassen, { fillColor: flaeche, fontSize: 7.5 }),
+    feld(b.name, NAME, 9, { bold: true, fillColor: flaeche }),
+    feld(b.verein || '–', VEREIN, 8, { color: '#555555', fillColor: flaeche }),
+    feld(b.klassen, KLASSE, 8, { fillColor: flaeche }),
   ];
   return {
     table: {
@@ -85,7 +108,6 @@ function kampfZeile(k: PdfKampf): Content {
         [
           zelle(String(k.nr), { bold: true, alignment: 'center' }),
           zelle(k.start, { bold: true }),
-          zelle(`${k.altersklasse} · ${k.runden}×${zahl(k.minuten)}`, { fontSize: 7.5 }),
           ...ecke(k.rot, ROT_FLAECHE),
           ...ecke(k.blau, BLAU_FLAECHE),
         ],
@@ -105,7 +127,6 @@ function kopfZeile(): Content {
         [
           kopf('Nr.', { alignment: 'center' }),
           kopf('Uhr'),
-          kopf('Klasse · Runden'),
           kopf('ROTE ECKE', { color: ROT, colSpan: 3 }),
           {},
           {},
@@ -119,7 +140,7 @@ function kopfZeile(): Content {
   };
 }
 
-/** Kampfkarte als Dokumentbeschreibung: Querformat, eine Zeile je Kampf, Kopfzeile auf jeder Seite. Jeder Kampf bleibt mit den Pausen davor auf einer Seite. */
+/** Kampfkarte als Dokumentbeschreibung: Querformat, eine Zeile je Kampf (ohne Zeilenumbruch), Kopfzeile auf jeder Seite. Jeder Kampf bleibt mit den Pausen davor auf einer Seite. */
 export function baueKampfkartePdf(karte: PdfKarte): TDocumentDefinitions {
   const inhalt: Content[] = karte.kaempfe.map((k) => ({
     unbreakable: true,
