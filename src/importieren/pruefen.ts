@@ -10,6 +10,8 @@ export interface ZeilenPruefung {
   boxer: Boxer | null;
   /** Gleicher Name und gleiches Geburtsdatum sind schon vorhanden */
   vorhanden: boolean;
+  /** Gar keine Kampfbilanz angegeben: der Boxer würde als Anfänger (C) gelten */
+  ohneBilanz: boolean;
 }
 
 export function schluessel(name: string, geburtsdatum: string): string {
@@ -47,7 +49,7 @@ export function pruefeZeile(
   } else if (siege + niederlagen + unentschieden > kaempfe) {
     fehler.push('Siege, Niederlagen und Unentschieden sind zusammen mehr als die Kämpfe');
   } else if (bilanzLeer) {
-    warnungen.push('Keine Kampfbilanz angegeben, mit 0 Kämpfen angenommen (zählt als Leistungsklasse C)');
+    warnungen.push('Keine Kampfbilanz angegeben, nicht vorgewählt: mit Haken trotzdem übernehmen (zählt dann als Leistungsklasse C)');
   } else if (z.siege === '') {
     warnungen.push('Siege fehlen, mit 0 angenommen (zählt als Leistungsklasse C)');
   }
@@ -73,7 +75,7 @@ export function pruefeZeile(
           ...(unentschieden! > 0 ? { unentschieden: unentschieden! } : {}),
         }
       : null;
-  return { fehler, warnungen, boxer, vorhanden };
+  return { fehler, warnungen, boxer, vorhanden, ohneBilanz: bilanzLeer };
 }
 
 /** Wie oft jeder Boxer (Name und Geburtsdatum) in der Eingabe vorkommt. */
