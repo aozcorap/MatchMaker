@@ -182,5 +182,5 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
     );
   }
 
-  return <App key="eigene" start={daten.zustand} userId={userId} startVersion={daten.version} kontoLeiste={leiste} />;
+  return <App key="eigene" start={daten.zustand} userId={userId} startVersion={daten.version} testdaten={admin} kontoLeiste={leiste} />;
 }
