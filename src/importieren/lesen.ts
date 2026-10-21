@@ -2,6 +2,7 @@ import {
   alsText,
   findeBilanz,
   findeDatum,
+  geschlechtMitGewicht,
   parseGeschlecht,
   parseGewicht,
   parseZahl,
@@ -28,6 +29,7 @@ export type Feld =
   | 'kaempfe'
   | 'siege'
   | 'niederlagen'
+  | 'unentschieden'
   | 'bilanz'
   | 'ignoriert';
 
@@ -46,9 +48,10 @@ const SYNONYME: Record<Feld, string[]> = {
   // "ss" und "jeb": typische Lesefehler der Texterkennung für "S" und "geb."
   siege: ['siege', 'sieg', 'gewonnen', 's', 'gew', 'ss'],
   niederlagen: ['niederlagen', 'niederlage', 'verloren', 'n', 'verl'],
+  unentschieden: ['unentschieden', 'unent', 'remis', 'draw'],
   bilanz: ['bilanz', 'kampfbilanz', 'bilanzksn', 'bilanzsn'],
   // Spalten, die vorkommen, aber nicht gebraucht werden (Alter wird aus dem Geburtsdatum berechnet)
-  ignoriert: ['alter', 'u', 'unentschieden', 'remis', 'nr', 'lfdnr', 'startnr', 'bemerkung', 'bemerkungen', 'anmerkung'],
+  ignoriert: ['alter', 'u', 'nr', 'lfdnr', 'startnr', 'bemerkung', 'bemerkungen', 'anmerkung'],
 };
 
 function normalisiere(text: string): string {
@@ -102,14 +105,16 @@ function leereZeile(quelle: string, verein: string): ImportZeile {
     kaempfe: '',
     siege: '',
     niederlagen: '',
+    unentschieden: '',
     hinweise: [],
   };
 }
 
-function setzeBilanz(z: ImportZeile, b: { kaempfe?: number; siege?: number; niederlagen?: number; berechnet?: boolean }) {
+function setzeBilanz(z: ImportZeile, b: { kaempfe?: number; siege?: number; niederlagen?: number; unentschieden?: number; berechnet?: boolean }) {
   if (b.kaempfe !== undefined) z.kaempfe = String(b.kaempfe);
   if (b.siege !== undefined) z.siege = String(b.siege);
   if (b.niederlagen !== undefined) z.niederlagen = String(b.niederlagen);
+  if (b.unentschieden !== undefined) z.unentschieden = String(b.unentschieden);
   if (b.berechnet) z.hinweise.push('Kämpfe aus Siegen und Niederlagen berechnet');
 }
 
@@ -181,16 +186,24 @@ function ausTabelleMitKopf(zeilen: Zelle[][], kopf: { index: number; spalten: (F
         }
         case 'gewicht': {
           const g = parseGewicht(zelle);
+          const gg = g === null ? geschlechtMitGewicht(zelle) : null;
           if (g !== null) z.gewicht = String(g);
-          else z.hinweise.push(`Gewicht nicht lesbar: ${text}`);
+          else if (gg) {
+            z.gewicht = String(gg.gewicht);
+            if (!z.geschlecht) z.geschlecht = gg.geschlecht;
+          } else z.hinweise.push(`Gewicht nicht lesbar: ${text}`);
           break;
         }
         case 'kaempfe':
         case 'siege':
-        case 'niederlagen': {
+        case 'niederlagen':
+        case 'unentschieden': {
           const n = parseZahl(zelle);
           if (n !== null) z[feld] = String(n);
-          else z.hinweise.push(`${feld === 'kaempfe' ? 'Kämpfe' : feld === 'siege' ? 'Siege' : 'Niederlagen'} nicht lesbar: ${text}`);
+          else
+            z.hinweise.push(
+              `${feld === 'kaempfe' ? 'Kämpfe' : feld === 'siege' ? 'Siege' : feld === 'niederlagen' ? 'Niederlagen' : 'Unentschieden'} nicht lesbar: ${text}`,
+            );
           break;
         }
         case 'ignoriert':
@@ -275,6 +288,12 @@ function ausKopfloserTabelle(zeilen: Zelle[][], o: LeseOptionen): LeseErgebnis |
         z.geschlecht = g;
         continue;
       }
+      const gg = geschlechtMitGewicht(c.roh);
+      if (gg && z.gewicht === '') {
+        z.geschlecht = gg.geschlecht;
+        z.gewicht = String(gg.gewicht);
+        continue;
+      }
       const n = zahlZelle(c.roh);
       if (n === null) {
         sonstige.push(c.text);
@@ -289,7 +308,7 @@ function ausKopfloserTabelle(zeilen: Zelle[][], o: LeseOptionen): LeseErgebnis |
       if (zahlen.length >= 2) z.siege = String(s);
       if (zahlen.length >= 3) z.niederlagen = String(n);
       if (zahlen.length === 2) z.hinweise.push('Zwei Zahlen als Kämpfe und Siege gelesen');
-      if (zahlen.length >= 4) z.hinweise.push(`Vierte Zahl (${u}) als Unentschieden gelesen und nicht übernommen`);
+      if (zahlen.length >= 4) z.unentschieden = String(u);
       if (zahlen.length >= 3 && k !== s + n + (u ?? 0)) z.hinweise.push('Kämpfe passen nicht zu Siegen, Niederlagen und Unentschieden: bitte prüfen');
     } else if (sonstige.length > 0) {
       const b = findeBilanz(sonstige.join(' '));
@@ -301,12 +320,11 @@ function ausKopfloserTabelle(zeilen: Zelle[][], o: LeseOptionen): LeseErgebnis |
   return ergebnis.zeilen.length > 0 ? ergebnis : null;
 }
 
-/** Fehlt das Geschlecht überall, gilt männlich (bei Frauen steht meist ein W dabei); die Prüfansicht weist darauf hin. */
+/** Fehlt das Geschlecht überall, gilt männlich (bei Frauen steht meist ein W dabei). */
 function nimmMaennlichAn(ergebnis: LeseErgebnis): LeseErgebnis {
   for (const z of ergebnis.zeilen) {
     if (z.geschlecht !== '' || z.hinweise.some((h) => h.startsWith('Geschlecht nicht eindeutig'))) continue;
     z.geschlecht = 'M';
-    z.hinweise.push('Geschlecht nicht angegeben: männlich angenommen (bei Frauen bitte W wählen)');
   }
   return ergebnis;
 }
@@ -359,7 +377,14 @@ function entnehme(segment: string, heute: Date): Funde {
     else f.hinweise.push(`Geburtsdatum nicht plausibel: ${d.text}`);
     f.rest = f.rest.replace(d.text, ' ');
   }
-  const g = /(\d{1,3}(?:[.,]\d{1,2})?)\s*kg\b/i.exec(f.rest);
+  // "w65 kg": Geschlecht und Gewicht zusammengeschrieben
+  const gk = /(?:^|\s)([wWmM])\s?(\d{2,3}(?:[.,]\d{1,2})?)\s*kg\b/.exec(f.rest);
+  if (gk) {
+    f.geschlecht = gk[1].toLowerCase() === 'w' ? 'W' : 'M';
+    f.gewicht = gk[2].replace(',', '.');
+    f.rest = `${f.rest.slice(0, gk.index)} ${f.rest.slice(gk.index + gk[0].length)}`;
+  }
+  const g = f.gewicht ? null : /(\d{1,3}(?:[.,]\d{1,2})?)\s*kg\b/i.exec(f.rest);
   if (g) {
     f.gewicht = g[1].replace(',', '.');
     f.rest = `${f.rest.slice(0, g.index)} ${f.rest.slice(g.index + g[0].length)}`;
