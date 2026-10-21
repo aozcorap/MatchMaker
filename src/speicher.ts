@@ -9,11 +9,27 @@ export interface GeplanterKampf {
   freigabe: boolean;
 }
 
+export type AusfallGrund = 'Verletzung' | 'Krankheit' | 'Sonstiges';
+export const AUSFALL_GRUENDE: AusfallGrund[] = ['Verletzung', 'Krankheit', 'Sonstiges'];
+
+export interface Ausfall {
+  grund: AusfallGrund;
+  notiz: string;
+  /** Gegner, dessen Kampf dadurch entfallen ist */
+  gegnerId?: string;
+}
+
 export interface Zustand {
   datum: string;
+  /** Beginn der Veranstaltung, HH:MM */
+  beginn: string;
   boxer: Boxer[];
   kampfkarte: GeplanterKampf[];
+  /** Ausgefallene Boxer nach ID */
+  ausfaelle: Record<string, Ausfall>;
 }
+
+export const STANDARD_BEGINN = '14:00';
 
 const SCHLUESSEL = 'matchmaker-v1';
 
@@ -22,7 +38,7 @@ export function heute(): string {
 }
 
 export function leererZustand(): Zustand {
-  return { datum: heute(), boxer: [], kampfkarte: [] };
+  return { datum: heute(), beginn: STANDARD_BEGINN, boxer: [], kampfkarte: [], ausfaelle: {} };
 }
 
 /** Prüft grob die Form, damit kaputte Dateien die App nicht lahmlegen. */
@@ -41,7 +57,14 @@ export function liesZustand(roh: unknown): Zustand | null {
   const kampfkarte = z.kampfkarte.filter(
     (k) => k && ids.has(k.aId) && ids.has(k.bId) && k.aId !== k.bId,
   );
-  return { datum: z.datum, boxer: z.boxer, kampfkarte };
+  const beginn = typeof z.beginn === 'string' && /^\d{1,2}:\d{2}$/.test(z.beginn) ? z.beginn : STANDARD_BEGINN;
+  const ausfaelle: Record<string, Ausfall> = {};
+  for (const [id, a] of Object.entries(z.ausfaelle ?? {})) {
+    if (ids.has(id) && a && AUSFALL_GRUENDE.includes(a.grund)) {
+      ausfaelle[id] = { grund: a.grund, notiz: typeof a.notiz === 'string' ? a.notiz : '', gegnerId: a.gegnerId };
+    }
+  }
+  return { datum: z.datum, beginn, boxer: z.boxer, kampfkarte, ausfaelle };
 }
 
 export function laden(): Zustand {

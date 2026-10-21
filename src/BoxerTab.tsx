@@ -108,6 +108,7 @@ export function BoxerTab(props: {
       ...z,
       boxer: z.boxer.filter((x) => x.id !== b.id),
       kampfkarte: z.kampfkarte.filter((k) => k.aId !== b.id && k.bId !== b.id),
+      ausfaelle: Object.fromEntries(Object.entries(z.ausfaelle).filter(([id]) => id !== b.id)),
     }));
     if (bearbeiteId === b.id) {
       setBearbeiteId(null);
@@ -246,7 +247,12 @@ export function BoxerTab(props: {
                 const info = boxerInfo(b, zustand.datum);
                 return (
                   <tr key={b.id}>
-                    <td>{b.name}</td>
+                    <td>
+                      {b.name}
+                      {zustand.ausfaelle[b.id] && (
+                        <span className="marke fehler"> Ausfall: {zustand.ausfaelle[b.id].grund}</span>
+                      )}
+                    </td>
                     <td>{b.verein}</td>
                     <td>{b.geburtsdatum.split('-').reverse().join('.')}</td>
                     <td>{b.geschlecht === 'M' ? 'm' : 'w'}</td>

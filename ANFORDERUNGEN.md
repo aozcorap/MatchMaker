@@ -38,6 +38,11 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 2. kleinste Gewichtsdifferenz
 3. ähnliche **Siegzahl** (z. B. 4 Kämpfe/0 Siege passt zu 0 Kämpfen/0 Siegen)
 
+## 6a. Ausfälle und Zeitplan
+- **Ausfall:** Jeder Boxer kann als Ausfall gemeldet werden (Verletzung, Krankheit, Sonstiges, mit Notiz), auch wenn er schon einen Kampf hat. Der Kampf entfällt, der Gegner kommt auf die Warteliste. Ausgefallene Boxer werden bei neuen Paarungen übergangen und können wieder aufgenommen werden.
+- **Uhrzeiten:** Die Kampfkarte zeigt je Kampf die voraussichtliche Startzeit. Grundlage ist der eingegebene Beginn (Annahme 14:00 Uhr), die Rundenzeit der Altersklasse mit einer Minute Pause zwischen den Runden und 2 Minuten zwischen den Kämpfen.
+- **Große Pause:** Sind seit Beginn (oder seit der letzten Pause) 2 Stunden Wettkampf vergangen, folgt nach dem laufenden Kampf eine Pause von 30 Minuten.
+
 ## 7. Offene Punkte
 - Bestätigung der Auslegungen in 4.3 (Gewichtstoleranz) und 4.4 (Rundenzeit).
 - Spätere Themen: Projektname, Ausgabeformat, Nutzerrollen.

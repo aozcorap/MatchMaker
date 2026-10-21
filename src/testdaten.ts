@@ -1,7 +1,7 @@
 import simulationJson from '../testdaten/meldungen-simulation.json';
 import { erzeugePaarungen } from './regeln/generator';
 import type { Boxer } from './regeln/typen';
-import type { Zustand } from './speicher';
+import { STANDARD_BEGINN, type Zustand } from './speicher';
 
 const roh = simulationJson as unknown as { datum: string; boxer: Boxer[] };
 
@@ -14,5 +14,5 @@ export function simulation(mitKampfkarte: boolean): Zustand {
         freigabe: false,
       }))
     : [];
-  return { datum: roh.datum, boxer: roh.boxer, kampfkarte };
+  return { datum: roh.datum, beginn: STANDARD_BEGINN, boxer: roh.boxer, kampfkarte, ausfaelle: {} };
 }

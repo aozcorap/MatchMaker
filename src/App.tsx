@@ -39,6 +39,14 @@ export function App() {
             onChange={(e) => e.target.value && setZustand({ ...zustand, datum: e.target.value })}
           />
         </label>
+        <label className="datum">
+          Beginn
+          <input
+            type="time"
+            value={zustand.beginn}
+            onChange={(e) => e.target.value && setZustand({ ...zustand, beginn: e.target.value })}
+          />
+        </label>
         <div className="aktionen" hidden={DEMO}>
           <button
             onClick={() => {

@@ -557,3 +557,68 @@ th {
   margin: 18px 0 8px;
   color: var(--leise);
 }
+
+.boxer.ecke {
+  position: relative;
+}
+
+.boxeraktion {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+}
+
+button.klein {
+  padding: 3px 10px;
+  font-size: 0.82rem;
+}
+
+.uhrzeit {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.grosse-pause {
+  text-align: center;
+  padding: 8px 12px;
+  border: 1px dashed var(--rand);
+  border-radius: 8px;
+  color: var(--leise);
+  font-weight: 600;
+  background: var(--flaeche);
+}
+
+.marke {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.ausfall-gruende {
+  border: 1px solid var(--rand);
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+}
+
+.ausfall-gruende legend {
+  font-size: 0.85rem;
+  color: var(--leise);
+  padding: 0 4px;
+}
+
+.ausfall-gruende label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.formular-feld {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--leise);
+}
