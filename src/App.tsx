@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BoxerTab } from './BoxerTab';
+import { KEIN_FILTER, type Filter } from './filter';
 import { KampfkarteTab } from './KampfkarteTab';
 import { exportiere, laden, liesZustand, speichern, type Zustand } from './speicher';
 import { simulation } from './testdaten';
@@ -11,6 +12,7 @@ export function App() {
   const [zustand, setZustand] = useState<Zustand>(laden);
   const [tab, setTab] = useState<Tab>('boxer');
   const [meldung, setMeldung] = useState('');
+  const [filter, setFilter] = useState<Filter>(KEIN_FILTER);
   const dateiRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => speichern(zustand), [zustand]);
@@ -95,9 +97,9 @@ export function App() {
         </button>
       </nav>
       {tab === 'boxer' ? (
-        <BoxerTab zustand={zustand} setZustand={setZustand} />
+        <BoxerTab zustand={zustand} setZustand={setZustand} filter={filter} setFilter={setFilter} />
       ) : (
-        <KampfkarteTab zustand={zustand} setZustand={setZustand} />
+        <KampfkarteTab zustand={zustand} setZustand={setZustand} filter={filter} setFilter={setFilter} />
       )}
     </div>
   );

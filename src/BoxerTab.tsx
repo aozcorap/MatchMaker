@@ -1,6 +1,8 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
 import type { Boxer, Geschlecht } from './regeln/typen';
+import { FilterLeiste } from './FilterLeiste';
+import { filterOptionen, istAktiv, passt, type Filter } from './filter';
 import type { Zustand } from './speicher';
 import { bestaetige } from './umgebung';
 
@@ -74,12 +76,13 @@ function alsEingabe(b: Boxer): Eingabe {
 export function BoxerTab(props: {
   zustand: Zustand;
   setZustand: Dispatch<SetStateAction<Zustand>>;
+  filter: Filter;
+  setFilter: (f: Filter) => void;
 }) {
-  const { zustand, setZustand } = props;
+  const { zustand, setZustand, filter, setFilter } = props;
   const [eingabe, setEingabe] = useState<Eingabe>(LEER);
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null);
   const [fehler, setFehler] = useState('');
-  const [filterVerein, setFilterVerein] = useState('');
 
   const feld = <K extends keyof Eingabe>(k: K, v: Eingabe[K]) => setEingabe({ ...eingabe, [k]: v });
 
@@ -116,10 +119,10 @@ export function BoxerTab(props: {
     }
   }
 
-  const vereine = [...new Set(zustand.boxer.map((b) => b.verein))].sort((a, b) => a.localeCompare(b, 'de'));
   const sortiert = zustand.boxer
-    .filter((b) => !filterVerein || b.verein === filterVerein)
+    .filter((b) => passt(b, filter, zustand.datum))
     .sort((a, b) => a.verein.localeCompare(b.verein, 'de') || a.name.localeCompare(b.name, 'de'));
+  const optionen = filterOptionen(zustand.boxer, zustand.datum, filter);
 
   return (
     <section>
@@ -210,21 +213,14 @@ export function BoxerTab(props: {
       </form>
 
       <h2>Gemeldete Boxer</h2>
-      {vereine.length > 1 && (
-        <label className="filter">
-          Verein
-          <select id="filter-verein" value={filterVerein} onChange={(e) => setFilterVerein(e.target.value)}>
-            <option value="">Alle ({zustand.boxer.length})</option>
-            {vereine.map((v) => (
-              <option key={v} value={v}>
-                {v} ({zustand.boxer.filter((b) => b.verein === v).length})
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
+      <FilterLeiste
+        filter={filter}
+        setFilter={setFilter}
+        optionen={optionen}
+        ergebnis={istAktiv(filter) ? `${sortiert.length} von ${zustand.boxer.length} Boxern` : undefined}
+      />
       {sortiert.length === 0 ? (
-        <p className="leer">Noch keine Boxer erfasst.</p>
+        <p className="leer">{zustand.boxer.length === 0 ? 'Noch keine Boxer erfasst.' : 'Kein Boxer passt zum Filter.'}</p>
       ) : (
         <div className="tabelle-rahmen">
           <table>

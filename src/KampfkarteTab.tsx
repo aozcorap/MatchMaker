@@ -3,6 +3,8 @@ import { fuegeSortiertEin, kampfSchluessel, verschiebe } from './ablauf';
 import { hebeAusfallAuf, meldeAusfall } from './ausfall';
 import { AusfallDialog } from './AusfallDialog';
 import { BoxerZelle } from './BoxerZelle';
+import { FilterLeiste } from './FilterLeiste';
+import { filterOptionen, istAktiv, passt, passtEiner, type Filter } from './filter';
 import { PaarungsDialog } from './PaarungsDialog';
 import { erzeugePaarungen } from './regeln/generator';
 import { altersklasseText, boxerInfo } from './regeln/info';
@@ -65,8 +67,10 @@ function gruppenName(b: Boxer, datum: string): string {
 export function KampfkarteTab(props: {
   zustand: Zustand;
   setZustand: Dispatch<SetStateAction<Zustand>>;
+  filter: Filter;
+  setFilter: (f: Filter) => void;
 }) {
-  const { zustand, setZustand } = props;
+  const { zustand, setZustand, filter, setFilter } = props;
   const { datum, beginn, boxer, kampfkarte, ausfaelle, regeln, zeit, extraPausen, autoPausen } = zustand;
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [ausfallFuer, setAusfallFuer] = useState<Boxer | null>(null);
@@ -132,6 +136,23 @@ export function KampfkarteTab(props: {
     () => new Set(moeglich.freigabe.flatMap((v) => [v.a.id, v.b.id])),
     [moeglich],
   );
+
+  // Filter: Kämpfe und Paarungen erscheinen, wenn mindestens ein Boxer alle Kriterien erfüllt
+  const filterAktiv = istAktiv(filter);
+  const treffer = (boxer: Boxer[]) => passtEiner(boxer, filter, datum);
+  const kaempfeSichtbar = kaempfe.filter((k) => treffer([k.kampf.rot, k.kampf.blau])).length;
+  const okSichtbar = moeglich.ok.filter((p) => treffer([p.a, p.b]));
+  const freigabeSichtbar = moeglich.freigabe.filter((p) => treffer([p.a, p.b]));
+  const wartendeSichtbar = wartende.filter((b) => passt(b, filter, datum));
+  const ausgefalleneSichtbar = ausgefallene.filter((b) => passt(b, filter, datum));
+  const optionen = useMemo(() => filterOptionen(boxer, datum, filter), [boxer, datum, filter]);
+  const zaehler = (sichtbar: number, gesamt: number) => (filterAktiv ? `${sichtbar} von ${gesamt}` : String(gesamt));
+  const vorschlagAnzahl = moeglich.ok.length + moeglich.freigabe.length;
+
+  function springe(id: string) {
+    const kurz = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById(id)?.scrollIntoView({ behavior: kurz ? 'auto' : 'smooth', block: 'start' });
+  }
 
   const gewaehlt = auswahl.filter((id) => !belegt.has(id)).map((id) => nachId.get(id)!).filter(Boolean);
   const vorschauAuswahl =
@@ -267,6 +288,30 @@ export function KampfkarteTab(props: {
 
   return (
     <section>
+      <nav className="sprungleiste" aria-label="Zu einem Abschnitt springen">
+        <button onClick={() => springe('abschnitt-kampfkarte')}>Kampfkarte ({kaempfe.length})</button>
+        <button disabled={vorschlagAnzahl === 0} onClick={() => springe('abschnitt-vorschlaege')}>
+          Vorschläge ({vorschlagAnzahl})
+        </button>
+        <button disabled={wartende.length === 0} onClick={() => springe('abschnitt-warteliste')}>
+          Warteliste ({wartende.length})
+        </button>
+        <button disabled={ausgefallene.length === 0} onClick={() => springe('abschnitt-ausfaelle')}>
+          Ausfälle ({ausgefallene.length})
+        </button>
+      </nav>
+
+      <FilterLeiste
+        filter={filter}
+        setFilter={setFilter}
+        optionen={optionen}
+        ergebnis={
+          filterAktiv
+            ? `Kämpfe ${kaempfeSichtbar} von ${kaempfe.length} · Vorschläge ${okSichtbar.length + freigabeSichtbar.length} von ${vorschlagAnzahl} · Wartende ${wartendeSichtbar.length} von ${wartende.length} · Pausen ausgeblendet`
+            : undefined
+        }
+      />
+
       <div className="grenzen">
         <label>
           Max. Gewichtsdifferenz (%)
@@ -342,7 +387,7 @@ export function KampfkarteTab(props: {
         )}
       </div>
 
-      <h2>Kampfkarte (Entwurf)</h2>
+      <h2 id="abschnitt-kampfkarte">Kampfkarte (Entwurf)</h2>
       {kaempfe.length > 0 && (
         <p className="zusammenfassung">
           {kaempfe.length} {kaempfe.length === 1 ? 'Kampf' : 'Kämpfe'} · {wartende.length} wartend · Beginn{' '}
@@ -362,9 +407,10 @@ export function KampfkarteTab(props: {
             const status = kampf.pruefung.status;
             const rz = kampf.altersklasse ? rundenzeitFuer(kampf.altersklasse) : null;
             const slot = zeiten[i];
+            if (!treffer([kampf.rot, kampf.blau])) return null;
             return (
               <Fragment key={`${geplant.aId}-${geplant.bId}`}>
-                {slot.auto && (
+                {!filterAktiv && slot.auto && (
                   <li className="pause-zeile">
                     <span className="pause-titel">Automatische Pause nach {zeit.blockMin} Minuten Wettkampf</span>
                     <label>
@@ -391,7 +437,7 @@ export function KampfkarteTab(props: {
                     )}
                   </li>
                 )}
-                {slot.extra.map(({ pause, von, bis }) => (
+                {!filterAktiv && slot.extra.map(({ pause, von, bis }) => (
                   <li key={pause.id} className="pause-zeile extra">
                     <input
                       id={`pause-text-${pause.id}`}
@@ -512,6 +558,9 @@ export function KampfkarteTab(props: {
           })}
         </ol>
       )}
+      {filterAktiv && kaempfe.length > 0 && kaempfeSichtbar === 0 && (
+        <p className="leer">Kein Kampf passt zum Filter.</p>
+      )}
       {extraPausen.some((p) => p.vorKampf > kaempfe.length) && (
         <ul className="warteliste">
           {extraPausen
@@ -529,18 +578,21 @@ export function KampfkarteTab(props: {
         </ul>
       )}
 
-      {(moeglich.ok.length > 0 || moeglich.freigabe.length > 0) && (
+      {vorschlagAnzahl > 0 && (
         <>
-          <h2>Vorschläge für Wartende</h2>
+          <h2 id="abschnitt-vorschlaege">Vorschläge für Wartende</h2>
+          {filterAktiv && okSichtbar.length + freigabeSichtbar.length === 0 && (
+            <p className="leer">Kein Vorschlag passt zum Filter.</p>
+          )}
           {[
-            { titel: 'Entsprechen den Regeln', status: 'ok', liste: moeglich.ok },
-            { titel: 'Nur mit Freigabe', status: 'freigabe', liste: moeglich.freigabe },
+            { titel: 'Entsprechen den Regeln', status: 'ok', liste: okSichtbar, gesamt: moeglich.ok.length },
+            { titel: 'Nur mit Freigabe', status: 'freigabe', liste: freigabeSichtbar, gesamt: moeglich.freigabe.length },
           ]
             .filter((g) => g.liste.length > 0)
             .map((g) => (
               <div key={g.status}>
                 <h3 className="vorschlag-titel">
-                  {g.titel} ({g.liste.length})
+                  {g.titel} ({zaehler(g.liste.length, g.gesamt)})
                 </h3>
                 <ul className="vorschlaege">
                   {g.liste.map((p) => (
@@ -576,7 +628,7 @@ export function KampfkarteTab(props: {
         </>
       )}
 
-      <h2>Warteliste ({wartende.length})</h2>
+      <h2 id="abschnitt-warteliste">Warteliste ({zaehler(wartendeSichtbar.length, wartende.length)})</h2>
       {wartende.length === 0 ? (
         <p className="leer">Niemand wartet.</p>
       ) : (
@@ -586,9 +638,9 @@ export function KampfkarteTab(props: {
             Ecke. Die App zeigt vorher, ob der Kampf den Regeln entspricht.
           </p>
           <ul className="warteliste">
-            {wartende.map((b, i) => {
+            {wartendeSichtbar.map((b, i) => {
               const gruppe = gruppenName(b, datum);
-              const neueGruppe = i === 0 || gruppe !== gruppenName(wartende[i - 1], datum);
+              const neueGruppe = i === 0 || gruppe !== gruppenName(wartendeSichtbar[i - 1], datum);
               return (
                 <Fragment key={b.id}>
                   {neueGruppe && <li className="gruppe">{gruppe}</li>}
@@ -611,14 +663,15 @@ export function KampfkarteTab(props: {
               );
             })}
           </ul>
+          {wartendeSichtbar.length === 0 && <p className="leer">Kein wartender Boxer passt zum Filter.</p>}
         </>
       )}
 
       {ausgefallene.length > 0 && (
         <>
-          <h2>Ausfälle ({ausgefallene.length})</h2>
+          <h2 id="abschnitt-ausfaelle">Ausfälle ({zaehler(ausgefalleneSichtbar.length, ausgefallene.length)})</h2>
           <ul className="warteliste">
-            {ausgefallene.map((b) => {
+            {ausgefalleneSichtbar.map((b) => {
               const a = ausfaelle[b.id];
               const gegner = a.gegnerId ? nachId.get(a.gegnerId) : undefined;
               return (

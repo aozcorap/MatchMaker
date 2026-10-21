@@ -706,3 +706,61 @@ button.klein {
   justify-content: flex-end;
   align-items: center;
 }
+
+.sprungleiste {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--rand);
+}
+
+.sprungleiste button {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+h2[id^='abschnitt-'] {
+  scroll-margin-top: 110px;
+}
+
+.filterleiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 16px;
+  padding: 10px 12px;
+  margin: 8px 0 14px;
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+  background: var(--flaeche);
+}
+
+.filterleiste.aktiv {
+  border-color: var(--akzent);
+}
+
+.filterleiste label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--leise);
+}
+
+.filterleiste select {
+  min-width: 9rem;
+  max-width: 100%;
+  padding: 6px 8px;
+}
+
+.filter-ergebnis {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
