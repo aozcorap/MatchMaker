@@ -61,7 +61,7 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 - **Große Pause:** Sind seit Beginn (oder seit der letzten Pause) 2 Stunden Wettkampf vergangen, folgt nach dem laufenden Kampf eine Pause von 30 Minuten.
 
 ## 7. Offene Punkte
-- Bestätigung der Auslegung in 4.3 (Gewichtstoleranz). Die Rundenzeit (4.4) ist gegen die WB geprüft und bestätigt.
+- Keine. Die Auslegungen zu Gewichtstoleranz (4.3) und Rundenzeit (4.4) sind bestätigt.
 - Spätere Themen: Projektname, Nutzerrollen, Bezahlmethode.
 
 ## Anhang: Gewichtsklassen (§19), "über" bis "bis einschließlich" in kg
