@@ -3,6 +3,7 @@ import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
 import type { Boxer, Geschlecht } from './regeln/typen';
 import { FilterLeiste } from './FilterLeiste';
 import { filterOptionen, istAktiv, passt, type Filter } from './filter';
+import { hebeFreigabeAuf } from './ablauf';
 import type { Zustand } from './speicher';
 import { bestaetige } from './umgebung';
 
@@ -15,6 +16,7 @@ interface Eingabe {
   kaempfe: string;
   siege: string;
   niederlagen: string;
+  unentschieden: string;
 }
 
 const LEER: Eingabe = {
@@ -26,6 +28,7 @@ const LEER: Eingabe = {
   kaempfe: '0',
   siege: '0',
   niederlagen: '0',
+  unentschieden: '0',
 };
 
 function ganzeZahl(text: string): number | null {
@@ -43,10 +46,11 @@ function pruefeEingabe(e: Eingabe, id: string): Boxer | string {
   const kaempfe = ganzeZahl(e.kaempfe);
   const siege = ganzeZahl(e.siege);
   const niederlagen = ganzeZahl(e.niederlagen);
-  if (kaempfe === null || siege === null || niederlagen === null) {
-    return 'Kämpfe, Siege und Niederlagen müssen ganze Zahlen ab 0 sein';
+  const unentschieden = ganzeZahl(e.unentschieden === '' ? '0' : e.unentschieden);
+  if (kaempfe === null || siege === null || niederlagen === null || unentschieden === null) {
+    return 'Kämpfe, Siege, Niederlagen und Unentschieden müssen ganze Zahlen ab 0 sein';
   }
-  if (siege + niederlagen > kaempfe) return 'Siege plus Niederlagen sind mehr als die Kämpfe';
+  if (siege + niederlagen + unentschieden > kaempfe) return 'Siege, Niederlagen und Unentschieden sind zusammen mehr als die Kämpfe';
   return {
     id,
     name: e.name.trim(),
@@ -57,6 +61,7 @@ function pruefeEingabe(e: Eingabe, id: string): Boxer | string {
     kaempfe,
     siege,
     niederlagen,
+    ...(unentschieden > 0 ? { unentschieden } : {}),
   };
 }
 
@@ -70,6 +75,7 @@ function alsEingabe(b: Boxer): Eingabe {
     kaempfe: String(b.kaempfe),
     siege: String(b.siege),
     niederlagen: String(b.niederlagen),
+    unentschieden: String(b.unentschieden ?? 0),
   };
 }
 
@@ -95,12 +101,25 @@ export function BoxerTab(props: {
       setFehler(ergebnis);
       return;
     }
-    setZustand((z) => ({
-      ...z,
-      boxer: bearbeiteId
-        ? z.boxer.map((b) => (b.id === id ? ergebnis : b))
-        : [...z.boxer, ergebnis],
-    }));
+    setZustand((z) => {
+      if (!bearbeiteId) return { ...z, boxer: [...z.boxer, ergebnis] };
+      const alt = z.boxer.find((b) => b.id === id);
+      const paarungsrelevant =
+        !alt ||
+        alt.gewicht !== ergebnis.gewicht ||
+        alt.geburtsdatum !== ergebnis.geburtsdatum ||
+        alt.geschlecht !== ergebnis.geschlecht ||
+        alt.verein !== ergebnis.verein ||
+        alt.kaempfe !== ergebnis.kaempfe ||
+        alt.siege !== ergebnis.siege ||
+        alt.niederlagen !== ergebnis.niederlagen ||
+        (alt.unentschieden ?? 0) !== (ergebnis.unentschieden ?? 0);
+      return {
+        ...z,
+        boxer: z.boxer.map((b) => (b.id === id ? ergebnis : b)),
+        kampfkarte: paarungsrelevant ? hebeFreigabeAuf(z.kampfkarte, id) : z.kampfkarte,
+      };
+    });
     setEingabe(LEER);
     setBearbeiteId(null);
     setFehler('');
@@ -211,6 +230,14 @@ export function BoxerTab(props: {
               onChange={(e) => feld('niederlagen', e.target.value)}
             />
           </label>
+          <label>
+            Unentschieden
+            <input
+              inputMode="numeric"
+              value={eingabe.unentschieden}
+              onChange={(e) => feld('unentschieden', e.target.value)}
+            />
+          </label>
         </div>
         {fehler && (
           <p className="fehler" role="alert">
@@ -254,7 +281,7 @@ export function BoxerTab(props: {
                 <th>Geboren</th>
                 <th>m/w</th>
                 <th>kg</th>
-                <th>K/S/N</th>
+                <th>K/S/N/U</th>
                 <th>Altersklasse</th>
                 <th>Gewichtsklasse</th>
                 <th>Leistung</th>
@@ -277,7 +304,7 @@ export function BoxerTab(props: {
                     <td>{b.geschlecht === 'M' ? 'm' : 'w'}</td>
                     <td>{b.gewicht}</td>
                     <td>
-                      {b.kaempfe}/{b.siege}/{b.niederlagen}
+                      {b.kaempfe}/{b.siege}/{b.niederlagen}/{b.unentschieden ?? 0}
                     </td>
                     <td>{altersklasseText(info.altersklasse)}</td>
                     <td className={info.gewichtsklasse ? '' : 'warn'}>

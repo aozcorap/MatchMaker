@@ -115,14 +115,14 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
     setListenFehler('');
     if (
       !bestaetige(
-        `Veranstaltung von ${e.email} (${datum}, ${e.zustand.boxer.length} Boxer, ${e.zustand.kampfkarte.length} Kämpfe) mit allen Sicherungen endgültig löschen? Das Konto bleibt bestehen und startet leer.`,
+        `Veranstaltung von ${e.email} (${datum}, ${e.zustand.boxer.length} Boxer, ${e.zustand.kampfkarte.length} Kämpfe) mit allen Boxern, Kämpfen und Sicherungen endgültig löschen? Das Konto (E-Mail und Anmeldung) bleibt bestehen und startet leer.`,
       )
     ) {
       return;
     }
     try {
       await loescheVeranstaltung(e.userId);
-      setListe((alt) => alt?.filter((x) => x.userId !== e.userId) ?? null);
+      setListe((alt) => alt?.map((x) => (x.userId === e.userId ? { ...x, aktualisiert: new Date().toISOString(), zustand: leererZustand() } : x)) ?? null);
       if (e.userId === userId) {
         setDaten(null);
         void lade();

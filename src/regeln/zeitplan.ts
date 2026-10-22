@@ -10,9 +10,11 @@ export interface Zeiteinstellungen {
   grossePauseMin: number;
   /** Nach so vielen Minuten Wettkampf folgt die große Pause */
   blockMin: number;
+  /** Minuten je Runde bei U19 und Erwachsenen (WB: 3, viele Veranstaltungen boxen 2) */
+  erwachsenenRundeMin: number;
 }
 
-export const STANDARD_ZEIT: Zeiteinstellungen = { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120 };
+export const STANDARD_ZEIT: Zeiteinstellungen = { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 120, erwachsenenRundeMin: 3 };
 
 /** Vom Veranstalter eingefügte Pause vor dem Kampf an Position `vorKampf` (ab 1). */
 export interface ExtraPause {
@@ -38,7 +40,8 @@ export function kampfdauer(r: Rundenzeit): number {
 
 export function parseUhrzeit(text: string): number {
   const m = /^(\d{1,2}):(\d{2})$/.exec(text);
-  return m ? Number(m[1]) * 3600 + Number(m[2]) * 60 : 14 * 3600;
+  // Ungültige Eingaben wie "29:99" fallen auf die Standardzeit zurück
+  return m && Number(m[1]) < 24 && Number(m[2]) < 60 ? Number(m[1]) * 3600 + Number(m[2]) * 60 : 14 * 3600;
 }
 
 /** HH:MM, auf die nächste Minute gerundet. */
@@ -72,7 +75,9 @@ export function plane(
     let auto: Zeitslot['auto'] = null;
     if (i > 0) {
       const vorherEnde = slots[i - 1].ende;
-      if (zeit.blockMin > 0 && vorherEnde - blockStart >= zeit.blockMin * 60) {
+      // Liegt vor diesem Kampf schon eine eigene Pause von mindestens der großen Pause, ersetzt sie die automatische
+      const langeExtra = extraPausen.some((p) => p.vorKampf === i + 1 && p.minuten >= zeit.grossePauseMin);
+      if (zeit.blockMin > 0 && vorherEnde - blockStart >= zeit.blockMin * 60 && !langeExtra) {
         const minuten = optionen.autoDauerMin?.(i) ?? zeit.grossePauseMin;
         auto = { von: vorherEnde, bis: vorherEnde + minuten * 60 };
         t = auto.bis;

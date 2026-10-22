@@ -1,4 +1,4 @@
-import { liesZustand, type Zustand } from '../speicher';
+import { leererZustand, liesZustand, type Zustand } from '../speicher';
 import { supabase } from './client';
 
 export interface Gespeichert {
@@ -48,7 +48,8 @@ export async function speichereCloud(userId: string, zustand: Zustand, version: 
 export async function ueberschreibe(userId: string, zustand: Zustand): Promise<number> {
   const { data, error } = await supabase.from('veranstaltungen').update({ zustand }).eq('user_id', userId).select('version');
   if (error) throw error;
-  if (!data || data.length === 0) throw new Error('Veranstaltung nicht gefunden');
+  // Wurde die Veranstaltung inzwischen gelöscht, wird sie mit dem eigenen Stand neu angelegt
+  if (!data || data.length === 0) return legeAn(userId, zustand);
   return data[0].version as number;
 }
 
@@ -109,10 +110,8 @@ export async function legeSicherungAn(userId: string, zustand: Zustand): Promise
   if (error) throw error;
 }
 
-/** Nur Admin: löscht die Veranstaltung samt Sicherungen. Das Konto selbst bleibt bestehen. */
+/** Nur Admin: leert die Veranstaltung samt Sicherungen. Konto und E-Mail bleiben bestehen. */
 export async function loescheVeranstaltung(userId: string): Promise<void> {
-  const a = await supabase.from('sicherungen').delete().eq('user_id', userId);
-  if (a.error) throw a.error;
-  const b = await supabase.from('veranstaltungen').delete().eq('user_id', userId);
-  if (b.error) throw b.error;
+  const { error } = await supabase.rpc('admin_leere_veranstaltung', { p_user: userId, p_zustand: leererZustand() });
+  if (error) throw error;
 }

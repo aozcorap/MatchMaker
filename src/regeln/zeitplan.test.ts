@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { kampfdauer, plane, uhrzeit, type ExtraPause } from './zeitplan';
+import { kampfdauer, plane, uhrzeit, type ExtraPause, parseUhrzeit } from './zeitplan';
 
 const MIN = 60;
 
@@ -58,7 +58,7 @@ describe('Zeitplan: anpassbare Pausen', () => {
   const pause = (vorKampf: number, minuten: number, text = 'Pause'): ExtraPause => ({ id: `p${vorKampf}`, vorKampf, minuten, text });
 
   it('Pause zwischen Kämpfen einstellbar', () => {
-    const s = plane('14:00', [kampf, kampf, kampf], { zeit: { kampfPauseMin: 5, grossePauseMin: 30, blockMin: 120 } });
+    const s = plane('14:00', [kampf, kampf, kampf], { zeit: { kampfPauseMin: 5, grossePauseMin: 30, blockMin: 120, erwachsenenRundeMin: 3 } });
     expect(s.map((x) => uhrzeit(x.start))).toEqual(['14:00', '14:16', '14:32']);
   });
 
@@ -91,11 +91,11 @@ describe('Zeitplan: anpassbare Pausen', () => {
   });
 
   it('große Pause und Blockdauer einstellbar', () => {
-    const s = plane('14:00', Array(12).fill(kampf), { zeit: { kampfPauseMin: 2, grossePauseMin: 20, blockMin: 60 } });
+    const s = plane('14:00', Array(12).fill(kampf), { zeit: { kampfPauseMin: 2, grossePauseMin: 20, blockMin: 60, erwachsenenRundeMin: 3 } });
     const erste = s.findIndex((x) => x.auto);
     expect(erste).toBe(5); // 5 Kämpfe enden bei 11 + 13 * 4 = 63 Minuten
     expect(uhrzeit(s[5].auto!.bis)).toBe('15:23');
-    expect(plane('14:00', Array(12).fill(kampf), { zeit: { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 0 } }).some((x) => x.auto)).toBe(false);
+    expect(plane('14:00', Array(12).fill(kampf), { zeit: { kampfPauseMin: 2, grossePauseMin: 30, blockMin: 0, erwachsenenRundeMin: 3 } }).some((x) => x.auto)).toBe(false);
   });
 
   it('eine eingefügte Pause von mindestens 30 Minuten setzt den Zwei-Stunden-Takt zurück', () => {
@@ -107,5 +107,31 @@ describe('Zeitplan: anpassbare Pausen', () => {
     const kurz = plane('14:00', dauern, { extraPausen: [pause(5, 10)] }).map((x, i) => (x.auto ? i : -1)).filter((i) => i >= 0);
     expect(kurz[0]).toBeLessThanOrEqual(10); // eine kurze Pause setzt nichts zurück
   });
+
+  it('eine eigene Pause ab großer Pause ersetzt die automatische vor demselben Kampf (keine Doppelpause)', () => {
+    const dauern = Array(15).fill(kampf);
+    // Kampf 11 (Index 10) löst ohne eigene Pause die automatische große Pause aus
+    expect(plane('14:00', dauern)[10].auto).not.toBeNull();
+    const mit = plane('14:00', dauern, { extraPausen: [pause(11, 45)] });
+    expect(mit[10].auto).toBeNull();
+    expect(mit[10].extra).toHaveLength(1);
+    // Beginn des Kampfes: Ende Kampf 10 + 2 min Kampfpause + 45 min eigene Pause, nicht zusätzlich 30 min
+    const ohne = plane('14:00', dauern);
+    const ende10 = mit[9].ende;
+    expect(mit[10].start).toBe(ende10 + 2 * 60 + 45 * 60);
+    expect(mit[10].start).toBeLessThan(ohne[10].start + 45 * 60);
+  });
 });
 
+
+describe('parseUhrzeit', () => {
+  it('liest gültige Uhrzeiten', () => {
+    expect(parseUhrzeit('09:30')).toBe(9 * 3600 + 30 * 60);
+    expect(parseUhrzeit('0:05')).toBe(5 * 60);
+  });
+  it('ungültige Eingaben fallen auf 14:00 zurück', () => {
+    expect(parseUhrzeit('29:99')).toBe(14 * 3600);
+    expect(parseUhrzeit('24:00')).toBe(14 * 3600);
+    expect(parseUhrzeit('abc')).toBe(14 * 3600);
+  });
+});

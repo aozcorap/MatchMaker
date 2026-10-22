@@ -62,6 +62,12 @@ export function findeDatum(eingabe: Zelle, heute: Date = new Date()): DatumTreff
   return { iso: ok ? isoDatum(j, m, t) : null, text: treffer[0] };
 }
 
+/** "w65 kg", "W 65kg", "m72": Geschlechtsbuchstabe und Gewicht zusammen. */
+export function geschlechtMitGewicht(eingabe: Zelle): { geschlecht: 'M' | 'W'; gewicht: number } | null {
+  const m = /^([wWmM])\s*(\d{2,3}(?:[.,]\d{1,2})?)\s*(?:kg)?$/.exec(alsText(eingabe));
+  return m ? { geschlecht: m[1].toLowerCase() === 'w' ? 'W' : 'M', gewicht: Number(m[2].replace(',', '.')) } : null;
+}
+
 /** Gewicht in kg: "72,5 kg", "72.5kg" oder nur die Zahl. */
 export function parseGewicht(eingabe: Zelle): number | null {
   if (typeof eingabe === 'number') return Number.isFinite(eingabe) ? eingabe : null;
@@ -90,6 +96,7 @@ export interface Bilanz {
   kaempfe?: number;
   siege?: number;
   niederlagen?: number;
+  unentschieden?: number;
   /** Kämpfe wurden aus Siegen und Niederlagen berechnet */
   berechnet?: boolean;
 }
@@ -124,6 +131,7 @@ export function findeBilanz(eingabe: string): BilanzTreffer | null {
       ['kaempfe', [/(\d+)\s*(?:kämpfe|kaempfe|kampf|k)(?![\p{L}\d])/iu, /(?:kämpfe|kaempfe|kampf)\p{L}*\s*[:=]?\s*(\d+)/iu]],
       ['siege', [/(\d+)\s*(?:siege|sieg|s)(?![\p{L}\d])/iu, /(?:siege|sieg)\p{L}*\s*[:=]?\s*(\d+)/iu]],
       ['niederlagen', [/(\d+)\s*(?:niederlagen|niederlage|verloren|n)(?![\p{L}\d])/iu, /(?:niederlagen|niederlage|verloren)\s*[:=]?\s*(\d+)/iu]],
+      ['unentschieden', [/(\d+)\s*(?:unentschieden|unent|remis|u)(?![\p{L}\d])/iu, /(?:unentschieden|unent|remis)\s*[:=]?\s*(\d+)/iu]],
     ];
     for (const [feld, regexe] of muster) {
       for (const re of regexe) {

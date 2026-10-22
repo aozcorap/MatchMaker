@@ -8,7 +8,7 @@ import { filterOptionen, istAktiv, passt, passtEiner, type Filter } from './filt
 import { PaarungsDialog } from './PaarungsDialog';
 import { erzeugePaarungen } from './regeln/generator';
 import { altersklasseText, boxerInfo, gewichtsklasseText } from './regeln/info';
-import { baueKampf, leichterZuerst, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
+import { baueKampf, leichterZuerst, type Kampf, vergleicheKampf, vergleicheWartende } from './regeln/kampfkarte';
 import { rundenzeitFuer } from './regeln/klassen';
 import { ladeKampfkartePdf, ladeVorab } from './pdf';
 import { altersdifferenzMonate, paarungsGuete } from './regeln/paarung';
@@ -93,7 +93,7 @@ export function KampfkarteTab(props: {
     () =>
       plane(
         beginn,
-        kaempfe.map((k) => kampfdauer(rundenzeitFuer(k.kampf.altersklasse ?? 'Erwachsene'))),
+        kaempfe.map((k) => kampfdauer(rundenzeitFuer(k.kampf.altersklasse ?? 'Erwachsene', zeit.erwachsenenRundeMin))),
         {
           zeit,
           extraPausen,
@@ -215,11 +215,27 @@ export function KampfkarteTab(props: {
   useEffect(() => {
     if (kampfkarte.length > 0) ladeVorab();
   }, [kampfkarte.length]);
-  const pdfBoxer = (b: Boxer) => {
-    const info = boxerInfo(b, datum);
-    return { name: b.name, verein: b.verein, klassen: `${altersklasseText(info.altersklasse)} · ${gewichtsklasseText(info.gewichtsklasse)}` };
+  const pdfBoxer = (b: Boxer) => ({ name: b.name, verein: b.verein, gewicht: b.gewicht });
+  /** Alters- und Leistungsklasse des Kampfes, z. B. "U17 C", "Männer B" oder bei Nachbarklassen "Männer B/A". */
+  const pdfKlasse = (kampf: Kampf) => {
+    const rot = boxerInfo(kampf.rot, datum);
+    const blau = boxerInfo(kampf.blau, datum);
+    const ak = kampf.altersklasse ?? rot.altersklasse;
+    const alter = ak === 'Erwachsene' ? (kampf.rot.geschlecht === 'W' ? 'Frauen' : 'Männer') : (ak ?? '');
+    const lk = [rot.leistungsklasse, blau.leistungsklasse].filter((l, i, a): l is NonNullable<typeof l> => l !== null && a.indexOf(l) === i).join('/');
+    return [alter, lk].filter(Boolean).join(' ');
   };
   async function erstellePdf() {
+    const offen = kaempfe.filter((k) => k.kampf.pruefung.status === 'freigabe' && !k.geplant.freigabe).length;
+    const verboten = kaempfe.filter((k) => k.kampf.pruefung.status === 'verboten').length;
+    if (
+      (offen > 0 || verboten > 0) &&
+      !bestaetige(
+        `Achtung: ${offen} Kampf/Kämpfe ohne Zustimmung der Trainer und ${verboten} mit Regelverstoß. PDF trotzdem erstellen?`,
+      )
+    ) {
+      return;
+    }
     setPdfLaeuft(true);
     setPdfFehler(false);
     try {
@@ -231,14 +247,11 @@ export function KampfkarteTab(props: {
           beginn: uhrzeit(zeiten[0].start),
           ende: uhrzeit(zeiten[zeiten.length - 1].ende),
           kaempfe: kaempfe.map(({ kampf }, i) => {
-            const rz = rundenzeitFuer(kampf.altersklasse ?? 'Erwachsene');
             const slot = zeiten[i];
             return {
               nr: i + 1,
               start: uhrzeit(slot.start),
-              altersklasse: kampf.altersklasse ?? '',
-              runden: rz.runden,
-              minuten: rz.minuten,
+              klasse: pdfKlasse(kampf),
               rot: pdfBoxer(kampf.rot),
               blau: pdfBoxer(kampf.blau),
               pausenDavor: [
@@ -433,6 +446,17 @@ export function KampfkarteTab(props: {
             />
           </label>
         ))}
+        <label>
+          Rundenzeit Erwachsene und U19
+          <select
+            id="erwachsenenrunde"
+            value={zeit.erwachsenenRundeMin}
+            onChange={(e) => setZustand((z) => ({ ...z, zeit: { ...z.zeit, erwachsenenRundeMin: Number(e.target.value) } }))}
+          >
+            <option value={3}>3 × 3 Minuten</option>
+            <option value={2}>3 × 2 Minuten</option>
+          </select>
+        </label>
       </div>
 
       <div className="aktionen">
@@ -477,7 +501,7 @@ export function KampfkarteTab(props: {
         <ol className="kampfliste">
           {kaempfe.map(({ geplant, kampf }, i) => {
             const status = kampf.pruefung.status;
-            const rz = kampf.altersklasse ? rundenzeitFuer(kampf.altersklasse) : null;
+            const rz = kampf.altersklasse ? rundenzeitFuer(kampf.altersklasse, zeit.erwachsenenRundeMin) : null;
             const slot = zeiten[i];
             if (!treffer([kampf.rot, kampf.blau])) return null;
             return (
@@ -771,6 +795,7 @@ export function KampfkarteTab(props: {
         <PaarungsDialog
           kampf={vorschauAuswahl}
           datum={datum}
+          erwachsenenRundeMin={zeit.erwachsenenRundeMin}
           onAnlegen={() => ergaenze([{ aId: gewaehlt[0].id, bId: gewaehlt[1].id, freigabe: false }])}
           onTauschen={() => setAuswahl(([x, y]) => [y, x])}
           onAbbrechen={() => setAuswahl([])}

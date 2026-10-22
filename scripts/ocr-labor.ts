@@ -22,10 +22,11 @@ for (const datei of process.argv.slice(2)) {
   const faktor = process.env.FAKTOR ? Number(process.env.FAKTOR) : vergroesserungsfaktor(original.width);
   const roh = vergroessern(original, faktor);
   const ohneLinien = entferneTabellenlinien(roh, faktor);
+  const farbHell = entferneTabellenlinien(roh, faktor, true);
   console.log(`\n=== ${datei.split('/').pop()}  (${original.width}x${original.height}, Faktor ${faktor})`);
   let beste = { text: '', punkte: -Infinity, nr: 0 };
   for (const [i, d] of DURCHGAENGE.entries()) {
-    const bild = d.linienEntfernen ? ohneLinien : roh;
+    const bild = d.farbflaechenHell ? farbHell : d.linienEntfernen ? ohneLinien : roh;
     const aus = new PNG({ width: bild.width, height: bild.height });
     aus.data = Buffer.from(bild.data);
     writeFileSync('/tmp/labor-bild.png', PNG.sync.write(aus));

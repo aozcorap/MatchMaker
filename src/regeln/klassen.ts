@@ -14,10 +14,11 @@ export function jahrVon(iso: string): number {
   return Number(iso.slice(0, 4));
 }
 
-/** Altersklasse = Jahr der Veranstaltung minus Geburtsjahr (§11). Unter 10: keine Klasse. */
+/** Altersklasse = Jahr der Veranstaltung minus Geburtsjahr (§11). Wettkampf erst ab dem 10. Geburtstag (§11.3), davor keine Klasse. */
 export function altersklasseVon(geburtsdatum: string, veranstaltung: string): Altersklasse | null {
   const alter = jahrVon(veranstaltung) - jahrVon(geburtsdatum);
   if (alter < 10) return null;
+  if (alter === 10 && geburtsdatum.slice(5) > veranstaltung.slice(5)) return null;
   if (alter <= 12) return 'U13';
   if (alter <= 14) return 'U15';
   if (alter <= 16) return 'U17';
@@ -74,8 +75,8 @@ export function breiteZehntel(k: Gewichtsklasse): number | null {
   return k.bis === null ? null : Math.round((k.bis - k.ueber) * 10);
 }
 
-/** §22: Runden je Altersklasse. */
-export function rundenzeitFuer(ak: Altersklasse): Rundenzeit {
+/** §22: Runden je Altersklasse. U19 und Erwachsene boxen 3 Minuten, der Veranstalter kann kürzer einstellen. */
+export function rundenzeitFuer(ak: Altersklasse, erwachsenenRundeMin = 3): Rundenzeit {
   switch (ak) {
     case 'U13':
       return { runden: 3, minuten: 1 };
@@ -84,7 +85,7 @@ export function rundenzeitFuer(ak: Altersklasse): Rundenzeit {
     case 'U17':
       return { runden: 3, minuten: 2 };
     default:
-      return { runden: 3, minuten: 3 };
+      return { runden: 3, minuten: erwachsenenRundeMin };
   }
 }
 

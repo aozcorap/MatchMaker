@@ -1,7 +1,7 @@
-# Anforderungen Matchmaking-Webseite (Entwurf zur Bestätigung)
+# Anforderungen Matchmaking-Webseite
 
-Grundlage: DBV-Wettkampfbestimmungen (WB), gültig ab 01.01.2025. Paragraphen in Klammern.
-Status: Anforderungen, noch keine technische Umsetzung.
+Grundlage: DBV-Wettkampfbestimmungen (WB), gültig ab 01.01.2025 (Volltext: [docs/Wettkampfbestimmungen-DBV-2025.pdf](docs/Wettkampfbestimmungen-DBV-2025.pdf)). Paragraphen in Klammern.
+Status: umgesetzt und live; offene Punkte stehen in Abschnitt 7 und in docs/UEBERGABE.md.
 
 ## 1. Zweck und Umfang
 Veranstalter von Amateurboxkämpfen erstellen **Einzelpaarungen** (keine Turniere, kein Breitensport).
@@ -15,7 +15,7 @@ Die App erzeugt einen **Entwurf**. Der Veranstalter hat das letzte Wort. Daten d
 3. **Sortierung der Kampfkarte.** Jüngste Altersklasse zuerst, darin leichteste Gewichtsklasse zuerst.
 4. **Warteliste.** Boxer ohne Gegner kommen mit Grund auf die Warteliste und können später manuell eingefügt werden.
 5. **Manuelle Änderung.** Der Veranstalter darf den Entwurf frei ändern. Die App warnt bei Regelverstoß, sperrt aber nicht.
-6. **Ausgabe.** Fertige Kampfkarte. Format wird später festgelegt.
+6. **Ausgabe.** Fertige Kampfkarte. Als PDF im Querformat (eine Zeile je Kampf, ohne Rundenzeiten).
 
 ## 3. Eingabedaten pro Boxer
 Name, Verein, Geburtsdatum, Geschlecht, Gewicht (Meldegewicht), Kämpfe, Siege, Niederlagen.
@@ -25,7 +25,7 @@ Die Leistungsklasse (C/B/A/Elite) wird aus Alter und Siegen berechnet.
 1. **Geschlecht (§19.6):** Nur gleiches Geschlecht. Ausnahme: Jugend (U19) gegen Männer, wenn der Altersunterschied höchstens 24 Monate beträgt (§11.10).
 2. **Altersklasse (§11):** Alter = Jahr der Veranstaltung minus Geburtsjahr. 10–12 U13, 13–14 U15, 15–16 U17, 17–18 U19, ab 19 Männer/Frauen. Zwischen Jugendklassen höchstens 24 Monate Unterschied, exakt nach Geburtsdatum (§11.9). Es gelten die Schutzbestimmungen der jüngeren Klasse.
 3. **Gewicht (§19):** Gewichtsklassen nach Tabellen (Männer/Frauen/U19, U17, U15, U13). Gleiche Klasse ist ideal. Bei verschiedenen Klassen gilt als erlaubte Differenz die Breite der Klasse des leichteren Boxers (§19.6), auch über Altersklassen hinweg. *Auslegung, bitte bestätigen.* Boxer unter der untersten Klasse haben "keine Klasse" und kommen auf die Warteliste. Offene Klassen (z. B. Männer über 90 kg) haben keine Obergrenze: Innerhalb derselben offenen Klasse gibt es keine Gewichtsgrenze, die kleinste Differenz wird trotzdem bevorzugt.
-4. **Rundenzeit (§22):** Männer, Frauen, U19: 3×3 min. U17: 3×2. U15: 3×1,5. U13: 3×1. Bei gemischten Altersklassen gilt die Rundenzeit der jüngeren Klasse. *Auslegung, bitte bestätigen.*
+4. **Rundenzeit (§22):** Männer, Frauen, U19: 3×3 min. U17: 3×2. U15: 3×1,5. U13: 3×1. Bei gemischten Altersklassen gilt die Rundenzeit der jüngeren Klasse (WB Altersklassen, Abschnitt zu altersklassenüberschreitendem Boxen). Nach §22 kann die Rundendauer "nach vorheriger Vereinbarung unterschritten werden"; darauf beruht die Einstellung "Rundenzeit Erwachsene und U19" (3 × 3 oder 3 × 2, Standard 3 × 3). Die Leistungsklasse spielt für die Rundenzeit keine Rolle. Gegen die WB-Texte geprüft.
 5. **Leistungsklasse (§12):** Unter 7 Siege = C, 7 bis 14 = B, über 14 = A. **Elite** ist eine eigene Klasse: über 18 Jahre (Stichtag 31.12. des Vorjahres) und mehr als 25 Siege, sonst nichts. (Bewusste Festlegung des Auftraggebers; die WB nennen zusätzlich "international vertreten", das entfällt hier.) Standard: nur gleiche Klasse. Elite gegen Elite, keine Ausnahme.
 6. **Gleicher Verein:** Keine Paarung zwischen Boxern desselben Vereins.
 
@@ -43,7 +43,7 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 ## 6c. Import der Meldungen
 - **Quellen:** Excel (.xlsx), CSV, eingefügter Text aus E-Mail oder WhatsApp. Jeder Trainer meldet in einem anderen Format, es gibt nur einen ungefähren Standard.
 - **Erkennung:** Spalten werden an ihrer Überschrift erkannt (Name oder Vor- und Nachname, Verein, Geburtsdatum, Geschlecht, Gewicht, Kämpfe, Siege, Niederlagen, Bilanz), auch in anderer Schreibweise. Ohne Überschriften wird jede Zeile als Text gelesen.
-- **Prüfansicht vor der Übernahme:** Jede Zeile ist bearbeitbar und zeigt Fehler und Warnungen. Pflicht sind Name, Verein, vollständiges Geburtsdatum, Geschlecht und Gewicht. Fehlt die Kampfbilanz, wird mit 0 gerechnet und gewarnt. Das Geschlecht wird nie aus dem Namen geraten. Schon vorhandene Boxer werden erkannt.
+- **Prüfansicht vor der Übernahme:** Jede Zeile ist bearbeitbar und zeigt Fehler und Warnungen. Pflicht sind Name, Verein, vollständiges Geburtsdatum, Geschlecht und Gewicht. Fehlt die Kampfbilanz ganz, ist die Zeile nicht vorgewählt und wird gewarnt; wird sie trotzdem übernommen, gilt der Boxer mit 0 Kämpfen als Anfänger (Leistungsklasse C). Das Geschlecht wird nie aus dem Namen geraten; fehlt jede Angabe, gilt männlich (bei Frauen steht in den Meldungen meist ein W, auch zusammen mit dem Gewicht wie "w65 kg"). Auch Unentschieden werden übernommen, wenn sie angegeben sind. Schon vorhandene Boxer werden erkannt.
 - **Screenshots:** Texterkennung direkt im Browser (die Bilder verlassen den Rechner nicht). Sie liest saubere Tabellen und Chatnachrichten gut, schmale Handy-Tabellen mit umgebrochenen Zellen und Ziffern wie "10 7 3" nur unzuverlässig. Alle Zahlen müssen in der Prüfansicht kontrolliert werden. Eine genauere KI-Bilderkennung über einen Server wäre möglich, ist aber eine Datenschutzentscheidung (Namen und Geburtsdaten Minderjähriger).
 - **Ziehen und Ablegen:** Dateien und Screenshots lassen sich auf die ganze Seite ziehen, mehrere gleichzeitig. Screenshots lassen sich auch mit Strg+V einfügen.
 
@@ -61,8 +61,8 @@ Bei mehreren möglichen Gegnern gewinnt die **beste Qualität**, nicht die Zahl 
 - **Große Pause:** Sind seit Beginn (oder seit der letzten Pause) 2 Stunden Wettkampf vergangen, folgt nach dem laufenden Kampf eine Pause von 30 Minuten.
 
 ## 7. Offene Punkte
-- Bestätigung der Auslegungen in 4.3 (Gewichtstoleranz) und 4.4 (Rundenzeit).
-- Spätere Themen: Projektname, Ausgabeformat, Nutzerrollen.
+- Keine. Die Auslegungen zu Gewichtstoleranz (4.3) und Rundenzeit (4.4) sind bestätigt.
+- Spätere Themen: Projektname, Nutzerrollen, Bezahlmethode.
 
 ## Anhang: Gewichtsklassen (§19), "über" bis "bis einschließlich" in kg
 **Männer und männl. Jugend (U19):** 47–50, 50–55, 55–60, 60–65, 65–70, 70–75, 75–80, 80–85, 85–90, über 90 (offen).
@@ -75,7 +75,7 @@ Unter der untersten Klasse: keine Klasse, Warteliste.
 - Anmeldung und Registrierung mit E-Mail und Passwort (mindestens 8 Zeichen), „Passwort vergessen“ per E-Mail.
 - Jeder Veranstalter hat genau eine Veranstaltung. Alles (Boxer, Kampfkarte, Ausfälle, Einstellungen) wird nach jeder Änderung automatisch in der Datenbank gespeichert und beim nächsten Login geladen.
 - Die Trennung der Konten erzwingt die Datenbank (Row Level Security), nicht nur die Oberfläche.
-- Admin (ahmet@ozcorapci.de, Tabelle `admins`): sieht alle Veranstaltungen, nur lesend.
+- Admin (ahmet@ozcorapci.de, Tabelle `admins`): sieht alle Veranstaltungen nur lesend und kann sie leeren (Boxer, Kämpfe und Sicherungen weg; Konto und E-Mail bleiben).
 - Zwei Fenster/Geräte: Wurde woanders neuer gespeichert, erscheint eine Warnung mit der Wahl „Neu laden“ oder „Meine Version speichern“.
 - Beim ersten Login werden Daten, die zuvor nur im Browser lagen, auf Nachfrage ins Konto übernommen.
 - Die Demo-Version bleibt ohne Konto.

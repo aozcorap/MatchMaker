@@ -22,18 +22,18 @@ Webseite für Veranstalter von Amateur-Boxveranstaltungen: Meldungen einlesen, E
 - Import: `src/importieren/` (Excel/CSV/Text/Chat; Screenshots per Texterkennung `tesseract.js` im Browser, Dateien werden vom Vite-Plugin in `dist/ocr/` bereitgestellt). Wichtig: Bilder mit `createImageBitmap(..., {colorSpaceConversion:'none'})` lesen, sonst verändert der Browser die Farben und die Tabellenlinien-Entfernung scheitert. `scripts/ocr-labor.ts` probiert die Bildaufbereitung in Node aus.
 - PDF: `src/pdfdoc.ts` (Layout, pdfmake) und `src/pdf.ts` (Download). Jeder Kampf bleibt mit den Pausen davor auf einer Seite.
 - Konten: `src/konto/` (Supabase-Anmeldung, Speichern mit Versionsprüfung, Sicherungen, Admin-Funktionen), Einstieg `src/Wurzel.tsx`. Die Demo (`DEMO`) läuft ohne Konto.
-- Veröffentlichung: `.github/workflows/pages.yml` baut und veröffentlicht bei jedem Push auf `main` und auf `claude/zen-cannon-ty3o2q` (Typprüfung, Tests, Build).
+- Veröffentlichung: `.github/workflows/pages.yml` baut und veröffentlicht bei jedem Push auf `main` (Typprüfung, Tests, Build).
 
 ## Funktionsstand
 Fertig und getestet: Regeln und Generator, Kampfkarte mit Zeitplan/Pausen/Ausfällen/Verschieben, Filter, Import (Excel, CSV, Text, Screenshots; Prüfansicht; Verein aus Signatur), PDF-Export (mit Alters- und Gewichtsklasse je Boxer), Konten mit Registrierung/Passwort vergessen, automatische Speicherung je Veranstalter, Datensicherung mit Wiederherstellung, Admin-Übersicht mit Ansehen (nur lesen) und Löschen.
 
-Einstellungen in der Kampfkarte: max. Gewichtsdifferenz in % (10), max. Siegdifferenz bei Freigabe (5), "Andere Alters- oder Gewichtsklasse nur mit Freigabe" (an; die WB erlauben das laut §11.9 und §19.6 ohne Zustimmung, der Auftraggeber will es strenger).
+Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 Minuten, Standard 3 × 3; wirkt auf Zeitplan, Anzeige und PDF), max. Gewichtsdifferenz in % (10), max. Siegdifferenz bei Freigabe (5), "Andere Alters- oder Gewichtsklasse nur mit Freigabe" (an; die WB erlauben das laut §11.9 und §19.6 ohne Zustimmung, der Auftraggeber will es strenger).
 
 ## Supabase
 - Projekt `matchmaker`, Ref `ymqzqfrskvmpyamvmnbe`, Region eu-central-1 (Frankfurt), kostenloser Plan, Organisation "ahmet@ozcorapci.de's Org".
 - URL und veröffentlichbarer Schlüssel stehen in `src/konto/client.ts` (für den Browser gedacht). Der Schutz der Daten liegt in den Zugriffsregeln (RLS).
-- Datenbank: `supabase/migrations/001..003` (bereits angewendet). Tabellen `admins`, `veranstaltungen` (eine je Konto, Zustand als JSON, Versionszähler), `sicherungen`.
-- Admin: Tabelle `admins`, Eintrag `ahmet@ozcorapci.de`. Admin sieht alle Veranstaltungen nur lesend und darf sie löschen.
+- Datenbank: `supabase/migrations/001..005` (alle angewendet; 004 und 005 am 21.10.2026 im SQL-Editor ausgeführt). Tabellen `admins`, `veranstaltungen` (eine je Konto, Zustand als JSON, Versionszähler), `sicherungen`.
+- Admin: Tabelle `admins`, Eintrag `ahmet@ozcorapci.de`. Admin sieht alle Veranstaltungen nur lesend und kann sie leeren (Boxer, Kämpfe, Sicherungen weg; Konto und E-Mail bleiben).
 - Im Dashboard gesetzt: Authentication → URL Configuration, Site URL und Redirect URL = `https://aozcorap.github.io/MatchMaker/`.
 - Hinweis zu den Werkzeugen: Über den Supabase-Zugang der Sitzung hängen Anweisungen mit `DELETE FROM` (vermutlich eine nicht beantwortete Bestätigung). Das nicht umgehen, sondern Löschen über die Oberfläche der App oder das Dashboard machen.
 
@@ -41,10 +41,14 @@ Einstellungen in der Kampfkarte: max. Gewichtsdifferenz in % (10), max. Siegdiff
 `src/rechtliches.tsx` (Seiten über `#/impressum` und `#/datenschutz`, Links im Fuß jeder Seite, beim Registrieren Häkchen "Datenschutzerklärung gelesen", Hinweis "nur erfundene Daten" auf der Anmeldeseite). **Vor der Veröffentlichung:** die Anschrift in `BETREIBER` eintragen (steht noch als Platzhalter in eckigen Klammern) und die Texte juristisch prüfen lassen. Die Datenschutzerklärung ist ein Entwurf nach dem Stand der Technik (Supabase Frankfurt, Hosting GitHub Pages, keine Tracking-Dienste). Eine Vereinbarung zur Auftragsverarbeitung mit den Veranstaltern gibt es noch nicht.
 
 ## Offene Punkte
-1. Vier Testkonten `zz-test-a/b/c/admin@example.com` (gesperrt, Passwort ersetzt) im Dashboard unter Authentication → Users löschen; dazu die Zeile `zz-test-admin@example.com` in der Tabelle `admins`. Ihre Veranstaltungen sind schon gelöscht.
-2. E-Mails kommen vom Standard-Absender von Supabase, englisch und stark begrenzt. Vor dem echten Betrieb: eigener SMTP-Dienst mit eigener Absenderadresse und deutsche Vorlagen.
-3. Datenschutz (Namen, Geburtsdaten, teils Minderjährige): Datenschutzerklärung und Auftragsverarbeitung klären, bevor echte Veranstalter die Seite nutzen. Der kostenlose Plan pausiert ungenutzte Projekte nach etwa einer Woche (Wissensstand, prüfen).
-4. Screenshots: Texterkennung ist bei stark komprimierten JPGs und schmalen Handy-Tabellen unzuverlässig; alle Zahlen müssen in der Prüfansicht kontrolliert werden. Mehr echte (anonymisierte) Beispiele wären hilfreich. Eine KI-Bilderkennung über einen Server wäre eine Datenschutzentscheidung.
-5. Offen aus den Anforderungen: Heimverein/blaue Ecke (WB §4.6), Bestätigung der Auslegungen (Gewichtstoleranz, Rundenzeit bei gemischten Klassen).
-6. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; Sicherungen werden nie automatisch bereinigt; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
-7. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
+1. E-Mails kommen vom Standard-Absender von Supabase, englisch und stark begrenzt. Vor dem echten Betrieb: eigener SMTP-Dienst mit eigener Absenderadresse und deutsche Vorlagen.
+2. Datenschutz (Namen, Geburtsdaten, teils Minderjährige): Datenschutzerklärung und Auftragsverarbeitung klären, bevor echte Veranstalter die Seite nutzen. Der kostenlose Plan pausiert ungenutzte Projekte nach etwa einer Woche (Wissensstand, prüfen).
+3. Screenshots: Texterkennung im Browser, ohne KI und ohne API. Sie ist bei stark komprimierten JPGs, schmalen Handy-Tabellen und Fotos von Bildschirmen unzuverlässig; alle Zahlen müssen in der Prüfansicht kontrolliert werden. Entschieden: Eine KI-Bilderkennung über einen Server brauchen wir nicht. Sicherer Weg sind Excel-Dateien, eingefügter Text und saubere Screenshots (Cmd+Shift+4).
+4. Gewichtstoleranz (Klassenbreite des Leichteren, höchstens 10 %, einstellbar) und Rundenzeit sind bestätigt. Volltext der WB in `docs/Wettkampfbestimmungen-DBV-2025.pdf`. Heimverein und blaue Ecke (WB §4.6) entfallen: Bei diesen Veranstaltungen gibt es keinen Heimverein.
+5. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
+6. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
+7. Bezahlmethode: Konzept mit Stripe (10 Euro pro Veranstaltung inkl. USt, Kosten, Ablauf, offene Entscheidungen) in `docs/BEZAHLKONZEPT.md`. Noch nicht gebaut; erst Impressum und Datenschutz (Punkt 2) und die steuerliche Klärung.
+
+
+## Bewusst nicht gebaut (entschieden)
+KI-Bilderkennung für Fotos, Hinweis bei Ende nach Mitternacht, Prüfung des US-Datumsformats (03/04/2009), Ausschluss versteckter Excel-Blätter, Barrierefreiheit der Knöpfe, Heimverein und blaue Ecke, Sonderdauer der automatischen Pause beim Verschieben aufräumen, zwei kleine Datenbank-Absicherungen (E-Mail im Konto, Form der gespeicherten Daten), Passwort-Mindestlänge in Supabase.

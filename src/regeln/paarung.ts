@@ -39,6 +39,23 @@ export function altersdifferenzMonate(a: string, b: string): number {
 
 const LEISTUNG_REIHE = ['C', 'B', 'A'];
 
+/** Vereinsname zum Vergleichen: ohne Groß-/Kleinschreibung, Satzzeichen und "e.V.", Bindestriche wie Leerzeichen. */
+function vereinSchluessel(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[.,]/g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/\be\s*v\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Gleicher Verein, auch bei unterschiedlicher Schreibweise ("TSV Foo" und "TSV Foo e.V."). Leere Namen sind nie gleich. */
+export function gleicherVerein(a: string, b: string): boolean {
+  const x = vereinSchluessel(a);
+  return x !== '' && x === vereinSchluessel(b);
+}
+
 export function pruefePaarung(
   a: Boxer,
   b: Boxer,
@@ -49,7 +66,7 @@ export function pruefePaarung(
   const hinweise: string[] = [];
   let freigabe = false;
 
-  if (a.verein.trim().toLowerCase() === b.verein.trim().toLowerCase()) {
+  if (gleicherVerein(a.verein, b.verein)) {
     gruende.push('Gleicher Verein');
   }
   if (a.geschlecht !== b.geschlecht) {
@@ -112,8 +129,9 @@ export function pruefePaarung(
     // Gewichtsdifferenz in Prozent des leichteren Boxers (Zehntel-kg, damit nichts durch Rundung kippt)
     const leichtZ = Math.round(Math.min(a.gewicht, b.gewicht) * 10);
     const diffZ = Math.round(Math.abs(a.gewicht - b.gewicht) * 10);
-    // In nach oben offenen Gewichtsklassen gilt keine Prozentgrenze (Festlegung des Auftraggebers)
-    const beideOffen = gkA?.bis === null && gkB?.bis === null;
+    // Innerhalb derselben nach oben offenen Gewichtsklasse gilt keine Prozentgrenze (Festlegung des Auftraggebers).
+    // Zwei verschiedene offene Klassen (z. B. U19 über 90 kg gegen U17 über 80 kg) unterliegen der Prozentgrenze.
+    const beideOffen = gkA?.bis === null && gkB?.bis === null && gleicheGewichtsklasse(gkA, gkB);
     if (!beideOffen && diffZ * 100 > leichtZ * optionen.maxGewichtProzent) {
       const prozent = ((diffZ / leichtZ) * 100).toFixed(1).replace('.', ',');
       gruende.push(`Gewichtsdifferenz ${prozent} % über der Grenze von ${optionen.maxGewichtProzent} %`);

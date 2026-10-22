@@ -5,7 +5,7 @@ import {
   leistungsklasseVon,
   rundenzeitFuer,
 } from './klassen';
-import { altersdifferenzMonate, innerhalb24Monate, paarungsGuete, pruefePaarung as pruefe } from './paarung';
+import { altersdifferenzMonate, gleicherVerein, innerhalb24Monate, paarungsGuete, pruefePaarung as pruefe } from './paarung';
 import { STANDARD_OPTIONEN, type Boxer, type RegelOptionen } from './typen';
 
 const TAG = '2026-11-14';
@@ -31,7 +31,8 @@ function boxer(teil: Partial<Boxer>): Boxer {
 describe('Altersklasse (§11)', () => {
   it.each([
     ['2017-01-01', null],
-    ['2016-01-01', 'U13'], // 10 im Jahr 2026
+    ['2016-01-01', 'U13'], // 10 im Jahr 2026, Geburtstag schon vorbei
+    ['2016-12-31', null], // wird erst nach dem Kampftag 10 (§11.3)
     ['2014-01-01', 'U13'], // 12
     ['2013-12-31', 'U15'], // 13
     ['2012-01-01', 'U15'], // 14
@@ -74,6 +75,10 @@ describe('Rundenzeit (§22)', () => {
     expect(rundenzeitFuer('U17').minuten).toBe(2);
     expect(rundenzeitFuer('U19').minuten).toBe(3);
     expect(rundenzeitFuer('Erwachsene').minuten).toBe(3);
+    expect(rundenzeitFuer('Erwachsene', 2).minuten).toBe(2);
+    expect(rundenzeitFuer('U19', 2).minuten).toBe(2);
+    expect(rundenzeitFuer('U17', 2).minuten).toBe(2);
+    expect(rundenzeitFuer('U13', 2).minuten).toBe(1);
   });
 });
 
@@ -130,6 +135,13 @@ describe('pruefePaarung', () => {
     const r = pruefePaarung(a, b, TAG);
     expect(r.status).toBe('ok');
     expect(r.rundenzeit).toEqual({ runden: 3, minuten: 2 });
+  });
+  it('zwei verschiedene offene Gewichtsklassen: Prozentgrenze gilt', () => {
+    const u17 = boxer({ geburtsdatum: '2010-09-01', gewicht: 100 }); // U17, über 80 kg
+    const weit = boxer({ geburtsdatum: '2009-09-01', gewicht: 130 }); // U19, über 90 kg
+    const nah = boxer({ geburtsdatum: '2009-09-01', gewicht: 102 });
+    expect(pruefePaarung(u17, weit, TAG).status).toBe('verboten');
+    expect(pruefePaarung(u17, nah, TAG).status).toBe('ok');
   });
   it('Jugend über 24 Monate Unterschied verboten', () => {
     const a = boxer({ geburtsdatum: '2012-09-01', gewicht: 50 }); // U15
@@ -227,5 +239,23 @@ describe('Klassenwechsel nur mit Freigabe (Standard)', () => {
   });
   it('gleiche Alters- und Gewichtsklasse bleibt ohne Freigabe', () => {
     expect(pruefe(boxer({ gewicht: 83 }), boxer({ gewicht: 84.5 }), TAG, strikt).status).toBe('ok');
+  });
+});
+
+describe('gleicherVerein', () => {
+  it('erkennt unterschiedliche Schreibweisen desselben Vereins', () => {
+    expect(gleicherVerein('TSV Foo', 'TSV Foo e.V.')).toBe(true);
+    expect(gleicherVerein('TSV Foo', 'tsv foo e. V.')).toBe(true);
+    expect(gleicherVerein('BC Duisburg-Süd', 'BC Duisburg Süd')).toBe(true);
+    expect(gleicherVerein(' BC Nord ', 'bc nord')).toBe(true);
+  });
+  it('unterscheidet verschiedene Vereine', () => {
+    expect(gleicherVerein('BC Nord', 'BC Nord 1920')).toBe(false);
+    expect(gleicherVerein('BC Nord', 'BC Süd')).toBe(false);
+    expect(gleicherVerein('', '')).toBe(false);
+  });
+  it('Paarung zwischen "TSV Foo" und "TSV Foo e.V." ist verboten', () => {
+    const r = pruefePaarung(boxer({ verein: 'TSV Foo' }), boxer({ verein: 'TSV Foo e.V.' }), TAG);
+    expect(r.status).toBe('verboten');
   });
 });
