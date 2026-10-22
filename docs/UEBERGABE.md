@@ -11,7 +11,7 @@ Webseite für Veranstalter von Amateur-Boxveranstaltungen: Meldungen einlesen, E
 ## Zusammenarbeit mit dem Auftraggeber (Ahmet, Veranstalter)
 - Deutsch, kurz, ehrlich, ohne Floskeln, keine technische Sprache. Unbequemes zuerst sagen, Gesichertes von Vermutung trennen, nichts erfinden, im Zweifel nachfragen.
 - Regeln, die der Auftraggeber setzt, gelten, auch wenn sie strenger als die WB sind (z. B. Klassenwechsel nur mit Freigabe). Abweichungen von den WB ehrlich benennen.
-- Das Repository und die Webseite sind **öffentlich**: keine echten Namen, Geburtsdaten oder Screenshots echter Boxer einchecken. Testdaten sind erfunden.
+- Das Repository und die Webseite sind **öffentlich**: keine echten Namen, Geburtsdaten oder Screenshots echter Boxer einchecken. Beispieldaten sind erfunden; die frühere Simulation (Knopf "Testdaten laden", Ordner testdaten, Demo-Daten) wurde entfernt.
 - Pull Requests nur auf ausdrückliche Bitte.
 
 ## Technik

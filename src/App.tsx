@@ -6,8 +6,7 @@ import { KampfkarteTab } from './KampfkarteTab';
 import { Sicherungen } from './konto/Sicherungen';
 import { useCloud } from './konto/useCloud';
 import { exportiere, liesZustand, speichern, type Zustand } from './speicher';
-import { simulation } from './testdaten';
-import { bestaetige, DEMO } from './umgebung';
+import { DEMO } from './umgebung';
 
 type Tab = 'boxer' | 'kampfkarte' | 'import';
 
@@ -18,13 +17,11 @@ interface Props {
   startVersion?: number;
   /** Ansicht einer fremden Veranstaltung (Admin): nichts ist änderbar, nichts wird gespeichert */
   nurLesen?: boolean;
-  /** Testdaten-Knopf auch mit Konto zeigen (nur Admin) */
-  testdaten?: boolean;
   /** Leiste mit Konto-Angaben; bekommt die Anzeige des Speicherstands */
   kontoLeiste?: (speicherstand: ReactNode) => ReactNode;
 }
 
-export function App({ start, userId = null, startVersion = 1, nurLesen = false, testdaten = false, kontoLeiste }: Props) {
+export function App({ start, userId = null, startVersion = 1, nurLesen = false, kontoLeiste }: Props) {
   const [zustand, setZustand] = useState<Zustand>(start);
   const cloudNutzer = nurLesen ? null : userId;
   const { status, erzwinge } = useCloud(zustand, cloudNutzer, startVersion);
@@ -90,16 +87,7 @@ export function App({ start, userId = null, startVersion = 1, nurLesen = false, 
             onChange={(e) => e.target.value && setZustand({ ...zustand, beginn: e.target.value })}
           />
         </label>
-        <div className="aktionen" hidden={DEMO || (!!userId && !testdaten)}>
-          <button
-            onClick={() => {
-              if (zustand.boxer.length === 0 || bestaetige('Alle Daten durch die Simulation ersetzen?')) {
-                setZustand(simulation(false));
-              }
-            }}
-          >
-            Testdaten laden
-          </button>
+        <div className="aktionen" hidden={DEMO || !!userId}>
           {!userId && <button onClick={() => exportiere(zustand)}>Sichern</button>}
           {!userId && <button onClick={() => dateiRef.current?.click()}>Laden</button>}
           <input
@@ -139,7 +127,7 @@ export function App({ start, userId = null, startVersion = 1, nurLesen = false, 
       )}
       {DEMO && (
         <p className="hinweis">
-          Demo mit simulierten Meldungen von 9 erfundenen Vereinen. Änderungen werden nicht gespeichert.
+          Demo: Änderungen werden nicht gespeichert.
         </p>
       )}
       <p className="hinweis" hidden={DEMO}>
