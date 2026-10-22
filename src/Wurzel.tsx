@@ -5,6 +5,7 @@ import { Anmeldung, NeuesPasswort } from './konto/Anmeldung';
 import { supabase } from './konto/client';
 import { istAdmin, ladeAlle, ladeVeranstaltung, legeAn, loescheVeranstaltung, type Gespeichert, type Uebersicht } from './konto/cloud';
 import { heute, laden, leererZustand, liesZustand, type Zustand } from './speicher';
+import { Fuss, Rechtliches, useRechtsseite } from './rechtliches';
 import { bestaetige, DEMO } from './umgebung';
 
 const LOKAL = 'matchmaker-v1';
@@ -21,8 +22,17 @@ function lokaleDaten(): Zustand | null {
 }
 
 export function Wurzel() {
-  if (DEMO) return <App start={laden()} />;
-  return <MitKonto />;
+  const rechtsseite = useRechtsseite();
+  // Die eigentliche Seite bleibt eingehängt (nur versteckt), damit beim Blick ins Impressum nichts verloren geht.
+  return (
+    <>
+      <div hidden={rechtsseite !== null}>
+        {DEMO ? <App start={laden()} /> : <MitKonto />}
+        <Fuss />
+      </div>
+      {rechtsseite && <Rechtliches seite={rechtsseite} />}
+    </>
+  );
 }
 
 type Ansicht = { art: 'eigene' } | { art: 'uebersicht' } | { art: 'fremde'; eintrag: Uebersicht };
@@ -172,7 +182,7 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
                 <th>Boxer</th>
                 <th>Kämpfe</th>
                 <th>Zuletzt geändert</th>
-                <th />
+                <th className="sticky-aktion" />
               </tr>
             </thead>
             <tbody>
@@ -186,9 +196,11 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
                   <td>{e.zustand.boxer.length}</td>
                   <td>{e.zustand.kampfkarte.length}</td>
                   <td>{new Date(e.aktualisiert).toLocaleString('de-DE')}</td>
-                  <td>
+                  <td className="sticky-aktion">
                     <button onClick={() => setAnsicht({ art: 'fremde', eintrag: e })}>Ansehen</button>{' '}
-                    <button onClick={() => void loesche(e)}>Löschen</button>
+                    <button className="gefahr" onClick={() => void loesche(e)}>
+                      Löschen
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -210,5 +222,5 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
     );
   }
 
-  return <App key="eigene" start={daten.zustand} userId={userId} startVersion={daten.version} testdaten={admin} kontoLeiste={leiste} />;
+  return <App key="eigene" start={daten.zustand} userId={userId} startVersion={daten.version} kontoLeiste={leiste} />;
 }

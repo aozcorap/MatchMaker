@@ -1,6 +1,5 @@
 import { STANDARD_OPTIONEN, type Boxer, type RegelOptionen } from './regeln/typen';
 import { STANDARD_ZEIT, type ExtraPause, type Zeiteinstellungen } from './regeln/zeitplan';
-import { simulation } from './testdaten';
 import { DEMO } from './umgebung';
 
 export interface GeplanterKampf {
@@ -95,7 +94,7 @@ export function liesZustand(roh: unknown): Zustand | null {
 }
 
 export function laden(): Zustand {
-  if (DEMO) return simulation(true);
+  if (DEMO) return leererZustand();
   try {
     const text = localStorage.getItem(SCHLUESSEL);
     if (text) return liesZustand(JSON.parse(text)) ?? leererZustand();

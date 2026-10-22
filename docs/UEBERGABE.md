@@ -2,13 +2,16 @@
 
 Dieses Dokument ist für eine neue Arbeitssitzung gedacht. Fachliche Regeln stehen in `ANFORDERUNGEN.md`.
 
+## Begriffe
+In der Oberfläche und im PDF heißt die Kampfkarte "Kampfpaarungen" (Reiter, Überschrift, PDF-Titel, Dateiname `Kampfpaarungen-<Datum>.pdf`). Im Code und in den gespeicherten Daten bleibt der Name `kampfkarte`, damit bestehende Veranstaltungen und Sicherungen lesbar bleiben. Die Fachtexte (`ANFORDERUNGEN.md`) sagen weiterhin "Kampfkarte".
+
 ## Zweck
 Webseite für Veranstalter von Amateur-Boxveranstaltungen: Meldungen einlesen, Einzelpaarungen nach den DBV-Wettkampfbestimmungen 2025 vorschlagen, Kampfkarte mit Zeitplan bearbeiten, als PDF ausgeben. Live: https://aozcorap.github.io/MatchMaker/
 
 ## Zusammenarbeit mit dem Auftraggeber (Ahmet, Veranstalter)
 - Deutsch, kurz, ehrlich, ohne Floskeln, keine technische Sprache. Unbequemes zuerst sagen, Gesichertes von Vermutung trennen, nichts erfinden, im Zweifel nachfragen.
 - Regeln, die der Auftraggeber setzt, gelten, auch wenn sie strenger als die WB sind (z. B. Klassenwechsel nur mit Freigabe). Abweichungen von den WB ehrlich benennen.
-- Das Repository und die Webseite sind **öffentlich**: keine echten Namen, Geburtsdaten oder Screenshots echter Boxer einchecken. Testdaten sind erfunden.
+- Das Repository und die Webseite sind **öffentlich**: keine echten Namen, Geburtsdaten oder Screenshots echter Boxer einchecken. Beispieldaten sind erfunden; die frühere Simulation (Knopf "Testdaten laden", Ordner testdaten, Demo-Daten) wurde entfernt.
 - Pull Requests nur auf ausdrückliche Bitte.
 
 ## Technik
@@ -33,6 +36,9 @@ Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 M
 - Admin: Tabelle `admins`, Eintrag `ahmet@ozcorapci.de`. Admin sieht alle Veranstaltungen nur lesend und kann sie leeren (Boxer, Kämpfe, Sicherungen weg; Konto und E-Mail bleiben).
 - Im Dashboard gesetzt: Authentication → URL Configuration, Site URL und Redirect URL = `https://aozcorap.github.io/MatchMaker/`.
 - Hinweis zu den Werkzeugen: Über den Supabase-Zugang der Sitzung hängen Anweisungen mit `DELETE FROM` (vermutlich eine nicht beantwortete Bestätigung). Das nicht umgehen, sondern Löschen über die Oberfläche der App oder das Dashboard machen.
+
+## Impressum und Datenschutz
+`src/rechtliches.tsx` (Seiten über `#/impressum` und `#/datenschutz`, Links im Fuß jeder Seite, beim Registrieren Häkchen "Datenschutzerklärung gelesen", Hinweis "nur erfundene Daten" auf der Anmeldeseite). **Vor der Veröffentlichung:** die Anschrift in `BETREIBER` eintragen (steht noch als Platzhalter in eckigen Klammern) und die Texte juristisch prüfen lassen. Die Datenschutzerklärung ist ein Entwurf nach dem Stand der Technik (Supabase Frankfurt, Hosting GitHub Pages, keine Tracking-Dienste). Eine Vereinbarung zur Auftragsverarbeitung mit den Veranstaltern gibt es noch nicht.
 
 ## Offene Punkte
 1. E-Mails kommen vom Standard-Absender von Supabase, englisch und stark begrenzt. Vor dem echten Betrieb: eigener SMTP-Dienst mit eigener Absenderadresse und deutsche Vorlagen.

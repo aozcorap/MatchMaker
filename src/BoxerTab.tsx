@@ -285,7 +285,7 @@ export function BoxerTab(props: {
                 <th>Altersklasse</th>
                 <th>Gewichtsklasse</th>
                 <th>Leistung</th>
-                <th />
+                <th className="sticky-aktion" />
               </tr>
             </thead>
             <tbody>
@@ -311,7 +311,7 @@ export function BoxerTab(props: {
                       {gewichtsklasseText(info.gewichtsklasse)}
                     </td>
                     <td>{info.leistungsklasse ?? '–'}</td>
-                    <td className="zeilenaktion">
+                    <td className="zeilenaktion sticky-aktion">
                       <button
                         onClick={() => {
                           setBearbeiteId(b.id);
@@ -323,7 +323,9 @@ export function BoxerTab(props: {
                       >
                         Bearbeiten
                       </button>
-                      <button onClick={() => loesche(b)}>Löschen</button>
+                      <button className="gefahr" onClick={() => loesche(b)}>
+                        Löschen
+                      </button>
                     </td>
                   </tr>
                 );

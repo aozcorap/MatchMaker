@@ -1,4 +1,4 @@
-// Erzeugt simulierte Meldungen: npx tsx scripts/simulation.ts
+// Erzeugt simulierte Meldungen (nur für Entwicklung, Ausgabe nicht einchecken): npx tsx scripts/simulation.ts
 // Feste Zufallsbasis, damit das Ergebnis jedes Mal gleich ist. Alle Namen und Vereine sind erfunden.
 import { writeFileSync } from 'node:fs';
 import { erzeugePaarungen } from '../src/regeln/generator';
