@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
-/** Angaben zum Betreiber. Die Anschrift muss vor der Veröffentlichung eingetragen werden. */
+/** Angaben zum Betreiber (Impressum und Datenschutzerklärung). */
 export const BETREIBER = {
   name: 'Ahmet Özcorapci',
-  anschrift: ['[Straße und Hausnummer – bitte ergänzen]', '[PLZ und Ort – bitte ergänzen]'],
+  anschrift: ['Hospitalgasse 36d', '61169 Friedberg'],
   email: 'ahmet@ozcorapci.de',
 };
 
