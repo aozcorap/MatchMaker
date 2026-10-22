@@ -101,7 +101,7 @@ function kampfBlock(k: PdfKampf): Content {
   };
 }
 
-/** Kampfkarte als Dokumentbeschreibung. Jeder Kampf (mit den Pausen davor) bleibt auf einer Seite zusammen. */
+/** Kampfpaarungen als Dokumentbeschreibung. Jeder Kampf (mit den Pausen davor) bleibt auf einer Seite zusammen. */
 export function baueKampfkartePdf(karte: PdfKarte): TDocumentDefinitions {
   const inhalt: Content[] = [
     { text: karte.titel, fontSize: 20, bold: true },

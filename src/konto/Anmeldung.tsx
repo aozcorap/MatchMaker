@@ -26,6 +26,7 @@ export function Anmeldung() {
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState('');
   const [info, setInfo] = useState('');
+  const [datenschutz, setDatenschutz] = useState(false);
 
   function wechsle(m: Modus) {
     setModus(m);
@@ -39,6 +40,10 @@ export function Anmeldung() {
     setInfo('');
     if (modus !== 'vergessen' && passwort.length < MIN_PASSWORT) {
       setFehler(`Das Passwort braucht mindestens ${MIN_PASSWORT} Zeichen.`);
+      return;
+    }
+    if (modus === 'registrieren' && !datenschutz) {
+      setFehler('Bitte bestätigen, dass Sie die Datenschutzerklärung gelesen haben.');
       return;
     }
     setLaeuft(true);
@@ -67,6 +72,7 @@ export function Anmeldung() {
   return (
     <div className="seite anmeldung">
       <h1>Matchmaking Boxen</h1>
+      <p className="hinweis">Prototyp in der Testphase: Bitte nur erfundene Namen und Daten eingeben, keine echten Boxer.</p>
       <form className="anmeldekarte" onSubmit={senden}>
         <h2>{modus === 'anmelden' ? 'Anmelden' : modus === 'registrieren' ? 'Registrieren' : 'Passwort vergessen'}</h2>
         <label>
@@ -84,6 +90,14 @@ export function Anmeldung() {
               value={passwort}
               onChange={(e) => setPasswort(e.target.value)}
             />
+          </label>
+        )}
+        {modus === 'registrieren' && (
+          <label className="zustimmung">
+            <input type="checkbox" checked={datenschutz} onChange={(e) => setDatenschutz(e.target.checked)} />
+            <span>
+              Ich habe die <a href="#/datenschutz">Datenschutzerklärung</a> gelesen.
+            </span>
           </label>
         )}
         {fehler && <p className="fehler" role="alert">{fehler}</p>}

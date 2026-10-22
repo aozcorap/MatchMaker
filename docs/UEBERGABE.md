@@ -2,6 +2,9 @@
 
 Dieses Dokument ist für eine neue Arbeitssitzung gedacht. Fachliche Regeln stehen in `ANFORDERUNGEN.md`.
 
+## Begriffe
+In der Oberfläche und im PDF heißt die Kampfkarte "Kampfpaarungen" (Reiter, Überschrift, PDF-Titel, Dateiname `Kampfpaarungen-<Datum>.pdf`). Im Code und in den gespeicherten Daten bleibt der Name `kampfkarte`, damit bestehende Veranstaltungen und Sicherungen lesbar bleiben. Die Fachtexte (`ANFORDERUNGEN.md`) sagen weiterhin "Kampfkarte".
+
 ## Zweck
 Webseite für Veranstalter von Amateur-Boxveranstaltungen: Meldungen einlesen, Einzelpaarungen nach den DBV-Wettkampfbestimmungen 2025 vorschlagen, Kampfkarte mit Zeitplan bearbeiten, als PDF ausgeben. Live: https://aozcorap.github.io/MatchMaker/
 
@@ -33,6 +36,9 @@ Einstellungen in der Kampfkarte: max. Gewichtsdifferenz in % (10), max. Siegdiff
 - Admin: Tabelle `admins`, Eintrag `ahmet@ozcorapci.de`. Admin sieht alle Veranstaltungen nur lesend und darf sie löschen.
 - Im Dashboard gesetzt: Authentication → URL Configuration, Site URL und Redirect URL = `https://aozcorap.github.io/MatchMaker/`.
 - Hinweis zu den Werkzeugen: Über den Supabase-Zugang der Sitzung hängen Anweisungen mit `DELETE FROM` (vermutlich eine nicht beantwortete Bestätigung). Das nicht umgehen, sondern Löschen über die Oberfläche der App oder das Dashboard machen.
+
+## Impressum und Datenschutz
+`src/rechtliches.tsx` (Seiten über `#/impressum` und `#/datenschutz`, Links im Fuß jeder Seite, beim Registrieren Häkchen "Datenschutzerklärung gelesen", Hinweis "nur erfundene Daten" auf der Anmeldeseite). **Vor der Veröffentlichung:** die Anschrift in `BETREIBER` eintragen (steht noch als Platzhalter in eckigen Klammern) und die Texte juristisch prüfen lassen. Die Datenschutzerklärung ist ein Entwurf nach dem Stand der Technik (Supabase Frankfurt, Hosting GitHub Pages, keine Tracking-Dienste). Eine Vereinbarung zur Auftragsverarbeitung mit den Veranstaltern gibt es noch nicht.
 
 ## Offene Punkte
 1. Vier Testkonten `zz-test-a/b/c/admin@example.com` (gesperrt, Passwort ersetzt) im Dashboard unter Authentication → Users löschen; dazu die Zeile `zz-test-admin@example.com` in der Tabelle `admins`. Ihre Veranstaltungen sind schon gelöscht.

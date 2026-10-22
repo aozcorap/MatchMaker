@@ -153,7 +153,7 @@ export function App({ start, userId = null, startVersion = 1, nurLesen = false, 
           Boxer ({zustand.boxer.length})
         </button>
         <button className={tab === 'kampfkarte' ? 'aktiv' : ''} onClick={() => setTab('kampfkarte')}>
-          Kampfkarte ({zustand.kampfkarte.length})
+          Kampfpaarungen ({zustand.kampfkarte.length})
         </button>
         <button className={tab === 'import' ? 'aktiv' : ''} onClick={() => setTab('import')}>
           Import

@@ -159,7 +159,7 @@ export function KampfkarteTab(props: {
   const vorschauAuswahl =
     gewaehlt.length === 2 ? baueKampf(gewaehlt[0], gewaehlt[1], datum, regeln) : null;
 
-  /** Standardreihenfolge der Kampfkarte: jüngste Altersklasse zuerst, darin leichtester Boxer zuerst. */
+  /** Standardreihenfolge der Kampfpaarungen: jüngste Altersklasse zuerst, darin leichtester Boxer zuerst. */
   function vergleicheGeplant(x: GeplanterKampf, y: GeplanterKampf): number {
     const kx = baueKampf(nachId.get(x.aId)!, nachId.get(x.bId)!, datum, regeln);
     const ky = baueKampf(nachId.get(y.aId)!, nachId.get(y.bId)!, datum, regeln);
@@ -226,7 +226,7 @@ export function KampfkarteTab(props: {
       const [j, m, t] = datum.split('-');
       await ladeKampfkartePdf(
         {
-          titel: 'Kampfkarte',
+          titel: 'Kampfpaarungen',
           datum: `${t}.${m}.${j}`,
           beginn: uhrzeit(zeiten[0].start),
           ende: uhrzeit(zeiten[zeiten.length - 1].ende),
@@ -255,7 +255,7 @@ export function KampfkarteTab(props: {
             };
           }),
         },
-        `Kampfkarte-${datum}.pdf`,
+        `Kampfpaarungen-${datum}.pdf`,
       );
     } catch {
       setPdfFehler(true);
@@ -265,7 +265,7 @@ export function KampfkarteTab(props: {
   }
 
   function erzeugeAlle() {
-    if (kampfkarte.length > 0 && !bestaetige('Die bisherige Kampfkarte wird ersetzt. Fortfahren?')) {
+    if (kampfkarte.length > 0 && !bestaetige('Die bisherigen Kampfpaarungen werden ersetzt. Fortfahren?')) {
       return;
     }
     const ergebnis = erzeugePaarungen(
@@ -344,7 +344,7 @@ export function KampfkarteTab(props: {
   return (
     <section>
       <nav className="sprungleiste" aria-label="Zu einem Abschnitt springen">
-        <button onClick={() => springe('abschnitt-kampfkarte')}>Kampfkarte ({kaempfe.length})</button>
+        <button onClick={() => springe('abschnitt-kampfkarte')}>Kampfpaarungen ({kaempfe.length})</button>
         <button disabled={vorschlagAnzahl === 0} onClick={() => springe('abschnitt-vorschlaege')}>
           Vorschläge ({vorschlagAnzahl})
         </button>
@@ -459,7 +459,7 @@ export function KampfkarteTab(props: {
         )}
       </div>
 
-      <h2 id="abschnitt-kampfkarte">Kampfkarte (Entwurf)</h2>
+      <h2 id="abschnitt-kampfkarte">Kampfpaarungen (Entwurf)</h2>
       {kaempfe.length > 0 && (
         <p className="zusammenfassung">
           {kaempfe.length} {kaempfe.length === 1 ? 'Kampf' : 'Kämpfe'} · {wartende.length} wartend · Beginn{' '}

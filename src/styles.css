@@ -991,3 +991,27 @@ button.link {
   margin: 0 auto 0 0;
   font-size: 1.1rem;
 }
+
+.fuss {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 24px auto 0;
+  padding-bottom: 16px;
+  font-size: 0.85rem;
+}
+
+.fuss a {
+  color: var(--leise);
+}
+
+.rechtstext {
+  max-width: 760px;
+  line-height: 1.5;
+}
+
+.anmeldekarte label.zustimmung {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+}

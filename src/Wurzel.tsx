@@ -5,6 +5,7 @@ import { Anmeldung, NeuesPasswort } from './konto/Anmeldung';
 import { supabase } from './konto/client';
 import { istAdmin, ladeAlle, ladeVeranstaltung, legeAn, loescheVeranstaltung, type Gespeichert, type Uebersicht } from './konto/cloud';
 import { heute, laden, leererZustand, liesZustand, type Zustand } from './speicher';
+import { Fuss, Rechtliches, useRechtsseite } from './rechtliches';
 import { bestaetige, DEMO } from './umgebung';
 
 const LOKAL = 'matchmaker-v1';
@@ -21,8 +22,17 @@ function lokaleDaten(): Zustand | null {
 }
 
 export function Wurzel() {
-  if (DEMO) return <App start={laden()} />;
-  return <MitKonto />;
+  const rechtsseite = useRechtsseite();
+  // Die eigentliche Seite bleibt eingehängt (nur versteckt), damit beim Blick ins Impressum nichts verloren geht.
+  return (
+    <>
+      <div hidden={rechtsseite !== null}>
+        {DEMO ? <App start={laden()} /> : <MitKonto />}
+        <Fuss />
+      </div>
+      {rechtsseite && <Rechtliches seite={rechtsseite} />}
+    </>
+  );
 }
 
 type Ansicht = { art: 'eigene' } | { art: 'uebersicht' } | { art: 'fremde'; eintrag: Uebersicht };
