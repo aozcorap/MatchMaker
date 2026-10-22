@@ -182,7 +182,7 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
                 <th>Boxer</th>
                 <th>Kämpfe</th>
                 <th>Zuletzt geändert</th>
-                <th />
+                <th className="sticky-aktion" />
               </tr>
             </thead>
             <tbody>
@@ -196,9 +196,11 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
                   <td>{e.zustand.boxer.length}</td>
                   <td>{e.zustand.kampfkarte.length}</td>
                   <td>{new Date(e.aktualisiert).toLocaleString('de-DE')}</td>
-                  <td>
+                  <td className="sticky-aktion">
                     <button onClick={() => setAnsicht({ art: 'fremde', eintrag: e })}>Ansehen</button>{' '}
-                    <button onClick={() => void loesche(e)}>Löschen</button>
+                    <button className="gefahr" onClick={() => void loesche(e)}>
+                      Löschen
+                    </button>
                   </td>
                 </tr>
               ))}

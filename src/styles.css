@@ -154,6 +154,32 @@ button:disabled {
   cursor: not-allowed;
 }
 
+button.gefahr {
+  color: var(--fehler);
+  border-color: var(--fehler);
+  background: var(--fehler-bg);
+}
+
+button.gefahr:hover:not(:disabled) {
+  background: var(--rot);
+  border-color: var(--rot);
+  color: var(--ecke-text);
+}
+
+/* Aktionsspalte bleibt beim seitlichen Scrollen sichtbar, damit "Löschen" nie abgeschnitten ist */
+th.sticky-aktion,
+td.sticky-aktion {
+  display: table-cell;
+  position: sticky;
+  right: 0;
+  background: var(--flaeche);
+  box-shadow: -10px 0 8px -8px rgba(0, 0, 0, 0.25);
+}
+
+td.sticky-aktion button + button {
+  margin-left: 6px;
+}
+
 button.primaer {
   background: var(--akzent);
   border-color: var(--akzent);
