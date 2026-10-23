@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState } from 'react';
 import { App } from './App';
 import { Anmeldung, NeuesPasswort } from './konto/Anmeldung';
+import { KontoSeite } from './konto/Konto';
 import { supabase } from './konto/client';
 import { istAdmin, ladeAlle, ladeVeranstaltung, legeAn, loescheVeranstaltung, type Gespeichert, type Uebersicht } from './konto/cloud';
 import { heute, laden, leererZustand, liesZustand, type Zustand } from './speicher';
@@ -35,11 +36,12 @@ export function Wurzel() {
   );
 }
 
-type Ansicht = { art: 'eigene' } | { art: 'uebersicht' } | { art: 'fremde'; eintrag: Uebersicht };
+type Ansicht = { art: 'eigene' } | { art: 'konto' } | { art: 'uebersicht' } | { art: 'fremde'; eintrag: Uebersicht };
 
 function MitKonto() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [neuesPasswort, setNeuesPasswort] = useState(false);
+  const [geloescht, setGeloescht] = useState(false);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -51,18 +53,19 @@ function MitKonto() {
   }, []);
 
   if (session === undefined) return <div className="seite"><p className="hinweis">Wird geladen …</p></div>;
-  if (!session) return <Anmeldung />;
+  if (!session) return <Anmeldung hinweis={geloescht ? 'Ihr Konto und alle Daten wurden gelöscht.' : ''} />;
   if (neuesPasswort) return <NeuesPasswort fertig={() => setNeuesPasswort(false)} />;
-  return <Angemeldet key={session.user.id} userId={session.user.id} email={session.user.email ?? ''} />;
+  return <Angemeldet key={session.user.id} userId={session.user.id} email={session.user.email ?? ''} kontoGeloescht={() => setGeloescht(true)} />;
 }
 
-function Angemeldet({ userId, email }: { userId: string; email: string }) {
+function Angemeldet({ userId, email, kontoGeloescht }: { userId: string; email: string; kontoGeloescht: () => void }) {
   const [daten, setDaten] = useState<Gespeichert | null>(null);
   const [fehler, setFehler] = useState('');
   const [admin, setAdmin] = useState(false);
   const [ansicht, setAnsicht] = useState<Ansicht>({ art: 'eigene' });
   const [liste, setListe] = useState<Uebersicht[] | null>(null);
   const [listenFehler, setListenFehler] = useState('');
+  const [stand, setStand] = useState(0);
 
   const lade = useCallback(async () => {
     setFehler('');
@@ -144,8 +147,9 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
       </span>
       <span className="aktionen">
         {status}
+        {ansicht.art === 'eigene' && <button onClick={() => setAnsicht({ art: 'konto' })}>Konto und Daten</button>}
         {admin && ansicht.art === 'eigene' && <button onClick={() => setAnsicht({ art: 'uebersicht' })}>Alle Veranstaltungen</button>}
-        {admin && ansicht.art !== 'eigene' && <button onClick={() => setAnsicht({ art: 'eigene' })}>Meine Veranstaltung</button>}
+        {ansicht.art !== 'eigene' && <button onClick={() => setAnsicht({ art: 'eigene' })}>Meine Veranstaltung</button>}
         {ansicht.art === 'fremde' && <button onClick={() => setAnsicht({ art: 'uebersicht' })}>Zur Übersicht</button>}
         <button onClick={() => void abmelden()}>Abmelden</button>
       </span>
@@ -163,64 +167,101 @@ function Angemeldet({ userId, email }: { userId: string; email: string }) {
   }
   if (!daten) return <div className="seite"><p className="hinweis">Veranstaltung wird geladen …</p></div>;
 
+  // Die eigene Veranstaltung bleibt eingehängt (nur versteckt), damit beim Blick in andere Ansichten nichts verloren geht.
+  const eigene = (
+    <div hidden={ansicht.art !== 'eigene'}>
+      <App key={`eigene-${stand}`} start={daten.zustand} userId={userId} startVersion={daten.version} kontoLeiste={leiste} />
+    </div>
+  );
+
+  if (ansicht.art === 'konto') {
+    return (
+      <>
+        {eigene}
+        <div className="seite">
+          {leiste(null)}
+          <KontoSeite
+            admin={admin}
+            veranstaltungGeleert={() => void lade().then(() => setStand((s) => s + 1))}
+            kontoGeloescht={() => {
+              try {
+                localStorage.removeItem(LOKAL);
+              } catch {
+                // egal
+              }
+              kontoGeloescht();
+              void supabase.auth.signOut({ scope: 'local' });
+            }}
+          />
+        </div>
+      </>
+    );
+  }
+
   if (ansicht.art === 'uebersicht') {
     return (
-      <div className="seite">
-        {leiste(null)}
-        <h2>Alle Veranstaltungen</h2>
-        {listenFehler && <p className="fehler" role="alert">{listenFehler}</p>}
-        {liste === null ? (
-          <p className="hinweis">Wird geladen …</p>
-        ) : liste.length === 0 ? (
-          <p className="leer">Noch keine Veranstaltungen.</p>
-        ) : (
-          <table className="adminliste">
-            <thead>
-              <tr>
-                <th>Veranstalter (E-Mail)</th>
-                <th>Datum</th>
-                <th>Boxer</th>
-                <th>Kämpfe</th>
-                <th>Zuletzt geändert</th>
-                <th className="sticky-aktion" />
-              </tr>
-            </thead>
-            <tbody>
-              {liste.map((e) => (
-                <tr key={e.userId}>
-                  <td>{e.email}</td>
-                  <td>
-                    {e.zustand.datum.split('-').reverse().join('.')}
-                    {e.zustand.datum < heute() && <span className="hinweis"> (vorbei)</span>}
-                  </td>
-                  <td>{e.zustand.boxer.length}</td>
-                  <td>{e.zustand.kampfkarte.length}</td>
-                  <td>{new Date(e.aktualisiert).toLocaleString('de-DE')}</td>
-                  <td className="sticky-aktion">
-                    <button onClick={() => setAnsicht({ art: 'fremde', eintrag: e })}>Ansehen</button>{' '}
-                    <button className="gefahr" onClick={() => void loesche(e)}>
-                      Löschen
-                    </button>
-                  </td>
+      <>
+        {eigene}
+        <div className="seite">
+          {leiste(null)}
+          <h2>Alle Veranstaltungen</h2>
+          {listenFehler && <p className="fehler" role="alert">{listenFehler}</p>}
+          {liste === null ? (
+            <p className="hinweis">Wird geladen …</p>
+          ) : liste.length === 0 ? (
+            <p className="leer">Noch keine Veranstaltungen.</p>
+          ) : (
+            <table className="adminliste">
+              <thead>
+                <tr>
+                  <th>Veranstalter (E-Mail)</th>
+                  <th>Datum</th>
+                  <th>Boxer</th>
+                  <th>Kämpfe</th>
+                  <th>Zuletzt geändert</th>
+                  <th className="sticky-aktion" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              </thead>
+              <tbody>
+                {liste.map((e) => (
+                  <tr key={e.userId}>
+                    <td>{e.email}</td>
+                    <td>
+                      {e.zustand.datum.split('-').reverse().join('.')}
+                      {e.zustand.datum < heute() && <span className="hinweis"> (vorbei)</span>}
+                    </td>
+                    <td>{e.zustand.boxer.length}</td>
+                    <td>{e.zustand.kampfkarte.length}</td>
+                    <td>{new Date(e.aktualisiert).toLocaleString('de-DE')}</td>
+                    <td className="sticky-aktion">
+                      <button onClick={() => setAnsicht({ art: 'fremde', eintrag: e })}>Ansehen</button>{' '}
+                      <button className="gefahr" onClick={() => void loesche(e)}>
+                        Löschen
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </>
     );
   }
 
   if (ansicht.art === 'fremde') {
     return (
-      <App
-        key={`${ansicht.eintrag.userId}-${ansicht.eintrag.aktualisiert}`}
-        start={ansicht.eintrag.zustand}
-        nurLesen
-        kontoLeiste={(s) => leiste(s)}
-      />
+      <>
+        {eigene}
+        <App
+          key={`${ansicht.eintrag.userId}-${ansicht.eintrag.aktualisiert}`}
+          start={ansicht.eintrag.zustand}
+          nurLesen
+          kontoLeiste={(s) => leiste(s)}
+        />
+      </>
     );
   }
 
-  return <App key="eigene" start={daten.zustand} userId={userId} startVersion={daten.version} kontoLeiste={leiste} />;
+  return eigene;
 }

@@ -1018,6 +1018,17 @@ button.link {
   font-size: 1.1rem;
 }
 
+.kontoseite {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 520px;
+}
+
+.kontoseite h2 {
+  margin: 0;
+}
+
 .fuss {
   display: flex;
   justify-content: center;

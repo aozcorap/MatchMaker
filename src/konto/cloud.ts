@@ -53,6 +53,18 @@ export async function ueberschreibe(userId: string, zustand: Zustand): Promise<n
   return data[0].version as number;
 }
 
+/** Eigene Veranstaltung samt Sicherungen leeren (das Konto bleibt). */
+export async function leereMeineVeranstaltung(): Promise<void> {
+  const { error } = await supabase.rpc('leere_meine_veranstaltung', { p_zustand: leererZustand() });
+  if (error) throw error;
+}
+
+/** Eigenes Konto samt Veranstaltung und Sicherungen endgültig löschen. */
+export async function loescheMeinKonto(): Promise<void> {
+  const { error } = await supabase.rpc('loesche_mein_konto');
+  if (error) throw error;
+}
+
 export async function istAdmin(): Promise<boolean> {
   const { data, error } = await supabase.rpc('ist_admin');
   return !error && data === true;
