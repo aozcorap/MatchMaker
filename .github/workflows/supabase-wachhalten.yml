@@ -1,0 +1,23 @@
+name: Supabase wachhalten
+
+# Der kostenlose Supabase-Plan pausiert Projekte ohne Aktivität nach etwa einer Woche.
+# Diese Abfrage läuft alle drei Tage und hält das Projekt wach. Schlägt sie fehl (Projekt pausiert oder nicht erreichbar),
+# schickt GitHub eine E-Mail über den fehlgeschlagenen Lauf.
+on:
+  schedule:
+    - cron: '17 5 */3 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  wachhalten:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Datenbank abfragen
+        run: |
+          # URL und veröffentlichbarer Schlüssel stehen auch in src/konto/client.ts (für den Browser gedacht, kein Geheimnis).
+          curl --fail --silent --show-error --max-time 30 \
+            -H "apikey: sb_publishable_2B8JvFPbuUqv780W8rMl9w_9JkqLdMu" \
+            "https://ymqzqfrskvmpyamvmnbe.supabase.co/rest/v1/veranstaltungen?select=user_id&limit=1"
+          echo
