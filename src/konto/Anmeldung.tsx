@@ -19,7 +19,7 @@ function fehlertext(meldung: string): string {
   return `Das hat nicht geklappt: ${meldung}`;
 }
 
-export function Anmeldung() {
+export function Anmeldung({ hinweis = '' }: { hinweis?: string }) {
   const [modus, setModus] = useState<Modus>('anmelden');
   const [email, setEmail] = useState('');
   const [passwort, setPasswort] = useState('');
@@ -72,6 +72,7 @@ export function Anmeldung() {
   return (
     <div className="seite anmeldung">
       <h1>Matchmaking Boxen</h1>
+      {hinweis && <p className="meldung" role="status">{hinweis}</p>}
       <p className="hinweis">Prototyp in der Testphase: Bitte nur erfundene Namen und Daten eingeben, keine echten Boxer.</p>
       <form className="anmeldekarte" onSubmit={senden}>
         <h2>{modus === 'anmelden' ? 'Anmelden' : modus === 'registrieren' ? 'Registrieren' : 'Passwort vergessen'}</h2>

@@ -147,7 +147,7 @@ function Datenschutz() {
 
       <h2>Speicherdauer und Löschung</h2>
       <p>
-        Die Daten bleiben gespeichert, bis die Veranstaltung samt Sicherungen gelöscht wird. Sie können die Löschung Ihrer Veranstaltung und Ihres Kontos jederzeit per E-Mail verlangen.
+        Die Daten bleiben gespeichert, bis die Veranstaltung samt Sicherungen gelöscht wird. Sie können Ihre Veranstaltung samt Sicherungen und Ihr Konto jederzeit selbst unter „Konto und Daten“ löschen. Auf Wunsch löschen wir sie auch auf Ihre E-Mail hin.
       </p>
 
       <h2>Ihre Rechte</h2>

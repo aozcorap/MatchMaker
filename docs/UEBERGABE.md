@@ -32,7 +32,7 @@ Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 M
 ## Supabase
 - Projekt `matchmaker`, Ref `ymqzqfrskvmpyamvmnbe`, Region eu-central-1 (Frankfurt), kostenloser Plan, Organisation "ahmet@ozcorapci.de's Org".
 - URL und veröffentlichbarer Schlüssel stehen in `src/konto/client.ts` (für den Browser gedacht). Der Schutz der Daten liegt in den Zugriffsregeln (RLS).
-- Datenbank: `supabase/migrations/001..005` (alle angewendet; 004 und 005 am 21.10.2026 im SQL-Editor ausgeführt). Tabellen `admins`, `veranstaltungen` (eine je Konto, Zustand als JSON, Versionszähler), `sicherungen`.
+- Datenbank: `supabase/migrations/001..006` (001 bis 005 angewendet; **006 (`eigene_daten_loeschen`) muss noch im SQL-Editor des Supabase-Dashboards ausgeführt werden**, sonst funktionieren "Veranstaltung leeren" und "Konto löschen" unter "Konto und Daten" nicht). Tabellen `admins`, `veranstaltungen` (eine je Konto, Zustand als JSON, Versionszähler), `sicherungen`.
 - Admin: Tabelle `admins`, Eintrag `ahmet@ozcorapci.de`. Admin sieht alle Veranstaltungen nur lesend und kann sie leeren (Boxer, Kämpfe, Sicherungen weg; Konto und E-Mail bleiben).
 - Im Dashboard gesetzt: Authentication → URL Configuration, Site URL und Redirect URL = `https://aozcorap.github.io/MatchMaker/`.
 - Hinweis zu den Werkzeugen: Über den Supabase-Zugang der Sitzung hängen Anweisungen mit `DELETE FROM` (vermutlich eine nicht beantwortete Bestätigung). Das nicht umgehen, sondern Löschen über die Oberfläche der App oder das Dashboard machen.
@@ -45,7 +45,7 @@ Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 M
 2. Datenschutz (Namen, Geburtsdaten, teils Minderjährige): Datenschutzerklärung und Auftragsverarbeitung klären, bevor echte Veranstalter die Seite nutzen. Der kostenlose Plan pausiert ungenutzte Projekte nach etwa einer Woche (Wissensstand, prüfen).
 3. Screenshots: Texterkennung im Browser, ohne KI und ohne API. Sie ist bei stark komprimierten JPGs, schmalen Handy-Tabellen und Fotos von Bildschirmen unzuverlässig; alle Zahlen müssen in der Prüfansicht kontrolliert werden. Entschieden: Eine KI-Bilderkennung über einen Server brauchen wir nicht. Sicherer Weg sind Excel-Dateien, eingefügter Text und saubere Screenshots (Cmd+Shift+4).
 4. Gewichtstoleranz (Klassenbreite des Leichteren, höchstens 10 %, einstellbar) und Rundenzeit sind bestätigt. Volltext der WB in `docs/Wettkampfbestimmungen-DBV-2025.pdf`. Heimverein und blaue Ecke (WB §4.6) entfallen: Bei diesen Veranstaltungen gibt es keinen Heimverein.
-5. Optional: Veranstalter dürfen ihre eigene Veranstaltung nicht löschen; kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
+5. Veranstalter löschen ihre Daten selbst unter "Konto und Daten" (Veranstaltung leeren, Konto löschen; Admin-Konto ausgenommen). Kein Mehrbenutzerbetrieb pro Konto (bewusst: eine Person je Konto).
 6. Die Demo-Datei (`dist-demo`) ist durch die PDF-Schriften auf etwa 2 MB gewachsen.
 7. Bezahlmethode: Konzept mit Stripe (10 Euro pro Veranstaltung inkl. USt, Kosten, Ablauf, offene Entscheidungen) in `docs/BEZAHLKONZEPT.md`. Noch nicht gebaut; erst Impressum und Datenschutz (Punkt 2) und die steuerliche Klärung.
 
