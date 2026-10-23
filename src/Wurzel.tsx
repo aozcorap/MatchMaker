@@ -5,7 +5,7 @@ import { Anmeldung, NeuesPasswort } from './konto/Anmeldung';
 import { KontoSeite } from './konto/Konto';
 import { supabase } from './konto/client';
 import { istAdmin, ladeAlle, ladeVeranstaltung, legeAn, loescheVeranstaltung, type Gespeichert, type Uebersicht } from './konto/cloud';
-import { heute, laden, leererZustand, liesZustand, type Zustand } from './speicher';
+import { exportiereAlle, heute, laden, leererZustand, liesZustand, type Zustand } from './speicher';
 import { Fuss, Rechtliches, useRechtsseite } from './rechtliches';
 import { bestaetige, DEMO } from './umgebung';
 
@@ -205,6 +205,14 @@ function Angemeldet({ userId, email, kontoGeloescht }: { userId: string; email: 
         <div className="seite">
           {leiste(null)}
           <h2>Alle Veranstaltungen</h2>
+          <p className="hinweis">
+            Der kostenlose Supabase-Plan hat keine automatischen Backups. Laden Sie regelmäßig eine Gesamtsicherung herunter und bewahren Sie die Datei geschützt auf (enthält personenbezogene Daten).
+          </p>
+          <p>
+            <button disabled={!liste || liste.length === 0} onClick={() => liste && exportiereAlle(liste)}>
+              Gesamtsicherung herunterladen
+            </button>
+          </p>
           {listenFehler && <p className="fehler" role="alert">{listenFehler}</p>}
           {liste === null ? (
             <p className="hinweis">Wird geladen …</p>

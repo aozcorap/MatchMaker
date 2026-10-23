@@ -113,6 +113,17 @@ export function speichern(z: Zustand): void {
   }
 }
 
+/** Admin: alle Veranstaltungen als eine Datei herunterladen (eigene Datensicherung außerhalb von Supabase). */
+export function exportiereAlle(eintraege: unknown[]): void {
+  const blob = new Blob([JSON.stringify({ stand: new Date().toISOString(), veranstaltungen: eintraege }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `matchmaker-gesamtsicherung-${heute()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function exportiere(z: Zustand): void {
   const blob = new Blob([JSON.stringify(z, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
