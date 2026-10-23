@@ -58,7 +58,7 @@ export function Anmeldung({ hinweis = '' }: { hinweis?: string }) {
           options: { emailRedirectTo: umleitung() },
         });
         if (error) setFehler(fehlertext(error.message));
-        else if (!data.session) setInfo('Fast geschafft: Wir haben dir eine E-Mail geschickt. Bitte den Link darin anklicken, danach kannst du dich anmelden.');
+        else if (!data.session) setInfo('Fast geschafft: Wir haben Ihnen eine E-Mail geschickt. Bitte den Link darin anklicken, danach können Sie sich anmelden.');
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: umleitung() });
         if (error) setFehler(fehlertext(error.message));
