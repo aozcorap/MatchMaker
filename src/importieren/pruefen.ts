@@ -14,8 +14,62 @@ export interface ZeilenPruefung {
   ohneBilanz: boolean;
 }
 
+/**
+ * Name für den Vergleich: Groß-/Kleinschreibung, Akzente, Bindestriche und die Reihenfolge der Namensteile spielen keine Rolle
+ * ("Müller, Max" = "Max Mueller" = "max  müller").
+ */
+function vergleichsname(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .sort()
+    .join(' ');
+}
+
+function abstand(a: string, b: string): number {
+  let zeile = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const neu = [i];
+    for (let j = 1; j <= b.length; j++) {
+      neu[j] = Math.min(zeile[j] + 1, neu[j - 1] + 1, zeile[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    zeile = neu;
+  }
+  return zeile[b.length];
+}
+
+/** Gleicher Boxer? Gleicher Name (auch mit einem Tippfehler oder einem Lesefehler der Texterkennung); das Geburtsdatum prüft der Aufrufer. */
+export function gleicherName(a: string, b: string): boolean {
+  const x = vergleichsname(a);
+  const y = vergleichsname(b);
+  return x === y || (Math.min(x.length, y.length) >= 6 && abstand(x, y) <= 1);
+}
+
 export function schluessel(name: string, geburtsdatum: string): string {
-  return `${name.trim().toLowerCase().replace(/\s+/g, ' ')}|${geburtsdatum}`;
+  return `${vergleichsname(name)}|${geburtsdatum}`;
+}
+
+/** Was in der neuen Meldung anders ist als beim schon vorhandenen Boxer. */
+function unterschiede(alt: Boxer, neu: { verein: string; gewicht: number | null; bilanz: [number, number, number, number] | null }): string[] {
+  const u: string[] = [];
+  if (neu.gewicht !== null && neu.gewicht !== alt.gewicht) u.push(`Gewicht ${alt.gewicht} → ${neu.gewicht} kg`);
+  if (neu.verein.trim() && neu.verein.trim().toLowerCase() !== alt.verein.trim().toLowerCase()) u.push(`Verein ${alt.verein} → ${neu.verein.trim()}`);
+  if (neu.bilanz) {
+    const [k, s, n, d] = neu.bilanz;
+    if (k !== alt.kaempfe) u.push(`Kämpfe ${alt.kaempfe} → ${k}`);
+    if (s !== alt.siege) u.push(`Siege ${alt.siege} → ${s}`);
+    if (n !== alt.niederlagen) u.push(`Niederlagen ${alt.niederlagen} → ${n}`);
+    if (d !== (alt.unentschieden ?? 0)) u.push(`Unentschieden ${alt.unentschieden ?? 0} → ${d}`);
+  }
+  return u;
 }
 
 /** Prüft eine Zeile und baut den Boxer. `inEingabe` zählt gleiche Boxer innerhalb derselben Eingabe. */
@@ -55,8 +109,20 @@ export function pruefeZeile(
   }
 
   const k = datum?.iso ? schluessel(z.name, datum.iso) : null;
-  const vorhanden = k !== null && vorhandene.some((b) => schluessel(b.name, b.geburtsdatum) === k);
-  if (vorhanden) warnungen.push('Dieser Boxer ist schon in der Liste');
+  const alt = datum?.iso ? vorhandene.find((b) => b.geburtsdatum === datum.iso && gleicherName(b.name, z.name)) : undefined;
+  const vorhanden = alt !== undefined;
+  if (alt) {
+    const u = unterschiede(alt, {
+      verein: z.verein,
+      gewicht,
+      bilanz: bilanzLeer || kaempfe === null || siege === null || niederlagen === null || unentschieden === null ? null : [kaempfe, siege, niederlagen, unentschieden],
+    });
+    warnungen.push(
+      u.length === 0
+        ? 'Dieser Boxer ist schon in der Liste (gleiche Angaben)'
+        : `Dieser Boxer ist schon in der Liste, mit anderen Angaben: ${u.join(', ')}. Bitte beim vorhandenen Boxer ändern`,
+    );
+  }
   if (k !== null && (inEingabe.get(k) ?? 0) > 1) warnungen.push('Kommt in dieser Eingabe mehrfach vor');
   for (const h of z.hinweise) warnungen.push(h);
 
@@ -76,6 +142,19 @@ export function pruefeZeile(
         }
       : null;
   return { fehler, warnungen, boxer, vorhanden, ohneBilanz: bilanzLeer };
+}
+
+/** Zeilen, die denselben Boxer wie eine frühere Zeile derselben Eingabe enthalten (z. B. zwei Dateien mit überlappenden Listen). */
+export function spaetereDoppelte(zeilen: ImportZeile[], heute: Date = new Date()): Set<string> {
+  const doppelt = new Set<string>();
+  const gesehen: { name: string; datum: string }[] = [];
+  for (const z of zeilen) {
+    const datum = z.geburtsdatum ? findeDatum(z.geburtsdatum, heute)?.iso : null;
+    if (!z.name.trim() || !datum) continue;
+    if (gesehen.some((g) => g.datum === datum && gleicherName(g.name, z.name))) doppelt.add(z.id);
+    else gesehen.push({ name: z.name, datum });
+  }
+  return doppelt;
 }
 
 /** Wie oft jeder Boxer (Name und Geburtsdatum) in der Eingabe vorkommt. */

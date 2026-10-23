@@ -25,7 +25,7 @@ Webseite für Veranstalter von Amateur-Boxveranstaltungen: Meldungen einlesen, E
 - Veröffentlichung: `.github/workflows/pages.yml` baut und veröffentlicht bei jedem Push auf `main` (Typprüfung, Tests, Build).
 
 ## Funktionsstand
-Fertig und getestet: Regeln und Generator, Kampfkarte mit Zeitplan/Pausen/Ausfällen/Verschieben, Filter, Import (Excel, CSV, Text, Screenshots; Prüfansicht; Verein aus Signatur), PDF-Export (mit Alters- und Gewichtsklasse je Boxer), Konten mit Registrierung/Passwort vergessen, automatische Speicherung je Veranstalter, Datensicherung mit Wiederherstellung, Admin-Übersicht mit Ansehen (nur lesen) und Löschen.
+Fertig und getestet: Regeln und Generator, Kampfkarte mit Zeitplan/Pausen/Ausfällen/Verschieben, Filter, Import (Excel, CSV, Text, Screenshots; Prüfansicht; Verein aus Signatur; Doppelte werden erkannt: gleiches Geburtsdatum und gleicher Name, unabhängig von Reihenfolge, Umlauten und einem Tippfehler; schon vorhandene und spätere Wiederholungen in derselben Eingabe sind nicht vorgewählt, geänderte Angaben wie Gewicht oder Bilanz werden in der Prüfansicht angezeigt, aber nicht automatisch übernommen), PDF-Export (mit Alters- und Gewichtsklasse je Boxer), Konten mit Registrierung/Passwort vergessen, automatische Speicherung je Veranstalter, Datensicherung mit Wiederherstellung, Admin-Übersicht mit Ansehen (nur lesen) und Löschen.
 
 Einstellungen in der Kampfkarte: Rundenzeit Erwachsene/U19 (3 × 3 oder 3 × 2 Minuten, Standard 3 × 3; wirkt auf Zeitplan, Anzeige und PDF), max. Gewichtsdifferenz in % (10), max. Siegdifferenz bei Freigabe (5), "Andere Alters- oder Gewichtsklasse nur mit Freigabe" (an; die WB erlauben das laut §11.9 und §19.6 ohne Zustimmung, der Auftraggeber will es strenger).
 

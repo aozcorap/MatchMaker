@@ -3,7 +3,7 @@ import { alsText, type Zelle } from './importieren/felder';
 import { liesTabelle, liesText } from './importieren/lesen';
 import { erkenneBild } from './importieren/ocr';
 import { ergaenzeAusAnderen } from './importieren/ocrbewertung';
-import { pruefeZeile, zaehleInEingabe } from './importieren/pruefen';
+import { pruefeZeile, spaetereDoppelte, zaehleInEingabe } from './importieren/pruefen';
 import type { ImportZeile, LeseErgebnis } from './importieren/typen';
 import type { Zustand } from './speicher';
 import { DEMO } from './umgebung';
@@ -102,11 +102,14 @@ export function ImportTab(props: {
     return zeilen.map((z) => pruefeZeile(z, zustand.boxer, mehrfach));
   }, [zeilen, zustand.boxer]);
 
+  /** Spätere Wiederholungen desselben Boxers in der Eingabe: nicht vorgewählt, sonst würde er doppelt eingetragen */
+  const spaeter = useMemo(() => (zeilen ? spaetereDoppelte(zeilen) : new Set<string>()), [zeilen]);
+
   const gewaehlt = (i: number): boolean => {
     const p = pruefungen[i];
     if (!p || p.fehler.length > 0) return false;
     // Ohne Kampfbilanz nicht vorgewählt: sonst würde der Boxer still als Anfänger (C) eingeplant
-    return auswahl[zeilen![i].id] ?? (!p.vorhanden && !p.ohneBilanz);
+    return auswahl[zeilen![i].id] ?? (!p.vorhanden && !p.ohneBilanz && !spaeter.has(zeilen![i].id));
   };
   const anzahlGewaehlt = zeilen ? zeilen.filter((_, i) => gewaehlt(i)).length : 0;
   const anzahlFehler = pruefungen.filter((p) => p.fehler.length > 0).length;
@@ -335,7 +338,7 @@ export function ImportTab(props: {
                       z={z}
                       nummer={i + 1}
                       fehler={p.fehler}
-                      warnungen={p.warnungen}
+                      warnungen={spaeter.has(z.id) ? [...p.warnungen, 'Steht in dieser Eingabe schon weiter oben: nicht vorgewählt'] : p.warnungen}
                       gewaehlt={gewaehlt(i)}
                       onWahl={(wert) => setAuswahl((a) => ({ ...a, [z.id]: wert }))}
                       onAendere={aendere}
